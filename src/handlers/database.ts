@@ -1,7 +1,12 @@
 import { Sequelize } from "sequelize";
 
+type Dialects = "mysql" | "postgres" | "sqlite" | "mariadb" | "mssql";
+
 export default async () => {
-    if (!process.env.DATABASE_DIALECT) return;
+    if (!process.env.DATABASE_DIALECT) {
+        console.error("No database dialect was specified in the environment file.")
+        process.exit(1);
+    }
 
     if (process.env.DATABASE_DIALECT === "sqlite") global.database = new Sequelize({
         dialect: "sqlite",
