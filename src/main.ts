@@ -13,6 +13,7 @@ async function bootstrap() {
         origin: [
             /* to config, put your own domain here include http[s]:// */
             "https://rewrite.blacket.org",
+            "https://admin.blacket.org",
             "https://blacket.org"
         ],
         credentials: true
