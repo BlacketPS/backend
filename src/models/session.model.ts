@@ -1,5 +1,5 @@
 import { Column, Model, Table, DataType, ForeignKey, BelongsTo } from "sequelize-typescript";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { User } from ".";
 
 @Table({ tableName: "sessions", timestamps: false })
