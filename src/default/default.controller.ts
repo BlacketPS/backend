@@ -10,7 +10,6 @@ export class DefaultController {
 
     @Public()
     @Get()
-    @HttpCode(HttpStatus.NO_CONTENT)
     get() {
         return this.defaultService.get();
     }
