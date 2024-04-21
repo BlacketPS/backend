@@ -91,7 +91,7 @@ export class SequelizeService extends Sequelize {
             await this.redisService.set(`blacket-rarity:${rarity.id}`, JSON.stringify({ ...rarity.dataValues }));
         }
 
-        for (const pack of await this.packRepo.findAll({ include: [{ model: this.resourceRepo, as: "image" }], attributes: { exclude: ["imageId"] } }) as Models.Pack[]) {
+        for (const pack of await this.packRepo.findAll({ include: [{ model: this.resourceRepo, as: "image" }, { model: this.blookRepo, as: "blooks" }], attributes: { exclude: ["imageId"] } }) as Models.Pack[]) {
             await this.redisService.set(`blacket-pack:${pack.id}`, JSON.stringify({ ...pack.dataValues, image: pack.imagePath }));
         }
 
@@ -134,7 +134,9 @@ export class SequelizeService extends Sequelize {
 
         await this.titleRepo.create({ name: "Common" }, { transaction });
 
-        await this.blookRepo.create({ name: "Default", chance: 0, price: 0, rarityId: 1, imageId: 1, backgroundId: 1, priority: 0 }, { transaction });
+        await this.packRepo.create({ name: "default", price: 1, imageId: 1, innerColor: "#ffffff", outerColor: "#ffffff" }, { transaction });
+
+        await this.blookRepo.create({ name: "Default", chance: 1, price: 0, rarityId: 1, imageId: 1, backgroundId: 1, priority: 0, packId: 1 }, { transaction });
 
         await this.fontRepo.create({ name: "Nunito", resourceId: 3 }, { transaction });
         await this.fontRepo.create({ name: "Titan One", resourceId: 4 }, { transaction });

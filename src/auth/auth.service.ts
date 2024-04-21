@@ -35,7 +35,13 @@ export class AuthService {
 
         const transaction = await this.sequelizeService.transaction();
 
-        const user = await this.usersService.createUser(dto.username, dto.password, transaction);
+        let user: User;
+        try {
+            user = await this.usersService.createUser(dto.username, dto.password, transaction);
+        } catch (_) {
+            throw new BadRequestException(BadRequest.USERNAME_TAKEN);
+        }
+
 
         await this.usersService.updateUserIp(user, ip, transaction);
 

@@ -12,6 +12,9 @@ export default class Pack extends Model<Pack> {
     @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 0 })
     price: number;
 
+    @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
+    enabled: boolean;
+
     @ForeignKey(() => Resource)
     @Column({ type: DataType.INTEGER, allowNull: false })
     imageId: number;

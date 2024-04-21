@@ -20,6 +20,9 @@ import { AuthGuard } from "./core/guard";
 
 import { PermissionsService } from "./permissions/permissions.service";
 import { IsAccessCode } from "./core/validate/";
+import { QuestsModule } from "./quests/quests.module";
+import { MarketModule } from "./market/market.module";
+
 
 @Module({
     imports: [
@@ -37,7 +40,9 @@ import { IsAccessCode } from "./core/validate/";
         FormsModule,
         StaffModule,
         ChatModule,
-        LeaderboardModule
+        LeaderboardModule,
+        QuestsModule,
+        MarketModule
     ],
     controllers: [],
     providers: [

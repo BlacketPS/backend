@@ -26,7 +26,7 @@ export default class UserBlook extends Model<UserBlook> {
     @BelongsTo(() => Blook)
     blook: Blook;
 
-    @Column({ type: DataType.BOOLEAN, allowNull: false })
+    @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
     sold: boolean;
 
     @ForeignKey(() => User)
