@@ -1,10 +1,9 @@
 import { Body, Controller, Delete, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { RegisterDto, LoginDto } from "./dto";
 import { GetCurrentUserId, Public, RealIp } from "src/core/decorator";
-import { AuthTokenEntity } from "blacket-types";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import { BadRequest, InternalServerError, NotFound } from "src/types/enums";
+import { AuthTokenEntity, BadRequest, InternalServerError, NotFound } from "blacket-types";
+import { RegisterDto, LoginDto } from "./dto";
 
 @Controller("auth")
 @ApiTags("auth")

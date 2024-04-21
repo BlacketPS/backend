@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "sequelize-typescript";
-import { Form } from "src/models";
-import { FormStatus } from "src/models/form.model";
 import { hash } from "bcrypt";
+import { Form } from "blacket-types";
+import { FormStatus } from "blacket-types/dist/models/form.model";
 
 @Injectable()
 export class FormsService {

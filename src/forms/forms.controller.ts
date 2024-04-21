@@ -2,12 +2,10 @@ import { BadRequestException, Body, ClassSerializerInterceptor, Controller, Get,
 import { ConfigService } from "@nestjs/config";
 import { FormsService } from "./forms.service";
 import { Public, RealIp } from "src/core/decorator";
-import { CreateDto } from "./dto";
-import { CreateFormEntity, GetFormEntity } from "./entity";
 
-import { BadRequest } from "src/types/enums";
 import { FormAlreadyExistsException, FormNotFoundException } from "./exception";
 import { ApiTags } from "@nestjs/swagger";
+import { BadRequest, CreateDto, CreateFormEntity, GetFormEntity } from "blacket-types";
 
 @ApiTags("forms")
 @Controller("forms")

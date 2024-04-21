@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
-import { Message, User, Resource } from "src/models";
 import { Repository } from "sequelize-typescript";
+import { Message, Resource, User } from "blacket-types";
 
 @Injectable()
 export class ChatService {

@@ -1,8 +1,7 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
-import { User } from "src/models";
 import { SequelizeService } from "src/sequelize/sequelize.service";
-import { TokenDistribution } from "blacket-types";
 import { Repository } from "sequelize-typescript";
+import { TokenDistribution, User } from "blacket-types";
 
 @Injectable()
 export class QuestsService {

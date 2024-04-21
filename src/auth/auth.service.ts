@@ -1,16 +1,14 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { User, Session, UserSetting } from "src/models";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { Repository } from "sequelize-typescript";
 import { type Transaction } from "sequelize";
-import { RegisterDto, LoginDto } from "./dto";
 import { compare } from "bcrypt";
 
-import { BadRequest, InternalServerError, NotFound } from "src/types/enums";
-import { AuthTokenEntity } from "blacket-types";
+import { AuthTokenEntity, BadRequest, InternalServerError, NotFound, Session, User, UserSetting } from "blacket-types";
+import { RegisterDto, LoginDto } from "./dto";
 
 @Injectable()
 export class AuthService {
@@ -52,8 +50,9 @@ export class AuthService {
             return await transaction.commit().then(async () => {
                 return { token: await this.sessionToToken(session) } as AuthTokenEntity;
             });
-        } catch (_) {
-            throw new InternalServerErrorException(InternalServerError.DEFAULT);
+        } catch (err) {
+            if (err) throw err;
+            else throw new InternalServerErrorException(InternalServerError.DEFAULT);
         }
     }
 

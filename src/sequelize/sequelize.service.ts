@@ -4,8 +4,7 @@ import { RedisService } from "src/redis/redis.service";
 import { Repository, Sequelize } from "sequelize-typescript";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 import * as Models from "src/models";
-
-import { AnimationType } from "src/models/rarity.model";
+import { AnimationType } from "blacket-types/dist/models/rarity.model";
 
 @Injectable()
 export class SequelizeService extends Sequelize {
@@ -26,6 +25,7 @@ export class SequelizeService extends Sequelize {
         private readonly redisService: RedisService,
         private readonly blacketLogger: BlacketLoggerService
     ) {
+        console.log(Models);
         super({
             dialect: "postgres",
             username: configService.get<string>("SERVER_DATABASE_USER"),

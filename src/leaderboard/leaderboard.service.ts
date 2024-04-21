@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Repository } from "sequelize-typescript";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
-import { User, Resource } from "src/models";
+import { Resource, User } from "blacket-types";
 
 @Injectable()
 export class LeaderboardService {

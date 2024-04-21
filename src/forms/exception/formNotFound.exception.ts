@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { NotFound } from "src/types/enums";
+import { NotFound } from "blacket-types";
 
 export class FormNotFoundException extends HttpException {
     constructor() {

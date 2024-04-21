@@ -1,8 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { BadRequest } from "blacket-types";
 import { ValidatorConstraint, ValidatorConstraintInterface } from "class-validator";
-
-import { BadRequest } from "src/types/enums";
 
 @ValidatorConstraint({ name: "IsAccessCode", async: false })
 @Injectable()

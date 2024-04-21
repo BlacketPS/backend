@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { Repository } from "sequelize-typescript";
-import { User, UserTitle, UserBanner, UserBlook, UserStatistic, UserSetting, IpAddress, UserIpAddress, Resource, Title, Font } from "src/models";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { hash } from "bcrypt";
 import { Op, type Transaction } from "sequelize";
+import { User, UserTitle, UserBanner, UserBlook, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource } from "blacket-types";
 
 export interface GetUserSettings {
     includeBlooks?: boolean;
