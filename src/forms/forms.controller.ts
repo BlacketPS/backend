@@ -7,7 +7,9 @@ import { CreateFormEntity, GetFormEntity } from "./entity";
 
 import { BadRequest } from "src/types/enums";
 import { FormAlreadyExistsException, FormNotFoundException } from "./exception";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags("forms")
 @Controller("forms")
 export class FormsController {
     constructor(

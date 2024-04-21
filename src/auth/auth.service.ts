@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { User, Session, UserSetting } from "src/models";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
@@ -9,7 +9,8 @@ import { type Transaction } from "sequelize";
 import { RegisterDto, LoginDto } from "./dto";
 import { compare } from "bcrypt";
 
-import { BadRequest, NotFound } from "src/types/enums";
+import { BadRequest, InternalServerError, NotFound } from "src/types/enums";
+import { AuthTokenEntity } from "blacket-types";
 
 @Injectable()
 export class AuthService {
@@ -30,47 +31,51 @@ export class AuthService {
         this.sessionRepo = this.sequelizeService.getRepository(Session);
     }
 
-    async register(dto: RegisterDto, ip: string) {
+    async register(dto: RegisterDto, ip: string): Promise<AuthTokenEntity> {
         if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") === "true") throw new BadRequestException(BadRequest.AUTH_FORMS_ENABLED);
 
-        const transaction = await this.sequelizeService.transaction();
+        const transaction: Transaction = await this.sequelizeService.transaction();
 
-        let user: User;
         try {
-            user = await this.usersService.createUser(dto.username, dto.password, transaction);
+            let user: User;
+            try {
+                user = await this.usersService.createUser(dto.username, dto.password, transaction);
+            } catch (_) {
+                throw new BadRequestException(BadRequest.USERNAME_TAKEN);
+            }
+
+
+            await this.usersService.updateUserIp(user, ip, transaction);
+
+            const session: Session = await this.findOrCreateSession(user.id, transaction);
+
+            return await transaction.commit().then(async () => {
+                return { token: await this.sessionToToken(session) } as AuthTokenEntity;
+            });
         } catch (_) {
-            throw new BadRequestException(BadRequest.USERNAME_TAKEN);
+            throw new InternalServerErrorException(InternalServerError.DEFAULT);
         }
-
-
-        await this.usersService.updateUserIp(user, ip, transaction);
-
-        const session = await this.findOrCreateSession(user.id, transaction);
-
-        return await transaction.commit().then(async () => {
-            return { token: await this.sessionToToken(session) };
-        });
     }
 
-    async login(dto: LoginDto, ip: string) {
-        const user = await this.userRepo.findOne({ where: { username: dto.username } });
+    async login(dto: LoginDto, ip: string): Promise<AuthTokenEntity> {
+        const user: User = await this.userRepo.findOne({ attributes: ["id", "password", "ip"], where: { username: dto.username } });
 
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
         if (!await compare(dto.password, user.password)) throw new BadRequestException(BadRequest.AUTH_INCORRECT_PASSWORD);
 
-        const session = await this.findOrCreateSession(user.id);
+        const session: Session = await this.findOrCreateSession(user.id);
 
         await this.usersService.updateUserIp(user, ip);
 
-        return { token: await this.sessionToToken(session) };
+        return { token: await this.sessionToToken(session) } as AuthTokenEntity;
     }
 
-    async logout(userId: User["id"]) {
+    async logout(userId: User["id"]): Promise<void> {
         return await this.destroySession(userId);
     }
 
-    async findOrCreateSession(userId: User["id"], transaction?: Transaction) {
+    async findOrCreateSession(userId: User["id"], transaction?: Transaction): Promise<Session> {
         const [session] = await this.sessionRepo.findOrCreate({ where: { userId }, defaults: { userId }, transaction });
 
         await this.redisService.set(`blacket-session:${session.userId}`, JSON.stringify(session));
@@ -78,7 +83,7 @@ export class AuthService {
         return session;
     }
 
-    async destroySession(userId: User["id"]) {
+    async destroySession(userId: User["id"]): Promise<void> {
         const session = await this.sessionRepo.findOne({ where: { userId } });
 
         if (session) {
@@ -88,7 +93,7 @@ export class AuthService {
         }
     }
 
-    async sessionToToken(session: Session) {
+    async sessionToToken(session: Session): Promise<string> {
         return Buffer.from(JSON.stringify(session)).toString("base64");
     }
 }

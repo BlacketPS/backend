@@ -1,7 +1,9 @@
 import { Controller, Get } from "@nestjs/common";
 import { DataService, DataKey } from "./data.service";
 import { Public } from "src/core/decorator";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags("data")
 @Controller("data")
 export class DataController {
     constructor(

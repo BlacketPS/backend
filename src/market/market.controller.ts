@@ -2,7 +2,9 @@ import { Body, ClassSerializerInterceptor, Controller, Post, UseInterceptors } f
 import { MarketService } from "./market.service";
 import { GetCurrentUserId } from "src/core/decorator";
 import { OpenPackDto, OpenPackBlook } from "blacket-types";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags("market")
 @Controller("market")
 export class MarketController {
     constructor(private readonly marketService: MarketService) { }

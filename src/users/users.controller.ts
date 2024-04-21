@@ -5,7 +5,9 @@ import { PublicUser } from "blacket-types";
 import { User } from "src/models";
 
 import { NotFound } from "src/types/enums";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags("users")
 @Controller("users")
 export class UsersController {
     constructor(
