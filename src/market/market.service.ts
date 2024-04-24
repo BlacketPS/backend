@@ -7,7 +7,6 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 
 @Injectable()
 export class MarketService {
-    private packRepo: Repository<Pack>;
     private userRepo: Repository<User>;
     private userStatisticRepo: Repository<UserStatistic>;
     private userBlookRepo: Repository<UserBlook>;
@@ -16,7 +15,6 @@ export class MarketService {
         private sequelizeService: SequelizeService,
         private redisService: RedisService
     ) {
-        this.packRepo = this.sequelizeService.getRepository(Pack);
         this.userRepo = this.sequelizeService.getRepository(User);
         this.userStatisticRepo = this.sequelizeService.getRepository(UserStatistic);
         this.userBlookRepo = this.sequelizeService.getRepository(UserBlook);

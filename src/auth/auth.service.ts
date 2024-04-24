@@ -7,7 +7,7 @@ import { Repository } from "sequelize-typescript";
 import { type Transaction } from "sequelize";
 import { compare } from "bcrypt";
 
-import { AuthTokenEntity, BadRequest, InternalServerError, NotFound, Session, User, UserSetting } from "blacket-types";
+import { AuthEntity, BadRequest, InternalServerError, NotFound, Session, User, UserSetting } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
 
 @Injectable()
@@ -21,34 +21,32 @@ export class AuthService {
         private redisService: RedisService,
         private usersService: UsersService,
         private configService: ConfigService
-    ) { }
-
-    async onModuleInit() {
+    ) {
         this.userRepo = this.sequelizeService.getRepository(User);
         this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
         this.sessionRepo = this.sequelizeService.getRepository(Session);
     }
 
-    async register(dto: RegisterDto, ip: string): Promise<AuthTokenEntity> {
+    async register(dto: RegisterDto, ip: string): Promise<AuthEntity> {
         if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") === "true") throw new BadRequestException(BadRequest.AUTH_FORMS_ENABLED);
 
         const transaction: Transaction = await this.sequelizeService.transaction();
 
         try {
             let user: User;
+
             try {
                 user = await this.usersService.createUser(dto.username, dto.password, transaction);
-            } catch (_) {
+            } catch {
                 throw new BadRequestException(BadRequest.USERNAME_TAKEN);
             }
-
 
             await this.usersService.updateUserIp(user, ip, transaction);
 
             const session: Session = await this.findOrCreateSession(user.id, transaction);
 
             return await transaction.commit().then(async () => {
-                return { token: await this.sessionToToken(session) } as AuthTokenEntity;
+                return { token: await this.sessionToToken(session) } as AuthEntity;
             });
         } catch (err) {
             if (err) throw err;
@@ -56,8 +54,8 @@ export class AuthService {
         }
     }
 
-    async login(dto: LoginDto, ip: string): Promise<AuthTokenEntity> {
-        const user: User = await this.userRepo.findOne({ attributes: ["id", "password", "ip"], where: { username: dto.username } });
+    async login(dto: LoginDto, ip: string): Promise<AuthEntity> {
+        const user: User = await this.userRepo.findOne({ attributes: ["id", "password", "ipAddress"], where: { username: dto.username } });
 
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
@@ -67,7 +65,7 @@ export class AuthService {
 
         await this.usersService.updateUserIp(user, ip);
 
-        return { token: await this.sessionToToken(session) } as AuthTokenEntity;
+        return { token: await this.sessionToToken(session) } as AuthEntity;
     }
 
     async logout(userId: User["id"]): Promise<void> {

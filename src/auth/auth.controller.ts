@@ -2,7 +2,7 @@ import { Body, Controller, Delete, HttpCode, HttpStatus, Post } from "@nestjs/co
 import { AuthService } from "./auth.service";
 import { GetCurrentUserId, Public, RealIp } from "src/core/decorator";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import { AuthTokenEntity, BadRequest, InternalServerError, NotFound } from "blacket-types";
+import { AuthEntity, BadRequest, InternalServerError, NotFound } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
 
 @Controller("auth")
@@ -17,7 +17,7 @@ export class AuthController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: "Successfully registered account",
-        type: AuthTokenEntity
+        type: AuthEntity
     })
     @ApiResponse({
         status: HttpStatus.BAD_REQUEST,
@@ -31,7 +31,7 @@ export class AuthController {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         description: InternalServerError.DEFAULT
     })
-    register(@Body() dto: RegisterDto, @RealIp() ip: string): Promise<AuthTokenEntity> {
+    register(@Body() dto: RegisterDto, @RealIp() ip: string): Promise<AuthEntity> {
         return this.authService.register(dto, ip);
     }
 
@@ -40,7 +40,7 @@ export class AuthController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: "Successfully logged in",
-        type: AuthTokenEntity
+        type: AuthEntity
     })
     @ApiResponse({
         status: HttpStatus.BAD_REQUEST,
@@ -50,7 +50,7 @@ export class AuthController {
         status: HttpStatus.NOT_FOUND,
         description: NotFound.UNKNOWN_USER
     })
-    login(@Body() dto: LoginDto, @RealIp() ip: string): Promise<AuthTokenEntity> {
+    login(@Body() dto: LoginDto, @RealIp() ip: string): Promise<AuthEntity> {
         return this.authService.login(dto, ip);
     }
 

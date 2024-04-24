@@ -24,55 +24,21 @@ export class LeaderboardService {
             return leaderboard;
         } else {
             const tokens = (await this.userRepo.findAll({
-                order: [
-                    [
-                        "tokens",
-                        "DESC"
-                    ]
-                ],
-                attributes: [
-                    "id",
-                    "username",
-                    "titleId",
-                    "color",
-                    "tokens"
-                ],
+                order: [["tokens", "DESC"]],
+                attributes: ["id", "username", "titleId", "color", "tokens"],
                 include: [
-                    {
-                        model: this.resourceRepo,
-                        as: "avatar"
-                    },
-                    {
-                        model: this.resourceRepo,
-                        as: "customAvatar"
-                    }
+                    { model: this.resourceRepo, as: "avatar" },
+                    { model: this.resourceRepo, as: "customAvatar" }
                 ],
                 limit: 10
             })).map((user) => user.toJSON());
 
             const experience = (await this.userRepo.findAll({
-                order: [
-                    [
-                        "experience",
-                        "DESC"
-                    ]
-                ],
-                attributes: [
-                    "id",
-                    "username",
-                    "titleId",
-                    "color",
-                    "experience"
-                ],
+                order: [["experience", "DESC"]],
+                attributes: ["id", "username", "titleId", "color", "experience"],
                 include: [
-                    {
-                        model: this.resourceRepo,
-                        as: "avatar"
-                    },
-                    {
-                        model: this.resourceRepo,
-                        as: "customAvatar"
-                    }
+                    { model: this.resourceRepo, as: "avatar" },
+                    { model: this.resourceRepo, as: "customAvatar" }
                 ],
                 limit: 10
             })).map((user) => user.toJSON());

@@ -3,7 +3,7 @@ import { IsBoolean, IsNotEmpty, Validate } from "class-validator";
 import { IsAccessCode } from "src/core/validate";
 
 export class RegisterDto {
-    @ApiProperty({ example: "Rin", description: "The username you wish to signup with" })
+    @ApiProperty({ example: "Rin", description: "The username you wish to register with" })
     @IsNotEmpty()
     @Validate((value: string) => value.length > 0)
     readonly username: string;
@@ -13,7 +13,7 @@ export class RegisterDto {
     @Validate((value: string) => value.length > 0)
     readonly password: string;
 
-    @ApiProperty({ example: "momfater5", description: "A code that's required to signup while the server is in a development mode" })
+    @ApiProperty({ example: "momfater5", description: "A code that's required to register while the server is in a development mode" })
     @IsNotEmpty()
     @Validate(IsAccessCode)
     readonly accessCode: string;

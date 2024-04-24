@@ -12,6 +12,6 @@ export class LeaderboardController {
     async getLeaderboard() {
         const leaderboard = await this.leaderboardService.getLeaderboard();
 
-        return { leaderboard: new LeaderboardEntity(leaderboard) };
+        return new LeaderboardEntity(leaderboard);
     }
 }

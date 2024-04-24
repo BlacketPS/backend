@@ -10,6 +10,8 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { logger: new BlacketLoggerService() });
 
+    const configService = app.get(ConfigService);
+
     app.enableCors({
         origin: [
             // to config, put your own domain here include http[s]://
@@ -26,8 +28,6 @@ async function bootstrap() {
 
     useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
-    const configService = app.get(ConfigService);
-
     const config = new DocumentBuilder()
         .setTitle(configService.get<string>("VITE_INFORMATION_NAME"))
         .setDescription(configService.get<string>("VITE_INFORMATION_DESCRIPTION"))
@@ -39,6 +39,7 @@ async function bootstrap() {
             description: "Auth token, no prefix"
         }, "Authorization")
         .build();
+        
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("api/docs", app, document);
 

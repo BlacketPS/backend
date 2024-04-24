@@ -25,7 +25,6 @@ export class SequelizeService extends Sequelize {
         private readonly redisService: RedisService,
         private readonly blacketLogger: BlacketLoggerService
     ) {
-        console.log(Models);
         super({
             dialect: "postgres",
             username: configService.get<string>("SERVER_DATABASE_USER"),
@@ -54,14 +53,11 @@ export class SequelizeService extends Sequelize {
 
         // development mode setting handler
         if (this.configService.get<string>("NODE_ENV") !== "production") {
-            switch (this.configService.get<string>("SERVER_DEV_RESEED_DATABASE")) {
-                case "true":
-                    await this.sync({ force: true });
-                    await this.seedDatabase();
-                    break;
-                case "false":
-                    await this.sync({ alter: true });
-                    break;
+            if (this.configService.get<string>("SERVER_DEV_RESEED_DATABASE") === "true") {
+                await this.sync({ force: true });
+                await this.seedDatabase();
+            } else {
+                await this.sync({ alter: true });
             }
         }
 
