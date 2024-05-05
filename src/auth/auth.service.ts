@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
@@ -6,8 +6,9 @@ import { ConfigService } from "@nestjs/config";
 import { Repository } from "sequelize-typescript";
 import { type Transaction } from "sequelize";
 import { compare } from "bcrypt";
+import * as speakEasy from "speakeasy";
 
-import { AuthEntity, BadRequest, InternalServerError, NotFound, Session, User, UserSetting } from "blacket-types";
+import { AuthEntity, BadRequest, NotFound, Session, Unauthorized, User, UserSetting } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
 
 @Injectable()
@@ -20,7 +21,7 @@ export class AuthService {
         private sequelizeService: SequelizeService,
         private redisService: RedisService,
         private usersService: UsersService,
-        private configService: ConfigService
+        private configService: ConfigService,
     ) {
         this.userRepo = this.sequelizeService.getRepository(User);
         this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
@@ -32,34 +33,29 @@ export class AuthService {
 
         const transaction: Transaction = await this.sequelizeService.transaction();
 
-        try {
-            let user: User;
+        if (await this.usersService.userExists(dto.username, transaction)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
 
-            try {
-                user = await this.usersService.createUser(dto.username, dto.password, transaction);
-            } catch {
-                throw new BadRequestException(BadRequest.USERNAME_TAKEN);
-            }
+        const user = await this.usersService.createUser(dto.username, dto.password, transaction);
 
-            await this.usersService.updateUserIp(user, ip, transaction);
+        await this.usersService.updateUserIp(user, ip, transaction);
 
-            const session: Session = await this.findOrCreateSession(user.id, transaction);
+        const session: Session = await this.findOrCreateSession(user.id, transaction);
 
-            return await transaction.commit().then(async () => {
-                return { token: await this.sessionToToken(session) } as AuthEntity;
-            });
-        } catch (err) {
-            if (err) throw err;
-            else throw new InternalServerErrorException(InternalServerError.DEFAULT);
-        }
+        return await transaction.commit().then(async () => {
+            return { token: await this.sessionToToken(session) } as AuthEntity;
+        });
     }
 
     async login(dto: LoginDto, ip: string): Promise<AuthEntity> {
-        const user: User = await this.userRepo.findOne({ attributes: ["id", "password", "ipAddress"], where: { username: dto.username } });
+        const user: User = await this.userRepo.findOne({ where: { username: dto.username }, include: [{ model: this.userSettingRepo }] });
 
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
         if (!await compare(dto.password, user.password)) throw new BadRequestException(BadRequest.AUTH_INCORRECT_PASSWORD);
+
+        // otp stuff is here
+        if (user.settings.otpSecret && !dto.otpCode) throw new UnauthorizedException(Unauthorized.AUTH_MISSING_OTP);
+        else if (user.settings.otpSecret && !speakEasy.totp.verify({ secret: user.settings.otpSecret, encoding: "base32", token: dto.otpCode })) throw new BadRequestException(BadRequest.AUTH_INCORRECT_OTP);
 
         const session: Session = await this.findOrCreateSession(user.id);
 
@@ -70,6 +66,21 @@ export class AuthService {
 
     async logout(userId: User["id"]): Promise<void> {
         return await this.destroySession(userId);
+    }
+
+    async generateOtpSecret(userId: User["id"]): Promise<string> {
+        if (await this.redisService.exists(`blacket-tempOtp:${userId}`)) return await this.redisService.get(`blacket-tempOtp:${userId}`);
+
+        const user: User = await this.usersService.getUser(userId);
+        if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+
+        if (user.settings.otpSecret) throw new BadRequestException(BadRequest.AUTH_OTP_ALREADY_ENABLED);
+
+        const secret = speakEasy.generateSecret({ name: user.username, issuer: process.env.VITE_INFORMATION_NAME });
+
+        await this.redisService.setex(`blacket-tempOtp:${userId}`, 300, secret.base32);
+
+        return secret.base32;
     }
 
     async findOrCreateSession(userId: User["id"], transaction?: Transaction): Promise<Session> {

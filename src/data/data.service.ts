@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "src/redis/redis.service";
+import { safelyParseJSON } from "src/core/functions";
 
 export enum DataKey {
     BLOOK = "blacket-blook:*",
@@ -24,6 +25,6 @@ export class DataService {
 
         const data = keys.length ? await this.redisService.mget(keys) : [];
 
-        return data.map((item: string) => JSON.parse(item));
+        return data.map((item: string) => safelyParseJSON(item));
     }
 }

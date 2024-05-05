@@ -84,6 +84,12 @@ export class UsersService {
         return userData;
     }
 
+    async userExists(user: string, transaction?: Transaction): Promise<boolean> {
+        const count = await this.userRepo.count({ where: this.sequelizeService.or({ id: user }, { username: user }), transaction });
+
+        return count > 0;
+    }
+
     // transactions are goofy, if you don't use a current transaction you'll get a fk constraint error
 
     async createUser(username: string, password: string, transaction?: Transaction): Promise<User> {
@@ -108,5 +114,9 @@ export class UsersService {
 
         await this.userIpAddressRepo.increment("uses", { where: { id: userIpAddress.id }, transaction });
         await this.userRepo.update({ ipAddress: ip }, { where: { id: user.id }, transaction });
+    }
+
+    async addTokens(userId: User["id"], amount: number, transaction?: Transaction): Promise<void> {
+        await this.userRepo.increment("tokens", { by: amount, where: { id: userId }, transaction });
     }
 }

@@ -8,59 +8,59 @@ import { ApiTags } from "@nestjs/swagger";
 export class DataController {
     constructor(
         private readonly dataService: DataService
-    ) {}
+    ) { }
 
     @Public()
     @Get("blooks")
-    async getBlooks() {
+    getBlooks() {
         return this.dataService.getData(DataKey.BLOOK);
     }
 
     @Public()
     @Get("rarities")
-    async getRarities() {
+    getRarities() {
         return this.dataService.getData(DataKey.RARITY);
     }
 
     @Public()
     @Get("packs")
-    async getPacks() {
+    getPacks() {
         return this.dataService.getData(DataKey.PACK);
     }
 
     @Public()
     @Get("items")
-    async getItems() {
+    getItems() {
         return this.dataService.getData(DataKey.ITEM);
     }
 
     @Public()
     @Get("titles")
-    async getTitles() {
+    getTitles() {
         return this.dataService.getData(DataKey.TITLE);
     }
 
     @Public()
     @Get("banners")
-    async getBanners() {
+    getBanners() {
         return this.dataService.getData(DataKey.BANNER);
     }
 
     @Public()
     @Get("badges")
-    async getBadges() {
+    getBadges() {
         return this.dataService.getData(DataKey.BADGE);
     }
 
     @Public()
     @Get("fonts")
-    async getFonts() {
+    getFonts() {
         return this.dataService.getData(DataKey.FONT);
     }
 
     @Public()
     @Get("emojis")
-    async getEmojis() {
+    getEmojis() {
         return this.dataService.getData(DataKey.EMOJI);
     }
 }

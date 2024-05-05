@@ -7,7 +7,9 @@ import { User } from "blacket-types";
 @ApiTags("quests")
 @Controller("quests")
 export class QuestsController {
-    constructor(private readonly questsService: QuestsService) { }
+    constructor(
+        private readonly questsService: QuestsService
+    ) { }
 
     @Post("claim-daily-tokens")
     claimDailyTokens(@GetCurrentUser() user: User) {

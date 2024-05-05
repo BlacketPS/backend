@@ -11,8 +11,9 @@ export class MarketController {
 
     @UseInterceptors(ClassSerializerInterceptor)
     @Post("open-pack")
-    async openPack(@GetCurrentUserId() userId: string, @Body() packDto: OpenPackDto) {
-        const blookId: number = await this.marketService.openPack(userId, packDto);
+    async openPack(@GetCurrentUserId() userId: string, @Body() dto: OpenPackDto) {
+        const blookId: number = await this.marketService.openPack(userId, dto);
+
         return new OpenPackBlookEntity({ id: blookId });
     }
 }

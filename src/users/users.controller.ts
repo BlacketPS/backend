@@ -16,7 +16,7 @@ export class UsersController {
     @Get("me")
     async getMe(@GetCurrentUser() user: User) {
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
-        else return { user: new PublicUser(user.toJSON()) };
+        else return new PublicUser(user.toJSON());
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
@@ -25,6 +25,6 @@ export class UsersController {
         const userData = await this.usersService.getUser(user);
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
-        else return { user: new PublicUser(userData.toJSON()) };
+        else return new PublicUser(userData.toJSON());
     }
 }

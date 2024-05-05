@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus } from "@nestjs/common";
+import { Controller, Get } from "@nestjs/common";
 import { DefaultService } from "./default.service";
 import { Public } from "src/core/decorator";
 

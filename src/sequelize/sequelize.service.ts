@@ -57,7 +57,7 @@ export class SequelizeService extends Sequelize {
                 await this.sync({ force: true });
                 await this.seedDatabase();
             } else {
-                await this.sync({ alter: true });
+                // await this.sync({ alter: true });
             }
         }
 
@@ -87,7 +87,7 @@ export class SequelizeService extends Sequelize {
             await this.redisService.set(`blacket-rarity:${rarity.id}`, JSON.stringify({ ...rarity.dataValues }));
         }
 
-        for (const pack of await this.packRepo.findAll({ include: [{ model: this.resourceRepo, as: "image" }, { model: this.blookRepo, as: "blooks" }], attributes: { exclude: ["imageId"] } }) as Models.Pack[]) {
+        for (const pack of await this.packRepo.findAll({ include: [{ model: this.resourceRepo, as: "image" }], attributes: { exclude: ["imageId"] } }) as Models.Pack[]) {
             await this.redisService.set(`blacket-pack:${pack.id}`, JSON.stringify({ ...pack.dataValues, image: pack.imagePath }));
         }
 

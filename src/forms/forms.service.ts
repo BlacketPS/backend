@@ -3,7 +3,7 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "sequelize-typescript";
 import { hash } from "bcrypt";
-import { Form } from "blacket-types";
+import { CreateDto, Form } from "blacket-types";
 import { FormStatus } from "blacket-types/dist/models/form.model";
 
 @Injectable()
@@ -13,9 +13,7 @@ export class FormsService {
     constructor(
         private sequelizeService: SequelizeService,
         private usersService: UsersService
-    ) { }
-
-    async onModuleInit() {
+    ) {
         this.formRepo = this.sequelizeService.getRepository(Form);
     }
 
@@ -31,14 +29,14 @@ export class FormsService {
         return await this.formRepo.destroy({ where: { id } });
     }
 
-    async createForm(username: string, password: string, reasonToPlay: string, ipAddress: string) {
-        if (await this.usersService.getUser(username)) return null;
+    async createForm(dto: CreateDto, ipAddress: string) {
+        if (await this.usersService.getUser(dto.username)) return null;
 
         const [
             form,
             created
-        ] = await this.formRepo.findOrCreate({ where: { username, status: FormStatus.PENDING }, defaults: { password: await hash(password, 10), reasonToPlay, ipAddress } });
+        ] = await this.formRepo.findOrCreate({ where: { username: dto.username, status: FormStatus.PENDING }, defaults: { password: await hash(dto.password, 10), reasonToPlay: dto.reasonToPlay, ipAddress } });
 
-       return created ? form : null;
+        return created ? form : null;
     }
 }

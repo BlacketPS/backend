@@ -4,8 +4,9 @@ import { FormsService } from "./forms.service";
 import { Public, RealIp } from "src/core/decorator";
 
 import { FormAlreadyExistsException, FormNotFoundException } from "./exception";
-import { ApiTags } from "@nestjs/swagger";
-import { BadRequest, CreateDto, CreateFormEntity, GetFormEntity } from "blacket-types";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
+
+import { BadRequest, Conflict, CreateDto, CreateFormEntity, GetFormEntity, NotFound } from "blacket-types";
 
 @ApiTags("forms")
 @Controller("forms")
@@ -19,19 +20,25 @@ export class FormsController {
     @UseInterceptors(ClassSerializerInterceptor)
     @Post("create")
     @HttpCode(HttpStatus.CREATED)
+    @ApiResponse({ status: HttpStatus.CREATED, description: "Form created successfully", type: CreateFormEntity })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: BadRequest.FORMS_FORMS_DISABLED })
+    @ApiResponse({ status: HttpStatus.CONFLICT, description: Conflict.FORMS_ALREADY_EXISTS })
     async createForm(@Body() dto: CreateDto, @RealIp() ipAddress: string) {
         if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") !== "true") throw new BadRequestException(BadRequest.FORMS_FORMS_DISABLED);
 
-        const form = await this.formsService.createForm(dto.username, dto.password, dto.reasonToPlay, ipAddress);
+        const form = await this.formsService.createForm(dto, ipAddress);
 
         if (!form) throw new FormAlreadyExistsException();
 
-        return { form: new CreateFormEntity(form.toJSON()) };
+        return new CreateFormEntity(form.toJSON());
     }
 
     @Public()
     @UseInterceptors(ClassSerializerInterceptor)
     @Get(":id")
+    @ApiResponse({ status: HttpStatus.OK, description: "Form found", type: GetFormEntity })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: BadRequest.FORMS_FORMS_DISABLED })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: NotFound.UNKNOWN_FORM })
     async getForm(@Param("id") id: string) {
         if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") !== "true") throw new BadRequestException(BadRequest.FORMS_FORMS_DISABLED);
 
@@ -39,6 +46,6 @@ export class FormsController {
 
         if (!form) throw new FormNotFoundException();
 
-        return { form: new GetFormEntity(form.toJSON()) };
+        return new GetFormEntity(form.toJSON());
     }
 }

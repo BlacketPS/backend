@@ -14,15 +14,16 @@ import { UsersModule } from "./users/users.module";
 import { FormsModule } from "./forms/forms.module";
 import { StaffModule } from "./staff/staff.module";
 import { ChatModule } from "./chat/chat.module";
+import { QuestsModule } from "./quests/quests.module";
+import { BlooksModule } from "./blooks/blooks.module";
+import { MarketModule } from "./market/market.module";
+import { SettingsModule } from "./settings/settings.module";
 import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 
 import { AuthGuard } from "./core/guard";
 
 import { PermissionsService } from "./permissions/permissions.service";
 import { IsAccessCode } from "./core/validate/";
-import { QuestsModule } from "./quests/quests.module";
-import { MarketModule } from "./market/market.module";
-
 
 @Module({
     imports: [
@@ -40,9 +41,11 @@ import { MarketModule } from "./market/market.module";
         FormsModule,
         StaffModule,
         ChatModule,
-        LeaderboardModule,
         QuestsModule,
-        MarketModule
+        BlooksModule,
+        MarketModule,
+        SettingsModule,
+        LeaderboardModule
     ],
     controllers: [],
     providers: [
