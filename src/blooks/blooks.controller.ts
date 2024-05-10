@@ -1,6 +1,6 @@
 import { Body, ClassSerializerInterceptor, Controller, HttpCode, HttpStatus, Put, UseInterceptors } from "@nestjs/common";
 import { BlooksService } from "./blooks.service";
-import { GetCurrentUserId } from "src/core/decorator";
+import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
 import { SellBlookDto } from "blacket-types";
 
@@ -14,7 +14,7 @@ export class BlooksController {
     @UseInterceptors(ClassSerializerInterceptor)
     @Put("sell-blooks")
     @HttpCode(HttpStatus.NO_CONTENT)
-    sellBlooks(@GetCurrentUserId() userId: string, @Body() dto: SellBlookDto) {
+    sellBlooks(@GetCurrentUser() userId: string, @Body() dto: SellBlookDto) {
         return this.blooksService.sellBlooks(userId, dto);
     }
 }

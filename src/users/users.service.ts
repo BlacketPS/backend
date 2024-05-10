@@ -1,11 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { Repository } from "sequelize-typescript";
 import { SequelizeService } from "src/sequelize/sequelize.service";
+import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { Op, type Transaction } from "sequelize";
 import { User, UserTitle, UserBanner, UserBlook, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource } from "blacket-types";
 
 export interface GetUserSettings {
+    cacheUser?: boolean;
     includeBlooks?: boolean;
     includeTitles?: boolean;
     includeBanners?: boolean;
@@ -33,7 +35,8 @@ export class UsersService {
     private defaultFont: Font;
 
     constructor(
-        private sequelizeService: SequelizeService
+        private sequelizeService: SequelizeService,
+        private redisService: RedisService
     ) { }
 
     async onModuleInit() {
@@ -55,7 +58,23 @@ export class UsersService {
         this.defaultFont = await this.fontRepo.findOne({ where: { id: 1 } });
     }
 
-    async getUser(user: string, settings: GetUserSettings = {}) {
+    async getUser(user: string, settings: GetUserSettings = {
+        cacheUser: true
+    }) {
+        if (settings.cacheUser) {
+            const cachedUser = await this.redisService.get(`blacket-userCached:${user.toLowerCase()}`);
+
+            if (cachedUser) return JSON.parse(cachedUser);
+        }
+
+        const include = [];
+
+        if (settings.includeBanners) include.push({ model: this.userBannerRepo, as: "banners", attributes: { exclude: [this.userBannerRepo.primaryKeyAttribute] } });
+        if (settings.includeBlooks) include.push({ model: this.userBlookRepo, as: "blooks", attributes: UserBlook["blookId"] });
+        if (settings.includeStatistics) include.push({ model: this.userStatisticRepo, as: "statistics", attributes: { exclude: [this.userStatisticRepo.primaryKeyAttribute] } });
+        if (settings.includeTitles) include.push({ model: this.userTitleRepo, as: "titles", attributes: { exclude: [this.userTitleRepo.primaryKeyAttribute] } });
+        if (settings.includeSettings) include.push({ model: this.userSettingRepo, as: "settings", attributes: { exclude: [this.userSettingRepo.primaryKeyAttribute] } });
+
         const userData: User = await this.userRepo.findOne({
             where: this.sequelizeService.or({ id: user }, { username: { [Op.like]: user } }),
             attributes: {
@@ -71,15 +90,16 @@ export class UsersService {
                 { model: this.resourceRepo, as: "banner" },
                 { model: this.resourceRepo, as: "customAvatar" },
                 { model: this.resourceRepo, as: "customBanner" },
-                { model: this.userTitleRepo, as: "titles", attributes: { exclude: [this.userTitleRepo.primaryKeyAttribute] } },
-                { model: this.userBannerRepo, as: "banners", attributes: { exclude: [this.userBannerRepo.primaryKeyAttribute] } },
-                { model: this.userBlookRepo, as: "blooks", attributes: UserBlook["blookId"], where: { sold: false }, required: false },
-                { model: this.userStatisticRepo, as: "statistics", attributes: { exclude: [this.userStatisticRepo.primaryKeyAttribute] } },
-                { model: this.userSettingRepo, as: "settings", attributes: { exclude: [this.userSettingRepo.primaryKeyAttribute] } }
+                ...include
             ]
         });
 
         if (!userData) return null;
+
+        if (settings.cacheUser) {
+            await this.redisService.setex(`blacket-userCached:${userData.id}`, 10, JSON.stringify(userData));
+            await this.redisService.setex(`blacket-userCached:${userData.username.toLowerCase()}`, 10, JSON.stringify(userData));
+        }
 
         return userData;
     }

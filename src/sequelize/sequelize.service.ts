@@ -68,6 +68,10 @@ export class SequelizeService extends Sequelize {
             await this.redisService.set(`blacket-session:${session.userId}`, JSON.stringify(session));
         }
 
+        for (const room of await this.roomRepo.findAll() as Models.Room[]) {
+            await this.redisService.set(`blacket-room:${room.id}`, JSON.stringify(room));
+        }
+
         for (const blook of await this.blookRepo.findAll({
             include: [
                 { model: this.resourceRepo, as: "image" },

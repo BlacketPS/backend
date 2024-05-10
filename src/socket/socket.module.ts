@@ -12,6 +12,9 @@ import { ChatModule } from "src/chat/chat.module";
         SocketService,
         UsersService
     ],
-    exports: [SocketService]
+    exports: [
+        SocketGateway,
+        SocketService
+    ]
 })
 export class SocketModule { }

@@ -92,7 +92,7 @@ export class SettingsService {
     }
 
     async disableOtp(userId: User["id"], dto: DisableOtpDto): Promise<void> {
-        const user = await this.usersService.getUser(userId);
+        const user = await this.usersService.getUser(userId, { includeSettings: true });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
         if (!user.settings.otpSecret) throw new NotFoundException(NotFound.UNKNOWN_OTP);

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { GetCurrentUserId, Public, RealIp } from "src/core/decorator";
+import { GetCurrentUser, Public, RealIp } from "src/core/decorator";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthEntity, OtpAuthEntity, BadRequest, InternalServerError, NotFound } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
@@ -60,7 +60,7 @@ export class AuthController {
         description: "Successfully logged out"
     })
     @HttpCode(HttpStatus.RESET_CONTENT)
-    logout(@GetCurrentUserId() userId: string): Promise<void> {
+    logout(@GetCurrentUser() userId: string): Promise<void> {
         return this.authService.logout(userId);
     }
 
@@ -70,7 +70,7 @@ export class AuthController {
         description: "Successfully generated OTP secret",
         type: OtpAuthEntity
     })
-    async generateOtpSecret(@GetCurrentUserId() userId: string): Promise<OtpAuthEntity> {
+    async generateOtpSecret(@GetCurrentUser() userId: string): Promise<OtpAuthEntity> {
         const otpSecret = await this.authService.generateOtpSecret(userId);
 
         return new OtpAuthEntity({ otpSecret });

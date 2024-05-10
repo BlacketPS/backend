@@ -1,6 +1,6 @@
 import { Body, ClassSerializerInterceptor, Controller, Post, UseInterceptors } from "@nestjs/common";
 import { MarketService } from "./market.service";
-import { GetCurrentUserId } from "src/core/decorator";
+import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
 import { OpenPackBlookEntity, OpenPackDto } from "blacket-types";
 
@@ -11,7 +11,7 @@ export class MarketController {
 
     @UseInterceptors(ClassSerializerInterceptor)
     @Post("open-pack")
-    async openPack(@GetCurrentUserId() userId: string, @Body() dto: OpenPackDto) {
+    async openPack(@GetCurrentUser() userId: string, @Body() dto: OpenPackDto) {
         const blookId: number = await this.marketService.openPack(userId, dto);
 
         return new OpenPackBlookEntity({ id: blookId });

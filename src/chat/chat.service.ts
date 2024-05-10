@@ -1,20 +1,23 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
+import { RedisService } from "src/redis/redis.service";
+import { SocketGateway } from "src/socket/socket.gateway";
+import { Message, User, Room } from "src/models";
 import { Repository } from "sequelize-typescript";
-import { Message, Resource, User } from "blacket-types";
+import { safelyParseJSON } from "src/core/functions";
+
+import { CreateMessageDto, Forbidden, NotFound } from "blacket-types";
 
 @Injectable()
 export class ChatService {
     private messageRepo: Repository<Message>;
-    private userRepo: Repository<User>;
-    private resourceRepo: Repository<Resource>;
 
     constructor(
-        private readonly sequelizeService: SequelizeService
+        private readonly sequelizeService: SequelizeService,
+        private readonly redisService: RedisService,
+        private readonly socketGateway: SocketGateway
     ) {
         this.messageRepo = this.sequelizeService.getRepository(Message);
-        this.userRepo = this.sequelizeService.getRepository(User);
-        this.resourceRepo = this.sequelizeService.getRepository(Resource);
     }
 
     async getMessages(room: Message["roomId"] = 0, limit: number = 50) {
@@ -28,53 +31,10 @@ export class ChatService {
             limit: limit,
             include: [
                 {
-                    model: this.userRepo,
-                    as: "author",
-                    attributes: [
-                        "id",
-                        "username",
-                        "titleId",
-                        "color"
-                    ],
-                    include: [
-                        {
-                            model: this.resourceRepo,
-                            as: "avatar"
-                        },
-                        {
-                            model: this.resourceRepo,
-                            as: "customAvatar"
-                        }
-                    ]
-                },
-                {
                     model: this.messageRepo,
                     as: "replyingTo",
-                    include: [
-                        {
-                            model: this.userRepo,
-                            as: "author",
-                            attributes: [
-                                "id",
-                                "username",
-                                "titleId",
-                                "color"
-                            ],
-                            include: [
-                                {
-                                    model: this.resourceRepo,
-                                    as: "avatar"
-                                },
-                                {
-                                    model: this.resourceRepo,
-                                    as: "customAvatar"
-                                }
-                            ]
-                        }
-                    ],
                     attributes: {
                         exclude: [
-                            "authorId",
                             "roomId",
                             "replyingToId"
                         ]
@@ -83,7 +43,6 @@ export class ChatService {
             ],
             attributes: {
                 exclude: [
-                    "authorId",
                     "roomId",
                     "replyingToId"
                 ]
@@ -92,5 +51,35 @@ export class ChatService {
                 roomId: room
             }
         });
+    }
+
+    async createMessage(userId: User["id"], roomId: Message["roomId"], dto: CreateMessageDto): Promise<Message> {
+        const room: Room = safelyParseJSON(await this.redisService.get(`blacket-room:${roomId}`));
+        if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
+
+        if (!room.public) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+
+        const mentions = Array.from(new Set(dto.content.match(/<@(\d+)>/g))).map((mention) => mention.replace(/<|@|>/g, ""));
+
+        const message = await this.messageRepo.create({
+            authorId: userId,
+            roomId: roomId,
+            content: dto.content,
+            replyingToId: dto.replyingTo,
+            mentions
+        });
+
+        this.socketGateway.server.emit("chat-messages-create", message);
+
+        return message;
+    }
+
+    async startTyping(userId: User["id"], roomId: Message["roomId"]): Promise<void> {
+        const room: Room = safelyParseJSON(await this.redisService.get(`blacket-room:${roomId}`));
+        if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
+
+        if (!room.public) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+
+        this.socketGateway.server.emit("chat-typing-started", { userId, roomId });
     }
 }

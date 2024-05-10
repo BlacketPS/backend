@@ -4,8 +4,7 @@ import { User } from ".";
 export enum HistoryType {
     UNKNOWN = 1,
     TRADE = 2,
-    AUCTION = 3,
-    BAZAAR = 4
+    AUCTION = 3
 }
 
 @Table({ tableName: "history" })
