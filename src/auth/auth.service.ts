@@ -71,7 +71,7 @@ export class AuthService {
     async generateOtpSecret(userId: User["id"]): Promise<string> {
         if (await this.redisService.exists(`blacket-tempOtp:${userId}`)) return await this.redisService.get(`blacket-tempOtp:${userId}`);
 
-        const user: User = await this.usersService.getUser(userId);
+        const user: User = await this.usersService.getUser(userId, { includeSettings: true });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
         if (user.settings.otpSecret) throw new BadRequestException(BadRequest.AUTH_OTP_ALREADY_ENABLED);
