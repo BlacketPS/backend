@@ -76,7 +76,7 @@ export class UsersService {
         if (settings.includeSettings) include.push({ model: this.userSettingRepo, as: "settings", attributes: { exclude: [this.userSettingRepo.primaryKeyAttribute] } });
 
         const userData: User = await this.userRepo.findOne({
-            where: this.sequelizeService.or({ id: user }, { username: { [Op.like]: user } }),
+            where: this.sequelizeService.or({ id: user }, { username: { [Op.iLike]: user } }),
             attributes: {
                 exclude: [
                     "avatarId",

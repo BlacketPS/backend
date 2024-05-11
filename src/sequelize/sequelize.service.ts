@@ -58,6 +58,7 @@ export class SequelizeService extends Sequelize {
                 await this.seedDatabase();
             } else {
                 // await this.sync({ alter: true });
+                // await this.seedDatabase();
             }
         }
 
@@ -121,9 +122,9 @@ export class SequelizeService extends Sequelize {
 
         const transaction = await this.transaction();
 
-        await this.resourceRepo.create({ path: "/content/blooks/Default.png" }, { transaction }); // resource id 1
+        /* await this.resourceRepo.create({ path: "/content/blooks/Default.png" }, { transaction }); // resource id 1
         await this.resourceRepo.create({ path: "/content/banners/Default.png" }, { transaction }); // resource id 2
-        await this.resourceRepo.create({ path: "/content/fonts/Nunito.ttf" }, { transaction }); // resource id 3
+        await this.resourceRepo.create({ path: "/content/fonts/Nunito Bold.ttf" }, { transaction }); // resource id 3
         await this.resourceRepo.create({ path: "/content/fonts/Titan One.ttf" }, { transaction }); // resource id 4
 
         await this.roomRepo.create({ id: 0, name: "global", public: true }, { transaction });
@@ -134,13 +135,11 @@ export class SequelizeService extends Sequelize {
 
         await this.titleRepo.create({ name: "Common" }, { transaction });
 
-        await this.packRepo.create({ name: "default", price: 1, imageId: 1, innerColor: "#ffffff", outerColor: "#ffffff" }, { transaction });
-
-        await this.blookRepo.create({ name: "Default", chance: 1, price: 0, rarityId: 1, imageId: 1, backgroundId: 1, priority: 0, packId: 1 }, { transaction });
+        await this.blookRepo.create({ name: "Default", chance: 1, price: 0, rarityId: 1, imageId: 1, backgroundId: 1, priority: 0 }, { transaction });
 
         await this.fontRepo.create({ name: "Nunito", resourceId: 3 }, { transaction });
         await this.fontRepo.create({ name: "Titan One", resourceId: 4 }, { transaction });
 
-        await transaction.commit().catch(async (error) => this.blacketLogger.error(error, "Database", "Sequelize"));
+        await transaction.commit().catch(async (error) => this.blacketLogger.error(error, "Database", "Sequelize")); */
     }
 }
