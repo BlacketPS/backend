@@ -27,3 +27,5 @@ export { default as UserRelationship } from "./userRelationship.model";
 export { default as UserSetting } from "./userSetting.model";
 export { default as UserStatistic } from "./userStatistic.model";
 export { default as UserTitle } from "./userTitle.model";
+export { default as UserOauth } from "./userOauth.model";
+export { default as UserDiscord } from "./userDiscord.model";

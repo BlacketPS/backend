@@ -1,10 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, OnApplicationBootstrap } from "@nestjs/common";
 import { Repository } from "sequelize-typescript";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { Op, type Transaction } from "sequelize";
-import { User, UserTitle, UserBanner, UserBlook, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource } from "blacket-types";
+import { User, UserTitle, UserBanner, UserBlook, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource, IAccessToken, IDiscordUser, InternalServerError } from "blacket-types";
+import { UserDiscord, UserOauth } from "src/models";
+import { OAuthType } from "src/models/userOauth.model";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -16,8 +18,10 @@ export interface GetUserSettings {
 }
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnApplicationBootstrap {
     private userRepo: Repository<User>;
+    private userOauthRepo: Repository<UserOauth>;
+    private userDiscordRepo: Repository<UserDiscord>;
     private userTitleRepo: Repository<UserTitle>;
     private userBannerRepo: Repository<UserBanner>;
     private userBlookRepo: Repository<UserBlook>;
@@ -39,8 +43,10 @@ export class UsersService {
         private redisService: RedisService
     ) { }
 
-    async onModuleInit() {
+    async onApplicationBootstrap() {
         this.userRepo = this.sequelizeService.getRepository(User);
+        this.userOauthRepo = this.sequelizeService.getRepository(UserOauth);
+        this.userDiscordRepo = this.sequelizeService.getRepository(UserDiscord);
         this.userTitleRepo = this.sequelizeService.getRepository(UserTitle);
         this.userBannerRepo = this.sequelizeService.getRepository(UserBanner);
         this.userBlookRepo = this.sequelizeService.getRepository(UserBlook);
@@ -134,6 +140,43 @@ export class UsersService {
 
         await this.userIpAddressRepo.increment("uses", { where: { id: userIpAddress.id }, transaction });
         await this.userRepo.update({ ipAddress: ip }, { where: { id: user.id }, transaction });
+    }
+
+    async linkDiscordOAuth(userId: string, accessTokenResponse: IAccessToken, discordUser: IDiscordUser): Promise<void> {
+        const transaction: Transaction = await this.sequelizeService.transaction();
+
+        await this.userOauthRepo.create({
+            userId,
+            accessToken: accessTokenResponse.access_token,
+            refreshToken: accessTokenResponse.refresh_token,
+            tokenType: accessTokenResponse.token_type,
+            scope: accessTokenResponse.scope,
+            expiresAt: new Date(Date.now() + accessTokenResponse.expires_in * 1000),
+            type: OAuthType.DISCORD,
+            createdAt: new Date()
+        }, { transaction });
+
+        await this.userDiscordRepo.create({
+            userId,
+            discordId: discordUser.id,
+            username: discordUser.username,
+            discriminator: discordUser.discriminator,
+            global_name: discordUser.global_name,
+            avatar: discordUser.avatar,
+            mfa_enabled: discordUser.mfa_enabled,
+            banner: discordUser.banner,
+            accent_color: discordUser.accent_color,
+            locale: discordUser.locale,
+            flags: discordUser.flags,
+            premium_type: discordUser.premium_type,
+            public_flags: discordUser.public_flags,
+            avatar_decoration: discordUser.avatar_decoration
+        }, { transaction });
+
+        await transaction.commit().catch(() => {
+            transaction.rollback();
+            throw new InternalServerErrorException(InternalServerError.DEFAULT);
+        });
     }
 
     async addTokens(userId: User["id"], amount: number, transaction?: Transaction): Promise<void> {

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "src/redis/redis.service";
 import { Repository, Sequelize } from "sequelize-typescript";
@@ -7,7 +7,7 @@ import * as Models from "src/models";
 import { AnimationType } from "blacket-types/dist/models/rarity.model";
 
 @Injectable()
-export class SequelizeService extends Sequelize {
+export class SequelizeService extends Sequelize implements OnModuleInit {
     private sessionRepo: Repository<Models.Session>;
     private resourceRepo: Repository<Models.Resource>;
     private roomRepo: Repository<Models.Room>;
@@ -122,7 +122,7 @@ export class SequelizeService extends Sequelize {
 
         const transaction = await this.transaction();
 
-        /* await this.resourceRepo.create({ path: "/content/blooks/Default.png" }, { transaction }); // resource id 1
+        await this.resourceRepo.create({ path: "/content/blooks/Default.png" }, { transaction }); // resource id 1
         await this.resourceRepo.create({ path: "/content/banners/Default.png" }, { transaction }); // resource id 2
         await this.resourceRepo.create({ path: "/content/fonts/Nunito Bold.ttf" }, { transaction }); // resource id 3
         await this.resourceRepo.create({ path: "/content/fonts/Titan One.ttf" }, { transaction }); // resource id 4
@@ -140,6 +140,6 @@ export class SequelizeService extends Sequelize {
         await this.fontRepo.create({ name: "Nunito", resourceId: 3 }, { transaction });
         await this.fontRepo.create({ name: "Titan One", resourceId: 4 }, { transaction });
 
-        await transaction.commit().catch(async (error) => this.blacketLogger.error(error, "Database", "Sequelize")); */
+        await transaction.commit().catch(async (error) => this.blacketLogger.error(error, "Database", "Sequelize"));
     }
 }

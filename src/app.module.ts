@@ -24,6 +24,7 @@ import { AuthGuard } from "./core/guard";
 
 import { PermissionsService } from "./permissions/permissions.service";
 import { IsAccessCode } from "./core/validate/";
+import { DiscordModule } from "./discord/discord.module";
 
 @Module({
     imports: [
@@ -45,7 +46,8 @@ import { IsAccessCode } from "./core/validate/";
         BlooksModule,
         MarketModule,
         SettingsModule,
-        LeaderboardModule
+        LeaderboardModule,
+        DiscordModule
     ],
     controllers: [],
     providers: [

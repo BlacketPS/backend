@@ -1,5 +1,7 @@
 import { Column, Model, Table, DataType, HasOne, HasMany, ForeignKey, BelongsTo } from "sequelize-typescript";
 import { History, Resource, Session, UserBlook, UserGroup, UserPunishment, UserRelationship, UserSetting, UserStatistic, UserIpAddress, Auction, Title, UserTitle, UserBanner, Font, Message, Form } from ".";
+import UserOauth from "./userOauth.model";
+import UserDiscord from "./userDiscord.model";
 
 @Table({ tableName: "user" })
 export default class User extends Model<User> {
@@ -92,8 +94,14 @@ export default class User extends Model<User> {
     @HasOne(() => UserSetting)
     settings: UserSetting;
 
+    @HasOne(() => UserDiscord)
+    discord?: UserDiscord;
+
     @HasMany(() => UserGroup)
     groups?: UserGroup[];
+
+    @HasMany(() => UserOauth)
+    oauth?: UserOauth[];
 
     @HasMany(() => UserPunishment, "userId")
     punishments?: UserPunishment[];
