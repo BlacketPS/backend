@@ -2,7 +2,15 @@ import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Put, Post }
 import { ApiTags } from "@nestjs/swagger";
 import { StaffService } from "./staff.service";
 import { GetCurrentUser } from "src/core/decorator";
-import { StaffAdminCreateResourceDto, StaffAdminUpdateBlookDto } from "blacket-types";
+import {
+    StaffAdminCreateResourceDto,
+    StaffAdminCreateBlookDto,
+    StaffAdminUpdateBlookDto,
+    StaffAdminCreatePackDto,
+    StaffAdminUpdatePackDto,
+    StaffAdminUpdatePackPrioritiesDto,
+    StaffAdminUpdateBlookPrioritiesDto
+} from "blacket-types";
 
 @ApiTags("staff")
 @Controller("staff")
@@ -25,14 +33,53 @@ export class StaffController {
         return await this.staffService.deleteResource(userId, resourceId);
     }
 
+    @Get("admin/rarities")
+    async getRarities() {
+        return await this.staffService.getRarities();
+    }
+
     @Get("admin/packs")
     async getPacks() {
         return await this.staffService.getPacks();
     }
 
+    @Post("admin/packs")
+    async createPack(@GetCurrentUser() userId: string, @Body() dto: StaffAdminCreatePackDto) {
+        return await this.staffService.createPack(userId, dto);
+    }
+
+    @Put("admin/packs/update-priorities")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updatePackPriorities(@GetCurrentUser() userId: string, @Body() dto: StaffAdminUpdatePackPrioritiesDto) {
+        return await this.staffService.updatePackPriorities(userId, dto);
+    }
+
+    @Put("admin/packs/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updatePack(@GetCurrentUser() userId: string, @Param("id") packId: number, @Body() dto: StaffAdminUpdatePackDto) {
+        return await this.staffService.updatePack(userId, packId, dto);
+    }
+
+    @Delete("admin/packs/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deletePack(@GetCurrentUser() userId: string, @Param("id") packId: number) {
+        return await this.staffService.deletePack(userId, packId);
+    }
+
     @Get("admin/blooks")
     async getBlooks() {
         return await this.staffService.getBlooks();
+    }
+
+    @Post("admin/blooks")
+    async createBlook(@GetCurrentUser() userId: string, @Body() dto: StaffAdminCreateBlookDto) {
+        return await this.staffService.createBlook(userId, dto);
+    }
+
+    @Put("admin/blooks/update-priorities")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateBlookPriorities(@GetCurrentUser() userId: string, @Body() dto: StaffAdminUpdateBlookPrioritiesDto) {
+        return await this.staffService.updateBlookPriorities(userId, dto);
     }
 
     @Put("admin/blooks/:id")
