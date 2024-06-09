@@ -10,7 +10,8 @@ import { OAuthType } from "src/models/userOauth.model";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
-    includeBlooks?: boolean;
+    includeBlooksCurrent?: boolean;
+    includeBlooksAll?: boolean;
     includeTitles?: boolean;
     includeBanners?: boolean;
     includeStatistics?: boolean;
@@ -76,7 +77,8 @@ export class UsersService implements OnApplicationBootstrap {
         const include = [];
 
         if (settings.includeBanners) include.push({ model: this.userBannerRepo, as: "banners", attributes: { exclude: [this.userBannerRepo.primaryKeyAttribute] } });
-        if (settings.includeBlooks) include.push({ model: this.userBlookRepo, as: "blooks", attributes: UserBlook["blookId"] });
+        if (settings.includeBlooksCurrent) include.push({ model: this.userBlookRepo, as: "blooks", attributes: ["blookId"], where: { sold: false }, required: false });
+        if (settings.includeBlooksAll) include.push({ model: this.userBlookRepo, as: "blooks", attributes: ["blookId"], required: false });
         if (settings.includeStatistics) include.push({ model: this.userStatisticRepo, as: "statistics", attributes: { exclude: [this.userStatisticRepo.primaryKeyAttribute] } });
         if (settings.includeTitles) include.push({ model: this.userTitleRepo, as: "titles", attributes: { exclude: [this.userTitleRepo.primaryKeyAttribute] } });
         if (settings.includeSettings) include.push({ model: this.userSettingRepo, as: "settings", attributes: { exclude: [this.userSettingRepo.primaryKeyAttribute] } });
@@ -85,15 +87,11 @@ export class UsersService implements OnApplicationBootstrap {
             where: this.sequelizeService.or({ id: user }, { username: { [Op.iLike]: user } }),
             attributes: {
                 exclude: [
-                    "avatarId",
                     "customAvatarId",
-                    "bannerId",
                     "customBannerId"
                 ]
             },
             include: [
-                { model: this.resourceRepo, as: "avatar" },
-                { model: this.resourceRepo, as: "banner" },
                 { model: this.resourceRepo, as: "customAvatar" },
                 { model: this.resourceRepo, as: "customBanner" },
                 ...include

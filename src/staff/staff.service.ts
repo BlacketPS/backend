@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { Resource, Rarity, Pack, Blook } from "src/models";
@@ -10,9 +10,14 @@ import {
     StaffAdminCreatePackDto,
     StaffAdminUpdatePackDto,
     StaffAdminUpdatePackPrioritiesDto,
-    StaffAdminUpdateBlookPrioritiesDto
+    StaffAdminUpdateBlookPrioritiesDto,
+    StaffAdminCreateRarityDto,
+    StaffAdminUpdateRarityDto,
+    Conflict,
+    BadRequest,
+    StaffAdminUpdateResourceDto
 } from "blacket-types";
-import { Op, literal } from "sequelize";
+import { ForeignKeyConstraintError } from "sequelize";
 
 @Injectable()
 export class StaffService {
@@ -31,28 +36,52 @@ export class StaffService {
         this.blookRepo = this.sequelizeService.getRepository(Blook);
     }
 
-    async getResources() {
-        return await this.resourceRepo.findAll();
+    getResources() {
+        return this.resourceRepo.findAll();
     }
 
-    async getRarities() {
-        return await this.rarityRepo.findAll();
+    getRarities() {
+        return this.rarityRepo.findAll();
     }
 
-    async getPacks() {
-        return await this.packRepo.findAll({ order: [["priority", "ASC"]] });
+    getPacks() {
+        return this.packRepo.findAll({ order: [["priority", "ASC"]] });
     }
 
-    async getBlooks() {
-        return await this.blookRepo.findAll({ order: [["priority", "ASC"]] });
+    getBlooks() {
+        return this.blookRepo.findAll({ order: [["priority", "ASC"]] });
     }
 
-    async createResource(userId: string, dto: StaffAdminCreateResourceDto) {
-        return await this.resourceRepo.create(dto);
+    createResource(userId: string, dto: StaffAdminCreateResourceDto) {
+        return this.resourceRepo.create(dto);
     }
 
-    async deleteResource(userId: string, resourceId: number) {
-        return await this.resourceRepo.destroy({ where: { id: resourceId } });
+    updateResource(userId: string, resourceId: number, dto: StaffAdminUpdateResourceDto) {
+        return this.resourceRepo.update(dto, { where: { id: resourceId } });
+    }
+
+    deleteResource(userId: string, resourceId: number) {
+        return this.resourceRepo.destroy({ where: { id: resourceId } })
+            .catch((error) => {
+                if (error instanceof ForeignKeyConstraintError) throw new ConflictException(Conflict.STAFF_ADMIN_RESOURCE_IN_USE);
+                else throw error;
+            });
+    }
+
+    createRarity(userId: string, dto: StaffAdminCreateRarityDto) {
+        return this.rarityRepo.create(dto);
+    }
+
+    updateRarity(userId: string, rarityId: number, dto: StaffAdminUpdateRarityDto) {
+        return this.rarityRepo.update(dto, { where: { id: rarityId } });
+    }
+
+    deleteRarity(userId: string, rarityId: number) {
+        return this.rarityRepo.destroy({ where: { id: rarityId } })
+            .catch((error) => {
+                if (error instanceof ForeignKeyConstraintError) throw new ConflictException(Conflict.STAFF_ADMIN_RARITY_IN_USE);
+                else throw error;
+            });
     }
 
     async createPack(userId: string, dto: StaffAdminCreatePackDto) {
@@ -62,7 +91,7 @@ export class StaffService {
             order: [["priority", "DESC"]]
         });
 
-        return await this.packRepo.create({
+        return this.packRepo.create({
             ...dto,
             priority: lastPack ? lastPack.priority + 1 : 1
         });
@@ -72,7 +101,7 @@ export class StaffService {
         await this.packRepo.findByPk(packId);
         await this.resourceRepo.findByPk(dto.imageId);
 
-        return await this.packRepo.update(dto, { where: { id: packId } });
+        return this.packRepo.update(dto, { where: { id: packId } });
     }
 
     async updatePackPriorities(userId: string, dto: StaffAdminUpdatePackPrioritiesDto) {
@@ -81,7 +110,7 @@ export class StaffService {
         const transaction = await this.sequelizeService.transaction();
 
         for (const pack of packs) {
-            if (!dto.packMap.find((packMap) => packMap.packId === pack.id)) throw new Error(`Pack with id ${pack.id} is not in the packMap`);
+            if (!dto.packMap.find((packMap) => packMap.packId === pack.id)) throw new BadRequestException(BadRequest.STAFF_ADMIN_INVALID_PRIORITIES);
 
             const newPriority = dto.packMap.find((packMap) => packMap.packId === pack.id).priority;
             await pack.update({ priority: newPriority }, { transaction });
@@ -90,8 +119,8 @@ export class StaffService {
         await transaction.commit();
     }
 
-    async deletePack(userId: string, packId: number) {
-        return await this.packRepo.destroy({ where: { id: packId } });
+    deletePack(userId: string, packId: number) {
+        return this.packRepo.destroy({ where: { id: packId } });
     }
 
     async createBlook(userId: string, dto: StaffAdminCreateBlookDto) {
@@ -126,7 +155,7 @@ export class StaffService {
         const transaction = await this.sequelizeService.transaction();
 
         for (const blookMap of dto.blookMap) {
-            if (!blooks.find((blook) => blook.id === blookMap.blookId)) throw new Error(`Blook with id ${blookMap.blookId} is not in the blooks`);
+            if (!blooks.find((blook) => blook.id === blookMap.blookId)) throw new BadRequestException(BadRequest.STAFF_ADMIN_INVALID_PRIORITIES);
 
             const blook = blooks.find((blook) => blook.id === blookMap.blookId);
             await blook.update({ priority: blookMap.priority }, { transaction });
@@ -135,7 +164,7 @@ export class StaffService {
         await transaction.commit();
     }
 
-    async deleteBlook(userId: string, blookId: number) {
-        return await this.blookRepo.destroy({ where: { id: blookId } });
+    deleteBlook(userId: string, blookId: number) {
+        return this.blookRepo.destroy({ where: { id: blookId } });
     }
 }

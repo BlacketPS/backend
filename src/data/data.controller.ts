@@ -63,4 +63,10 @@ export class DataController {
     getEmojis() {
         return this.dataService.getData(DataKey.EMOJI);
     }
+
+    @Public()
+    @Get("resources")
+    getResources() {
+        return this.dataService.getData(DataKey.RESOURCE);
+    }
 }

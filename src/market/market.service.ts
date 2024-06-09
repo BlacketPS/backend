@@ -26,8 +26,8 @@ export class MarketService {
     // as opening packs is one of the MOST intensive operations we do
     // i'll be probably optimising this a few times and doing performance measures
     async openPack(userId: string, dto: OpenPackDto) {
-        if (!this.redisService.exists(`blacket-pack:${dto.packId}`)) throw new NotFoundException("Pack not found");
         const pack: Pack = safelyParseJSON(await this.redisService.get(`blacket-pack:${dto.packId}`) as string) as Pack;
+        if (!pack) throw new NotFoundException("Pack not found");
 
         if (!pack.enabled) throw new NotFoundException("Pack not found");
 

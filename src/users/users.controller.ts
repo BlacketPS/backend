@@ -18,7 +18,7 @@ export class UsersController {
         const userData = await this.usersService.getUser(userId, {
             cacheUser: false,
             includeBanners: true,
-            includeBlooks: true,
+            includeBlooksCurrent: true,
             includeSettings: true,
             includeStatistics: true,
             includeTitles: true
@@ -33,7 +33,7 @@ export class UsersController {
     async getUser(@Param("user") user: string) {
         const userData = await this.usersService.getUser(user, {
             includeBanners: true,
-            includeBlooks: true,
+            includeBlooksCurrent: true,
             includeStatistics: true,
             includeTitles: true
         });

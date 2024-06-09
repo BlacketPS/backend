@@ -11,7 +11,8 @@ export enum DataKey {
     BANNER = "blacket-banner:*",
     BADGE = "blacket-badge:*",
     FONT = "blacket-font:*",
-    EMOJI = "blacket-emoji:*"
+    EMOJI = "blacket-emoji:*",
+    RESOURCE = "blacket-resource:*"
 }
 
 @Injectable()

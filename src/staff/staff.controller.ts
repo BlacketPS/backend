@@ -9,7 +9,9 @@ import {
     StaffAdminCreatePackDto,
     StaffAdminUpdatePackDto,
     StaffAdminUpdatePackPrioritiesDto,
-    StaffAdminUpdateBlookPrioritiesDto
+    StaffAdminUpdateBlookPrioritiesDto,
+    StaffAdminCreateRarityDto,
+    StaffAdminUpdateRarityDto
 } from "blacket-types";
 
 @ApiTags("staff")
@@ -27,6 +29,12 @@ export class StaffController {
         return await this.staffService.createResource(userId, dto);
     }
 
+    @Put("admin/resources/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateResource(@GetCurrentUser() userId: string, @Param("id") resourceId: number, @Body() dto: StaffAdminCreateResourceDto) {
+        return await this.staffService.updateResource(userId, resourceId, dto);
+    }
+
     @Delete("admin/resources/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteResource(@GetCurrentUser() userId: string, @Param("id") resourceId: number) {
@@ -36,6 +44,23 @@ export class StaffController {
     @Get("admin/rarities")
     async getRarities() {
         return await this.staffService.getRarities();
+    }
+
+    @Post("admin/rarities")
+    async createRarity(@GetCurrentUser() userId: string, @Body() dto: StaffAdminCreateRarityDto) {
+        return await this.staffService.createRarity(userId, dto);
+    }
+
+    @Put("admin/rarities/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateRarity(@GetCurrentUser() userId: string, @Param("id") rarityId: number, @Body() dto: StaffAdminUpdateRarityDto) {
+        return await this.staffService.updateRarity(userId, rarityId, dto);
+    }
+
+    @Delete("admin/rarities/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteRarity(@GetCurrentUser() userId: string, @Param("id") rarityId: number) {
+        return await this.staffService.deleteRarity(userId, rarityId);
     }
 
     @Get("admin/packs")

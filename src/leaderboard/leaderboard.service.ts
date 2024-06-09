@@ -25,9 +25,8 @@ export class LeaderboardService {
         } else {
             const tokens = (await this.userRepo.findAll({
                 order: [["tokens", "DESC"]],
-                attributes: ["id", "username", "titleId", "color", "tokens"],
+                attributes: ["id", "username", "titleId", "avatarId", "color", "tokens"],
                 include: [
-                    { model: this.resourceRepo, as: "avatar" },
                     { model: this.resourceRepo, as: "customAvatar" }
                 ],
                 limit: 10
@@ -35,9 +34,8 @@ export class LeaderboardService {
 
             const experience = (await this.userRepo.findAll({
                 order: [["experience", "DESC"]],
-                attributes: ["id", "username", "titleId", "color", "experience"],
+                attributes: ["id", "username", "titleId", "avatarId", "color", "experience"],
                 include: [
-                    { model: this.resourceRepo, as: "avatar" },
                     { model: this.resourceRepo, as: "customAvatar" }
                 ],
                 limit: 10

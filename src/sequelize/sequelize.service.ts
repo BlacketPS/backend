@@ -63,57 +63,50 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
         }
 
         // all next for loops are for redis caching so we don't have to fetch it again to save on performance
-        await this.redisService.del("blacket-session:*");
+        await this.redisService.flushall();
 
         for (const session of await this.sessionRepo.findAll() as Models.Session[]) {
-            await this.redisService.set(`blacket-session:${session.userId}`, JSON.stringify(session));
+            this.redisService.set(`blacket-session:${session.userId}`, JSON.stringify(session));
+        }
+
+        for (const resource of await this.resourceRepo.findAll() as Models.Resource[]) {
+            this.redisService.set(`blacket-resource:${resource.id}`, JSON.stringify(resource));
         }
 
         for (const room of await this.roomRepo.findAll() as Models.Room[]) {
-            await this.redisService.set(`blacket-room:${room.id}`, JSON.stringify(room));
+            this.redisService.set(`blacket-room:${room.id}`, JSON.stringify(room));
         }
 
-        for (const blook of await this.blookRepo.findAll({
-            include: [
-                { model: this.resourceRepo, as: "image" },
-                { model: this.resourceRepo, as: "background" }
-            ],
-            attributes: {
-                exclude: [
-                    "imageId",
-                    "backgroundId"
-                ]
-            }
-        }) as Models.Blook[]) {
-            await this.redisService.set(`blacket-blook:${blook.id}`, JSON.stringify({ ...blook.dataValues, image: blook.imagePath, background: blook.backgroundPath }));
+        for (const blook of await this.blookRepo.findAll() as Models.Blook[]) {
+            this.redisService.set(`blacket-blook:${blook.id}`, JSON.stringify({ ...blook.dataValues }));
         }
 
         for (const rarity of await this.rarityRepo.findAll() as Models.Rarity[]) {
-            await this.redisService.set(`blacket-rarity:${rarity.id}`, JSON.stringify({ ...rarity.dataValues }));
+            this.redisService.set(`blacket-rarity:${rarity.id}`, JSON.stringify({ ...rarity.dataValues }));
         }
 
-        for (const pack of await this.packRepo.findAll({ include: [{ model: this.resourceRepo, as: "image" }], attributes: { exclude: ["imageId"] } }) as Models.Pack[]) {
-            await this.redisService.set(`blacket-pack:${pack.id}`, JSON.stringify({ ...pack.dataValues, image: pack.imagePath }));
+        for (const pack of await this.packRepo.findAll() as Models.Pack[]) {
+            this.redisService.set(`blacket-pack:${pack.id}`, JSON.stringify({ ...pack.dataValues }));
         }
 
-        for (const item of await this.itemRepo.findAll({ include: [{ model: this.resourceRepo, as: "image" }], attributes: { exclude: ["imageId"] } }) as Models.Item[]) {
-            await this.redisService.set(`blacket-item:${item.id}`, JSON.stringify({ ...item.dataValues, image: item.imagePath }));
+        for (const item of await this.itemRepo.findAll() as Models.Item[]) {
+            this.redisService.set(`blacket-item:${item.id}`, JSON.stringify({ ...item.dataValues }));
         }
 
         for (const title of await this.titleRepo.findAll() as Models.Title[]) {
-            await this.redisService.set(`blacket-title:${title.id}`, JSON.stringify(title));
+            this.redisService.set(`blacket-title:${title.id}`, JSON.stringify(title));
         }
 
-        for (const banner of await this.bannerRepo.findAll({ include: [{ model: this.resourceRepo, as: "image" }], attributes: { exclude: ["imageId"] } }) as Models.Banner[]) {
-            await this.redisService.set(`blacket-banner:${banner.id}`, JSON.stringify({ ...banner.dataValues, image: banner.imagePath }));
+        for (const banner of await this.bannerRepo.findAll() as Models.Banner[]) {
+            this.redisService.set(`blacket-banner:${banner.id}`, JSON.stringify({ ...banner.dataValues }));
         }
 
-        for (const font of await this.fontRepo.findAll({ include: [{ model: this.resourceRepo, as: "resource" }], attributes: { exclude: ["resourceId"] } }) as Models.Font[]) {
-            await this.redisService.set(`blacket-font:${font.id}`, JSON.stringify({ ...font.dataValues, resource: font.resourcePath }));
+        for (const font of await this.fontRepo.findAll() as Models.Font[]) {
+            this.redisService.set(`blacket-font:${font.id}`, JSON.stringify({ ...font.dataValues }));
         }
 
-        for (const emoji of await this.emojiRepo.findAll({ include: [{ model: this.resourceRepo, as: "image" }], attributes: { exclude: ["imageId"] } }) as Models.Emoji[]) {
-            await this.redisService.set(`blacket-emoji:${emoji.id}`, JSON.stringify({ ...emoji.dataValues, image: emoji.imagePath }));
+        for (const emoji of await this.emojiRepo.findAll() as Models.Emoji[]) {
+            this.redisService.set(`blacket-emoji:${emoji.id}`, JSON.stringify({ ...emoji.dataValues }));
         }
     }
 
