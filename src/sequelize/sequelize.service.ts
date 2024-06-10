@@ -115,10 +115,10 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
 
         const transaction = await this.transaction();
 
-        await this.resourceRepo.create({ path: "/content/blooks/Default.png" }, { transaction }); // resource id 1
-        await this.resourceRepo.create({ path: "/content/banners/Default.png" }, { transaction }); // resource id 2
-        await this.resourceRepo.create({ path: "/content/fonts/Nunito Bold.ttf" }, { transaction }); // resource id 3
-        await this.resourceRepo.create({ path: "/content/fonts/Titan One.ttf" }, { transaction }); // resource id 4
+        await this.resourceRepo.create({ path: "https://cdn.blacket.org/static/content/blooks/Default.png" }, { transaction }); // resource id 1
+        await this.resourceRepo.create({ path: "https://cdn.blacket.org/static/content/banners/Default.png" }, { transaction }); // resource id 2
+        await this.resourceRepo.create({ path: "https://cdn.blacket.org/static/content/fonts/Nunito Bold.ttf" }, { transaction }); // resource id 3
+        await this.resourceRepo.create({ path: "https://cdn.blacket.org/static/content/fonts/Titan One.ttf" }, { transaction }); // resource id 4
 
         await this.roomRepo.create({ id: 0, name: "global", public: true }, { transaction });
 
@@ -130,7 +130,7 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
 
         await this.blookRepo.create({ name: "Default", chance: 1, price: 0, rarityId: 1, imageId: 1, backgroundId: 1, priority: 0 }, { transaction });
 
-        await this.fontRepo.create({ name: "Nunito", resourceId: 3 }, { transaction });
+        await this.fontRepo.create({ name: "Nunito Bold", resourceId: 3 }, { transaction });
         await this.fontRepo.create({ name: "Titan One", resourceId: 4 }, { transaction });
 
         await transaction.commit().catch(async (error) => this.blacketLogger.error(error, "Database", "Sequelize"));

@@ -1,14 +1,12 @@
 import { UseGuards } from "@nestjs/common";
 import { OnGatewayConnection, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { Server as eiowsServer } from "eiows";
 import { SocketService } from "./socket.service";
 import { WsAuthGuard } from "src/core/guard";
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway(0, {
-    path: "/gateway",
-    wsEngine: eiowsServer
+    path: "/gateway"
 })
 export class SocketGateway implements OnGatewayConnection {
     constructor(
