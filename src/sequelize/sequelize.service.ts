@@ -3,8 +3,9 @@ import { ConfigService } from "@nestjs/config";
 import { RedisService } from "src/redis/redis.service";
 import { Repository, Sequelize } from "sequelize-typescript";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
-import * as Models from "src/models";
-import { AnimationType } from "blacket-types/dist/models/rarity.model";
+import * as Models from "blacket-types/dist/models";
+
+import { RarityAnimationType } from "blacket-types";
 
 @Injectable()
 export class SequelizeService extends Sequelize implements OnModuleInit {
@@ -33,7 +34,7 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
             host: configService.get<string>("SERVER_DATABASE_HOST"),
             port: configService.get<number>("SERVER_DATABASE_PORT"),
             repositoryMode: true,
-            models: Object.values(Models),
+            models: Object.values(Models).map((model) => typeof model === "function" ? model : null).filter((model) => model !== null),
             logging: configService.get<string>("NODE_ENV") === "production" ? false : (msg) => blacketLogger.debug(msg, "Database", "Sequelize")
         });
     }
@@ -122,7 +123,7 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
 
         await this.roomRepo.create({ id: 0, name: "global", public: true }, { transaction });
 
-        await this.rarityRepo.create({ name: "Common", color: "#ffffff", experience: 0, animationType: AnimationType.UNCOMMON }, { transaction });
+        await this.rarityRepo.create({ name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON }, { transaction });
 
         await this.bannerRepo.create({ name: "Default", imageId: 2 }, { transaction });
 

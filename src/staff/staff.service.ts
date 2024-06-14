@@ -1,10 +1,15 @@
 import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
-import { Resource, Rarity, Pack, Blook } from "src/models";
 import { Repository } from "sequelize-typescript";
 import {
+    Resource,
+    Rarity,
+    Pack,
+    Blook,
+    Item,
     StaffAdminCreateResourceDto,
+    StaffAdminUpdateResourceDto,
     StaffAdminCreateBlookDto,
     StaffAdminUpdateBlookDto,
     StaffAdminCreatePackDto,
@@ -14,8 +19,7 @@ import {
     StaffAdminCreateRarityDto,
     StaffAdminUpdateRarityDto,
     Conflict,
-    BadRequest,
-    StaffAdminUpdateResourceDto
+    BadRequest
 } from "blacket-types";
 import { ForeignKeyConstraintError } from "sequelize";
 
@@ -25,6 +29,7 @@ export class StaffService {
     private rarityRepo: Repository<Rarity>;
     private packRepo: Repository<Pack>;
     private blookRepo: Repository<Blook>;
+    private itemRepo: Repository<Item>;
 
     constructor(
         private readonly sequelizeService: SequelizeService,
@@ -34,6 +39,7 @@ export class StaffService {
         this.rarityRepo = this.sequelizeService.getRepository(Rarity);
         this.packRepo = this.sequelizeService.getRepository(Pack);
         this.blookRepo = this.sequelizeService.getRepository(Blook);
+        this.itemRepo = this.sequelizeService.getRepository(Item);
     }
 
     getResources() {
@@ -50,6 +56,10 @@ export class StaffService {
 
     getBlooks() {
         return this.blookRepo.findAll({ order: [["priority", "ASC"]] });
+    }
+
+    getItems() {
+        return this.itemRepo.findAll();
     }
 
     createResource(userId: string, dto: StaffAdminCreateResourceDto) {

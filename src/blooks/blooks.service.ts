@@ -2,11 +2,10 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
-import { Blook, User, UserBlook } from "src/models";
 import { Repository } from "sequelize-typescript";
 import { safelyParseJSON } from "src/core/functions";
 
-import { SellBlookDto, NotFound, Forbidden } from "blacket-types";
+import { Blook, User, UserBlook, SellBlookDto, NotFound, Forbidden } from "blacket-types";
 
 @Injectable()
 export class BlooksService {

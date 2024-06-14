@@ -2,11 +2,10 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { SocketGateway } from "src/socket/socket.gateway";
-import { Message, User, Room } from "src/models";
 import { Repository } from "sequelize-typescript";
 import { safelyParseJSON } from "src/core/functions";
 
-import { CreateMessageDto, Forbidden, NotFound } from "blacket-types";
+import { Message, User, Room, CreateMessageDto, Forbidden, NotFound } from "blacket-types";
 
 @Injectable()
 export class ChatService {

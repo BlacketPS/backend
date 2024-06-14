@@ -118,4 +118,9 @@ export class StaffController {
     async deleteBlook(@GetCurrentUser() userId: string, @Param("id") blookId: number) {
         return await this.staffService.deleteBlook(userId, blookId);
     }
+
+    @Get("admin/items")
+    async getItems() {
+        return await this.staffService.getItems();
+    }
 }

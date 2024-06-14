@@ -15,8 +15,8 @@ async function bootstrap() {
     app.enableCors({
         origin: [
             // to config, put your own domain here include http[s]://
-            "https://rewrite.blacket.org",
-            "https://admin.blacket.org",
+            "https://dev.blacket.org",
+            "https://admin-dev.blacket.org",
             "https://blacket.org"
         ],
         credentials: true
@@ -39,7 +39,7 @@ async function bootstrap() {
             description: "Auth token, no prefix"
         }, "Authorization")
         .build();
-        
+
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("api/docs", app, document);
 

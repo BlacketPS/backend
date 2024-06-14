@@ -2,8 +2,7 @@ import { HttpService } from "@nestjs/axios";
 import { Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { AxiosError } from "axios";
-import { IAccessToken, DiscordLinkDto, IDiscordUser, Unauthorized, InternalServerError } from "blacket-types";
-import { UserDiscord } from "src/models";
+import { UserDiscord, IAccessToken, DiscordLinkDto, IDiscordUser, Unauthorized, InternalServerError } from "blacket-types";
 import { UsersService } from "src/users/users.service";
 
 @Injectable()

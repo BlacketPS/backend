@@ -3,12 +3,11 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
-import { User, UserSetting } from "src/models";
 import { Repository } from "sequelize-typescript";
 import { hash, compare } from "bcrypt";
 import * as speakEasy from "speakeasy";
 
-import { ChangeSettingDto, ChangeUsernameDto, ChangePasswordDto, BadRequest, NotFound, AuthEntity, EnableOtpDto, DisableOtpDto } from "blacket-types";
+import { User, UserSetting, ChangeSettingDto, ChangeUsernameDto, ChangePasswordDto, BadRequest, NotFound, AuthEntity, EnableOtpDto, DisableOtpDto } from "blacket-types";
 
 @Injectable()
 export class SettingsService {

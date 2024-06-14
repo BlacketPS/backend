@@ -1,6 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { Pack, User, UserStatistic, UserBlook, OpenPackDto, Blook } from "blacket-types";
-import { BlookObtainMethod } from "blacket-types/dist/models/userBlook.model";
+import { Pack, User, UserStatistic, UserBlook, OpenPackDto, Blook, BlookObtainMethod } from "blacket-types";
 import { Repository } from "sequelize-typescript";
 import { RedisService } from "src/redis/redis.service";
 import { SequelizeService } from "src/sequelize/sequelize.service";
@@ -53,7 +52,7 @@ export class MarketService {
         // increment user's pack opened amount, and experience. insert blook to table. decrement user tokens
         const transaction = await this.sequelizeService.transaction();
 
-        await this.userRepo.update({ tokens: this.sequelizeService.literal(`tokens - ${pack.price}`) }, { returning: false, where: { id: userId }, transaction }, );
+        await this.userRepo.update({ tokens: this.sequelizeService.literal(`tokens - ${pack.price}`) }, { returning: false, where: { id: userId }, transaction },);
         await this.userStatisticRepo.update({ packsOpened: this.sequelizeService.literal("\"packsOpened\"+1") }, { returning: false, where: { id: userId }, transaction });
         await this.userBlookRepo.create({ userId, initalObtainerId: userId, blookId: blook.id, obtainedBy: BlookObtainMethod.PACK_OPEN }, { returning: false, transaction });
 
