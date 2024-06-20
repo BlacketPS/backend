@@ -19,7 +19,10 @@ import {
     StaffAdminCreateRarityDto,
     StaffAdminUpdateRarityDto,
     Conflict,
-    BadRequest
+    BadRequest,
+    StaffAdminCreateItemDto,
+    StaffAdminUpdateItemDto,
+    StaffAdminUpdateItemPrioritiesDto
 } from "blacket-types";
 import { ForeignKeyConstraintError } from "sequelize";
 
@@ -176,5 +179,47 @@ export class StaffService {
 
     deleteBlook(userId: string, blookId: number) {
         return this.blookRepo.destroy({ where: { id: blookId } });
+    }
+
+    async createItem(userId: string, dto: StaffAdminCreateItemDto) {
+        await this.rarityRepo.findByPk(dto.rarityId);
+        await this.resourceRepo.findByPk(dto.imageId);
+
+        const lastItem = await this.itemRepo.findOne({
+            order: [["priority", "DESC"]]
+        });
+
+        return this.itemRepo.create({
+            ...dto,
+            priority: lastItem ? lastItem.priority + 1 : 1
+        });
+    }
+
+    async updateItem(userId: string, itemId: number, dto: StaffAdminUpdateItemDto) {
+        await this.itemRepo.findByPk(itemId);
+
+        await this.rarityRepo.findByPk(dto.rarityId);
+        await this.resourceRepo.findByPk(dto.imageId);
+
+        return this.itemRepo.update(dto, { where: { id: itemId } });
+    }
+
+    async updateItemPriorities(userId: string, dto: StaffAdminUpdateItemPrioritiesDto) {
+        const items = await this.itemRepo.findAll();
+
+        const transaction = await this.sequelizeService.transaction();
+
+        for (const itemMap of dto.itemMap) {
+            if (!items.find((item) => item.id === itemMap.itemId)) throw new BadRequestException(BadRequest.STAFF_ADMIN_INVALID_PRIORITIES);
+
+            const item = items.find((item) => item.id === itemMap.itemId);
+            await item.update({ priority: itemMap.priority }, { transaction });
+        }
+
+        await transaction.commit();
+    }
+
+    deleteItem(userId: string, itemId: number) {
+        return this.itemRepo.destroy({ where: { id: itemId } });
     }
 }

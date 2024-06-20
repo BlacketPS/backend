@@ -11,7 +11,10 @@ import {
     StaffAdminUpdatePackPrioritiesDto,
     StaffAdminUpdateBlookPrioritiesDto,
     StaffAdminCreateRarityDto,
-    StaffAdminUpdateRarityDto
+    StaffAdminUpdateRarityDto,
+    StaffAdminCreateItemDto,
+    StaffAdminUpdateItemDto,
+    StaffAdminUpdateItemPrioritiesDto
 } from "blacket-types";
 
 @ApiTags("staff")
@@ -122,5 +125,28 @@ export class StaffController {
     @Get("admin/items")
     async getItems() {
         return await this.staffService.getItems();
+    }
+
+    @Post("admin/items")
+    async createItem(@GetCurrentUser() userId: string, @Body() dto: StaffAdminCreateItemDto) {
+        return await this.staffService.createItem(userId, dto);
+    }
+
+    @Put("admin/items/update-priorities")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateItemPriorities(@GetCurrentUser() userId: string, @Body() dto: StaffAdminUpdateItemPrioritiesDto) {
+        return await this.staffService.updateItemPriorities(userId, dto);
+    }
+
+    @Put("admin/items/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateItem(@GetCurrentUser() userId: string, @Param("id") itemId: number, @Body() dto: StaffAdminUpdateItemDto) {
+        return await this.staffService.updateItem(userId, itemId, dto);
+    }
+
+    @Delete("admin/items/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteItem(@GetCurrentUser() userId: string, @Param("id") itemId: number) {
+        return await this.staffService.deleteItem(userId, itemId);
     }
 }

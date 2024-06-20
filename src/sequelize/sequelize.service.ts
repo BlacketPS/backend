@@ -34,6 +34,7 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
             host: configService.get<string>("SERVER_DATABASE_HOST"),
             port: configService.get<number>("SERVER_DATABASE_PORT"),
             repositoryMode: true,
+            // remove all the other types we only want the actual models
             models: Object.values(Models).map((model) => typeof model === "function" ? model : null).filter((model) => model !== null),
             logging: configService.get<string>("NODE_ENV") === "production" ? false : (msg) => blacketLogger.debug(msg, "Database", "Sequelize")
         });
@@ -58,8 +59,7 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
                 await this.sync({ force: true });
                 await this.seedDatabase();
             } else {
-                // await this.sync({ alter: true });
-                // await this.seedDatabase();
+                await this.sync({ alter: true });
             }
         }
 
@@ -124,12 +124,20 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
         await this.roomRepo.create({ id: 0, name: "global", public: true }, { transaction });
 
         await this.rarityRepo.create({ name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON }, { transaction });
+        await this.rarityRepo.create({ name: "Uncommon", color: "#ffffff", experience: 5, animationType: RarityAnimationType.UNCOMMON }, { transaction });
+        await this.rarityRepo.create({ name: "Rare", color: "#ffffff", experience: 10, animationType: RarityAnimationType.RARE }, { transaction });
+        await this.rarityRepo.create({ name: "Epic", color: "#ffffff", experience: 25, animationType: RarityAnimationType.EPIC }, { transaction });
+        await this.rarityRepo.create({ name: "Legendary", color: "#ffffff", experience: 100, animationType: RarityAnimationType.LEGENDARY }, { transaction });
+        await this.rarityRepo.create({ name: "Chroma", color: "#ffffff", experience: 250, animationType: RarityAnimationType.CHROMA }, { transaction });
+        await this.rarityRepo.create({ name: "Unique", color: "#ffffff", experience: 500, animationType: RarityAnimationType.CHROMA }, { transaction });
+        await this.rarityRepo.create({ name: "Mystical", color: "#ffffff", experience: 500, animationType: RarityAnimationType.CHROMA }, { transaction });
+        await this.rarityRepo.create({ name: "Iridescent", color: "#ffffff", experience: 1000, animationType: RarityAnimationType.IRIDESCENT }, { transaction });
 
         await this.bannerRepo.create({ name: "Default", imageId: 2 }, { transaction });
 
         await this.titleRepo.create({ name: "Common" }, { transaction });
 
-        await this.blookRepo.create({ name: "Default", chance: 1, price: 0, rarityId: 1, imageId: 1, backgroundId: 1, priority: 0 }, { transaction });
+        await this.blookRepo.create({ name: "Default", chance: 0, price: 0, rarityId: 1, imageId: 1, backgroundId: 1, priority: 0 }, { transaction });
 
         await this.fontRepo.create({ name: "Nunito Bold", resourceId: 3 }, { transaction });
         await this.fontRepo.create({ name: "Titan One", resourceId: 4 }, { transaction });
