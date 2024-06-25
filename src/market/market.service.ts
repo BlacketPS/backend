@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { Pack, User, UserStatistic, UserBlook, OpenPackDto, Blook, BlookObtainMethod } from "blacket-types";
+import { Pack, User, UserStatistic, UserBlook, UserItem, OpenPackDto, Blook, BlookObtainMethod, ItemObtainMethod, NotFound, Forbidden } from "blacket-types";
 import { Repository } from "sequelize-typescript";
 import { RedisService } from "src/redis/redis.service";
 import { SequelizeService } from "src/sequelize/sequelize.service";
@@ -11,6 +11,7 @@ export class MarketService {
     private userRepo: Repository<User>;
     private userStatisticRepo: Repository<UserStatistic>;
     private userBlookRepo: Repository<UserBlook>;
+    private userItemRepo: Repository<UserItem>;
 
     constructor(
         private sequelizeService: SequelizeService,
@@ -20,28 +21,24 @@ export class MarketService {
         this.userRepo = this.sequelizeService.getRepository(User);
         this.userStatisticRepo = this.sequelizeService.getRepository(UserStatistic);
         this.userBlookRepo = this.sequelizeService.getRepository(UserBlook);
+        this.userItemRepo = this.sequelizeService.getRepository(UserItem);
     }
 
     // as opening packs is one of the MOST intensive operations we do
     // i'll be probably optimising this a few times and doing performance measures
     async openPack(userId: string, dto: OpenPackDto) {
         const pack: Pack = safelyParseJSON(await this.redisService.get(`blacket-pack:${dto.packId}`) as string) as Pack;
-        if (!pack) throw new NotFoundException("Pack not found");
+        if (!pack) throw new NotFoundException(NotFound.UNKNOWN_PACK);
 
-        if (!pack.enabled) throw new NotFoundException("Pack not found");
+        if (!pack.enabled) throw new NotFoundException(NotFound.UNKNOWN_PACK);
 
-        const user: User = await this.userRepo.findOne({
-            attributes: ["tokens"],
-            where: {
-                id: userId
-            }
-        });
+        const user = await this.userRepo.findOne({ attributes: ["tokens"], where: { id: userId } });
 
-        if (user.tokens < pack.price) throw new ForbiddenException("Not enough tokens");
+        if (user.tokens < pack.price) throw new ForbiddenException(Forbidden.PACKS_NOT_ENOUGH_TOKENS);
 
         const allBlooks = await this.dataService.getData(DataKey.BLOOK);
-        const blooks: Blook[] = allBlooks.filter((blook: Blook) => blook.packId === pack.id);
-        if (!blooks.length) throw new NotFoundException("No blooks in pack");
+        const blooks = allBlooks.filter((blook: Blook) => blook.packId === pack.id && (!blook.onlyOnDay || blook.onlyOnDay === new Date().getDay() + 1));
+        if (!blooks.length) throw new NotFoundException(NotFound.UNKNOWN_PACK);
 
         const totalChance: number = blooks.reduce((acc, curr) => acc + curr.chance, 0);
         let rand: number = Math.random() * totalChance;
@@ -59,5 +56,9 @@ export class MarketService {
         await transaction.commit();
 
         return blook.id;
+    }
+
+    async gimmeItem(userId: string) {
+        return await this.userItemRepo.create({ userId, itemId: 5, usesLeft: 6, initalObtainerId: userId, obtainedBy: ItemObtainMethod.ITEM_SHOP });
     }
 }

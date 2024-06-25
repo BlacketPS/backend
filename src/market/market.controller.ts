@@ -16,4 +16,10 @@ export class MarketController {
 
         return new OpenPackBlookEntity({ id: blookId });
     }
+
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Post("gimme-item")
+    gimmeItem(@GetCurrentUser() userId: string) {
+        return this.marketService.gimmeItem(userId);
+    }
 }

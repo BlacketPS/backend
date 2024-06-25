@@ -4,12 +4,14 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { Op, type Transaction } from "sequelize";
-import { OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource, IAccessToken, IDiscordUser, InternalServerError } from "blacket-types";
+import { OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource, IAccessToken, IDiscordUser, InternalServerError } from "blacket-types";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
     includeBlooksCurrent?: boolean;
     includeBlooksAll?: boolean;
+    includeItemsCurrent?: boolean;
+    includeItemsAll?: boolean;
     includeTitles?: boolean;
     includeBanners?: boolean;
     includeStatistics?: boolean;
@@ -24,6 +26,7 @@ export class UsersService implements OnApplicationBootstrap {
     private userTitleRepo: Repository<UserTitle>;
     private userBannerRepo: Repository<UserBanner>;
     private userBlookRepo: Repository<UserBlook>;
+    private userItemRepo: Repository<UserItem>;
     private userStatisticRepo: Repository<UserStatistic>;
     private userSettingRepo: Repository<UserSetting>;
     private ipAddressRepo: Repository<IpAddress>;
@@ -49,6 +52,7 @@ export class UsersService implements OnApplicationBootstrap {
         this.userTitleRepo = this.sequelizeService.getRepository(UserTitle);
         this.userBannerRepo = this.sequelizeService.getRepository(UserBanner);
         this.userBlookRepo = this.sequelizeService.getRepository(UserBlook);
+        this.userItemRepo = this.sequelizeService.getRepository(UserItem);
         this.userStatisticRepo = this.sequelizeService.getRepository(UserStatistic);
         this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
         this.ipAddressRepo = this.sequelizeService.getRepository(IpAddress);
@@ -77,6 +81,8 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeBanners) include.push({ model: this.userBannerRepo, as: "banners", attributes: { exclude: [this.userBannerRepo.primaryKeyAttribute] } });
         if (settings.includeBlooksCurrent) include.push({ model: this.userBlookRepo, as: "blooks", attributes: ["blookId"], where: { sold: false }, required: false });
         if (settings.includeBlooksAll) include.push({ model: this.userBlookRepo, as: "blooks", attributes: ["blookId"], required: false });
+        if (settings.includeItemsCurrent) include.push({ model: this.userItemRepo, as: "items", attributes: ["id", "itemId", "usesLeft"], where: { usesLeft: { [Op.gt]: 0 } }, required: false });
+        if (settings.includeItemsAll) include.push({ model: this.userItemRepo, as: "items", attributes: ["id", "itemId", "usesLeft"], required: false });
         if (settings.includeStatistics) include.push({ model: this.userStatisticRepo, as: "statistics", attributes: { exclude: [this.userStatisticRepo.primaryKeyAttribute] } });
         if (settings.includeTitles) include.push({ model: this.userTitleRepo, as: "titles", attributes: { exclude: [this.userTitleRepo.primaryKeyAttribute] } });
         if (settings.includeSettings) include.push({ model: this.userSettingRepo, as: "settings", attributes: { exclude: [this.userSettingRepo.primaryKeyAttribute] } });
@@ -113,7 +119,6 @@ export class UsersService implements OnApplicationBootstrap {
     }
 
     // transactions are goofy, if you don't use a current transaction you'll get a fk constraint error
-
     async createUser(username: string, password: string, transaction?: Transaction): Promise<User> {
         const user = await this.userRepo.create({
             username: username,

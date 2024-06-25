@@ -8,6 +8,9 @@ import {
     Pack,
     Blook,
     Item,
+    UserBlook,
+    Conflict,
+    BadRequest,
     StaffAdminCreateResourceDto,
     StaffAdminUpdateResourceDto,
     StaffAdminCreateBlookDto,
@@ -18,8 +21,6 @@ import {
     StaffAdminUpdateBlookPrioritiesDto,
     StaffAdminCreateRarityDto,
     StaffAdminUpdateRarityDto,
-    Conflict,
-    BadRequest,
     StaffAdminCreateItemDto,
     StaffAdminUpdateItemDto,
     StaffAdminUpdateItemPrioritiesDto
@@ -33,6 +34,7 @@ export class StaffService {
     private packRepo: Repository<Pack>;
     private blookRepo: Repository<Blook>;
     private itemRepo: Repository<Item>;
+    private userBlookRepo: Repository<UserBlook>;
 
     constructor(
         private readonly sequelizeService: SequelizeService,
@@ -43,6 +45,7 @@ export class StaffService {
         this.packRepo = this.sequelizeService.getRepository(Pack);
         this.blookRepo = this.sequelizeService.getRepository(Blook);
         this.itemRepo = this.sequelizeService.getRepository(Item);
+        this.userBlookRepo = this.sequelizeService.getRepository(UserBlook);
     }
 
     getResources() {
@@ -62,7 +65,7 @@ export class StaffService {
     }
 
     getItems() {
-        return this.itemRepo.findAll();
+        return this.itemRepo.findAll({ order: [["priority", "ASC"]] });
     }
 
     createResource(userId: string, dto: StaffAdminCreateResourceDto) {
@@ -177,7 +180,9 @@ export class StaffService {
         await transaction.commit();
     }
 
-    deleteBlook(userId: string, blookId: number) {
+    async deleteBlook(userId: string, blookId: number) {
+        await this.userBlookRepo.destroy({ where: { blookId } });
+
         return this.blookRepo.destroy({ where: { id: blookId } });
     }
 
