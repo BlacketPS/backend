@@ -22,8 +22,7 @@ import { SettingsModule } from "./settings/settings.module";
 import { DiscordModule } from "./discord/discord.module";
 import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 
-import { AuthGuard } from "./core/guard";
-import { UserThrottlerGuard } from "./core/guard";
+import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
 
 import { ThrottlerStorageRedisService } from "nestjs-throttler-storage-redis";
 import { RedisService } from "./redis/redis.service";
@@ -61,6 +60,7 @@ import { IsAccessCode } from "./core/validate/";
     providers: [
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_GUARD, useClass: UserThrottlerGuard },
+        { provide: APP_GUARD, useClass: PermissionGuard },
 
         PermissionsService,
 

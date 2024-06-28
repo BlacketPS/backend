@@ -1,8 +1,8 @@
 import { Body, ClassSerializerInterceptor, Controller, Post, UseInterceptors } from "@nestjs/common";
 import { MarketService } from "./market.service";
-import { GetCurrentUser } from "src/core/decorator";
+import { GetCurrentUser, Permissions } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
-import { OpenPackBlookEntity, OpenPackDto } from "blacket-types";
+import { OpenPackBlookEntity, OpenPackDto, Permission } from "blacket-types";
 
 @ApiTags("market")
 @Controller("market")
@@ -21,5 +21,12 @@ export class MarketController {
     @Post("gimme-item")
     gimmeItem(@GetCurrentUser() userId: string) {
         return this.marketService.gimmeItem(userId);
+    }
+
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Permissions([Permission.BAN_USERS])
+    @Post("test")
+    test() {
+        return "test";
     }
 }

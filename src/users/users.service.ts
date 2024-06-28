@@ -87,7 +87,7 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeTitles) include.push({ model: this.userTitleRepo, as: "titles", attributes: { exclude: [this.userTitleRepo.primaryKeyAttribute] } });
         if (settings.includeSettings) include.push({ model: this.userSettingRepo, as: "settings", attributes: { exclude: [this.userSettingRepo.primaryKeyAttribute] } });
 
-        const userData: User = await this.userRepo.findOne({
+        const userData = await this.userRepo.findOne({
             where: this.sequelizeService.or({ id: user }, { username: { [Op.iLike]: user } }),
             attributes: {
                 exclude: [
@@ -101,6 +101,7 @@ export class UsersService implements OnApplicationBootstrap {
                 ...include
             ]
         });
+
 
         if (!userData) return null;
 
