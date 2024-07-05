@@ -17,8 +17,10 @@ export class PermissionsService {
         this.userRepo = this.sequelizeService.getRepository(User);
         this.userGroupRepo = this.sequelizeService.getRepository(UserGroup);
         this.groupRepo = this.sequelizeService.getRepository(Group);
+    }
 
-        this.groupRepo.findAll().then((groups) => this.groups = groups);
+    async onModuleInit() {
+        this.groups = await this.groupRepo.findAll();
     }
 
     getPermissionsField(permissions: Permission[]): number {

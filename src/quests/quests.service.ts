@@ -1,7 +1,8 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { Repository } from "sequelize-typescript";
-import { TokenDistribution, User } from "blacket-types";
+import { TokenDistribution, User, Forbidden } from "blacket-types";
+import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class QuestsService {
@@ -18,9 +19,10 @@ export class QuestsService {
     ];
     private dailyTokensDistributionTotalChance = this.dailyTokensDistribution.reduce((acc, curr) => acc + curr.chance, 0);
 
-    constructor(private sequelizeService: SequelizeService) { }
-
-    async onModuleInit() {
+    constructor(
+        private sequelizeService: SequelizeService,
+        private usersService: UsersService
+    ) {
         this.userRepo = this.sequelizeService.getRepository(User);
     }
 
@@ -31,6 +33,7 @@ export class QuestsService {
         let cumulativeChance: number = 0;
         for (const distribution of this.dailyTokensDistribution) {
             cumulativeChance += distribution.chance;
+
             if (rand <= cumulativeChance) return distribution.amount;
         }
 
@@ -38,11 +41,13 @@ export class QuestsService {
         return this.dailyTokensDistribution[0].amount;
     }
 
-    claimDailyTokens(user: User): number {
+    async claimDailyTokens(userId: string): Promise<number> {
+        const user = await this.usersService.getUser(userId);
+
         const lastDailyTokenClaim = new Date();
         lastDailyTokenClaim.setHours(0, 0, 0, 0);
 
-        if (user.lastClaimed && user.lastClaimed >= lastDailyTokenClaim) throw new ForbiddenException("You have already claimed your daily tokens");
+        if (user.lastClaimed && user.lastClaimed >= lastDailyTokenClaim) throw new ForbiddenException(Forbidden.QUESTS_DAILY_ALREADY_CLAIMED);
 
         const tokensToAdd = this.getRandomDailyTokens();
 

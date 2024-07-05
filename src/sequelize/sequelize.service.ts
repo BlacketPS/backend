@@ -34,7 +34,6 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
             host: configService.get<string>("SERVER_DATABASE_HOST"),
             port: configService.get<number>("SERVER_DATABASE_PORT"),
             repositoryMode: true,
-            // remove all the other types we only want the actual models
             models: Object.values(Models).map((model) => typeof model === "function" ? model : null).filter((model) => model !== null),
             logging: configService.get<string>("NODE_ENV") === "production" ? false : (msg) => blacketLogger.debug(msg, "Database", "Sequelize")
         });
@@ -56,6 +55,8 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
         // development mode setting handler
         if (this.configService.get<string>("NODE_ENV") !== "production") {
             if (this.configService.get<string>("SERVER_DEV_RESEED_DATABASE") === "true") {
+                this.blacketLogger.info("The database will be WIPED and reseeded, you may want to turn this option to false in the enviroment after this is finished.", "Database", "Blacket");
+
                 await this.sync({ force: true });
                 await this.seedDatabase();
             } else {

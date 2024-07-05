@@ -2,8 +2,10 @@ import { Controller, Get } from "@nestjs/common";
 import { DataService, DataKey } from "./data.service";
 import { Public } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
+import { Throttle, seconds } from "@nestjs/throttler";
 
 @ApiTags("data")
+@Throttle({ default: { limit: 100, ttl: seconds(60) } })
 @Controller("data")
 export class DataController {
     constructor(
@@ -13,60 +15,60 @@ export class DataController {
     @Public()
     @Get("blooks")
     getBlooks() {
-        return this.dataService.getData(DataKey.BLOOK);
+        return this.dataService.getAllFromDataKey(DataKey.BLOOK);
     }
 
     @Public()
     @Get("rarities")
     getRarities() {
-        return this.dataService.getData(DataKey.RARITY);
+        return this.dataService.getAllFromDataKey(DataKey.RARITY);
     }
 
     @Public()
     @Get("packs")
     getPacks() {
-        return this.dataService.getData(DataKey.PACK);
+        return this.dataService.getAllFromDataKey(DataKey.PACK);
     }
 
     @Public()
     @Get("items")
     getItems() {
-        return this.dataService.getData(DataKey.ITEM);
+        return this.dataService.getAllFromDataKey(DataKey.ITEM);
     }
 
     @Public()
     @Get("titles")
     getTitles() {
-        return this.dataService.getData(DataKey.TITLE);
+        return this.dataService.getAllFromDataKey(DataKey.TITLE);
     }
 
     @Public()
     @Get("banners")
     getBanners() {
-        return this.dataService.getData(DataKey.BANNER);
+        return this.dataService.getAllFromDataKey(DataKey.BANNER);
     }
 
     @Public()
     @Get("badges")
     getBadges() {
-        return this.dataService.getData(DataKey.BADGE);
+        return this.dataService.getAllFromDataKey(DataKey.BADGE);
     }
 
     @Public()
     @Get("fonts")
     getFonts() {
-        return this.dataService.getData(DataKey.FONT);
+        return this.dataService.getAllFromDataKey(DataKey.FONT);
     }
 
     @Public()
     @Get("emojis")
     getEmojis() {
-        return this.dataService.getData(DataKey.EMOJI);
+        return this.dataService.getAllFromDataKey(DataKey.EMOJI);
     }
 
     @Public()
     @Get("resources")
     getResources() {
-        return this.dataService.getData(DataKey.RESOURCE);
+        return this.dataService.getAllFromDataKey(DataKey.RESOURCE);
     }
 }

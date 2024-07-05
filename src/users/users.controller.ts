@@ -1,6 +1,6 @@
 import { ClassSerializerInterceptor, Controller, Get, Param, NotFoundException, UseInterceptors } from "@nestjs/common";
 import { UsersService } from "./users.service";
-import { GetCurrentUser } from "src/core/decorator/getUser.decorator";
+import { GetCurrentUser } from "src/core/decorator/getCurrentUser.decorator";
 
 import { ApiTags } from "@nestjs/swagger";
 import { User, NotFound, PrivateUser, PublicUser } from "blacket-types";
