@@ -5,11 +5,12 @@ import { Repository, Sequelize } from "sequelize-typescript";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 import * as Models from "blacket-types/dist/models";
 
-import { RarityAnimationType } from "blacket-types";
+import { RarityAnimationType, PermissionType } from "blacket-types";
 
 @Injectable()
 export class SequelizeService extends Sequelize implements OnModuleInit {
     private sessionRepo: Repository<Models.Session>;
+    private permissionRepo: Repository<Models.Permission>;
     private resourceRepo: Repository<Models.Resource>;
     private roomRepo: Repository<Models.Room>;
     private blookRepo: Repository<Models.Blook>;
@@ -35,12 +36,14 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
             port: configService.get<number>("SERVER_DATABASE_PORT"),
             repositoryMode: true,
             models: Object.values(Models).map((model) => typeof model === "function" ? model : null).filter((model) => model !== null),
-            logging: configService.get<string>("NODE_ENV") === "production" ? false : (msg) => blacketLogger.debug(msg, "Database", "Sequelize")
+            // logging: configService.get<string>("NODE_ENV") === "production" ? false : (msg) => blacketLogger.debug(msg, "Database", "Sequelize")
+            logging: false
         });
     }
 
     async onModuleInit() {
         this.sessionRepo = this.getRepository(Models.Session);
+        this.permissionRepo = this.getRepository(Models.Permission);
         this.resourceRepo = this.getRepository(Models.Resource);
         this.roomRepo = this.getRepository(Models.Room);
         this.blookRepo = this.getRepository(Models.Blook);
@@ -55,12 +58,16 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
         // development mode setting handler
         if (this.configService.get<string>("NODE_ENV") !== "production") {
             if (this.configService.get<string>("SERVER_DEV_RESEED_DATABASE") === "true") {
-                this.blacketLogger.info("The database will be WIPED and reseeded, you may want to turn this option to false in the enviroment after this is finished.", "Database", "Blacket");
+                this.blacketLogger.warn("Creating database. You may want to set \"SERVER_DEV_RESEED_DATABASE\" to false in .env after this is finished.", "Database", "Blacket");
 
                 await this.sync({ force: true });
                 await this.seedDatabase();
             } else {
+                this.blacketLogger.info("Syncing database...", "Database", "Blacket");
+
                 await this.sync({ alter: true });
+
+                this.blacketLogger.info("Database synced!", "Database", "Blacket");
             }
         }
 
@@ -110,10 +117,28 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
         for (const emoji of await this.emojiRepo.findAll() as Models.Emoji[]) {
             this.redisService.set(`blacket-emoji:${emoji.id}`, JSON.stringify({ ...emoji.dataValues }));
         }
-    }
 
+        // we run this everytime the server starts just incase there are new permissions, doubt there will be but its always a possibility
+        this.blacketLogger.info("Checking for new permissions...", "Database", "Blacket");
+
+        for (const permission of Object.values(PermissionType).filter((permission) => isNaN(Number(permission)))) {
+            if (await this.permissionRepo.findByPk(PermissionType[permission])) {
+                this.blacketLogger.info(`Permission ${permission} already exists, skipping...`, "Database", "Blacket");
+
+                continue;
+            }
+
+            const permissionName = permission as string;
+
+            this.blacketLogger.info(`NEW PERMISSION FOUND! Creating new permission ${permissionName} with ID ${PermissionType[permission]}...`, "Database", "Blacket");
+            await this.permissionRepo.create({ id: PermissionType[permission], name: permissionName });
+            this.blacketLogger.info(`Permission ${permissionName} has been created!`, "Database", "Blacket");
+        }
+    }
+    
+    // this will only run once after the database has been wiped to provide it with initial data
     async seedDatabase() {
-        // this will only run once after the database has been wiped to provide it with initial data
+        this.blacketLogger.info("Seeding database with initial data...", "Database", "Blacket");
 
         const transaction = await this.transaction();
 
@@ -144,5 +169,7 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
         await this.fontRepo.create({ name: "Titan One", resourceId: 4 }, { transaction });
 
         await transaction.commit().catch(async (error) => this.blacketLogger.error(error, "Database", "Sequelize"));
+
+        this.blacketLogger.info("Database has been seeded with initial data!", "Database", "Blacket");
     }
 }

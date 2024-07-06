@@ -4,7 +4,7 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { Op, type Transaction } from "sequelize";
-import { OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource, IAccessToken, IDiscordUser, InternalServerError } from "blacket-types";
+import { PermissionType, OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, Permission, Group, UserPermission, UserGroup, IpAddress, UserIpAddress, Title, Font, Resource, IAccessToken, IDiscordUser, InternalServerError } from "blacket-types";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -29,12 +29,15 @@ export class UsersService implements OnApplicationBootstrap {
     private userItemRepo: Repository<UserItem>;
     private userStatisticRepo: Repository<UserStatistic>;
     private userSettingRepo: Repository<UserSetting>;
+    private userPermissionRepo: Repository<UserPermission>;
     private ipAddressRepo: Repository<IpAddress>;
     private userIpAddressRepo: Repository<UserIpAddress>;
     private titleRepo: Repository<Title>;
     private fontRepo: Repository<Font>;
     private resourceRepo: Repository<Resource>;
+    private permissionRepo: Repository<Permission>;
 
+    private defaultPermissions: PermissionType[];
     private defaultAvatar: Resource;
     private defaultBanner: Resource;
     private defaultTitle: Title;
@@ -55,12 +58,14 @@ export class UsersService implements OnApplicationBootstrap {
         this.userItemRepo = this.sequelizeService.getRepository(UserItem);
         this.userStatisticRepo = this.sequelizeService.getRepository(UserStatistic);
         this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
+        this.userPermissionRepo = this.sequelizeService.getRepository(UserPermission);
         this.ipAddressRepo = this.sequelizeService.getRepository(IpAddress);
         this.userIpAddressRepo = this.sequelizeService.getRepository(UserIpAddress);
         this.titleRepo = this.sequelizeService.getRepository(Title);
         this.fontRepo = this.sequelizeService.getRepository(Font);
         this.resourceRepo = this.sequelizeService.getRepository(Resource);
 
+        this.defaultPermissions = [PermissionType.CHANGE_USERNAME, PermissionType.CREATE_REPORTS];
         this.defaultAvatar = await this.resourceRepo.findOne({ where: { id: 1 } });
         this.defaultBanner = await this.resourceRepo.findOne({ where: { id: 2 } });
         this.defaultTitle = await this.titleRepo.findOne({ where: { id: 1 } });
@@ -98,6 +103,7 @@ export class UsersService implements OnApplicationBootstrap {
             include: [
                 { model: this.resourceRepo, as: "customAvatar" },
                 { model: this.resourceRepo, as: "customBanner" },
+                { model: this.userPermissionRepo, as: "permissions", attributes: ["permissionId"] },
                 ...include
             ]
         });
@@ -132,6 +138,10 @@ export class UsersService implements OnApplicationBootstrap {
 
         await this.userStatisticRepo.create({ id: user.id }, { transaction });
         await this.userSettingRepo.create({ id: user.id }, { transaction });
+
+        for (const permission of this.defaultPermissions) {
+            await this.userPermissionRepo.create({ userId: user.id, permissionId: permission }, { transaction });
+        }
 
         return user;
     }

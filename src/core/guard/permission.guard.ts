@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { Permissions } from "../decorator";
-import { Permission } from "blacket-types";
+import { PermissionType } from "blacket-types";
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -14,7 +14,7 @@ export class PermissionGuard implements CanActivate {
     async canActivate(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest();
 
-        const requiredPermissions = this.reflector.get<Permission[]>(Permissions, context.getHandler());
+        const requiredPermissions = this.reflector.get<PermissionType[]>(Permissions, context.getHandler());
         if (!requiredPermissions) return true;
 
         if (!request.session) return false;
