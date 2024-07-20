@@ -24,8 +24,6 @@ import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
 
-import { ThrottlerStorageRedisService } from "nestjs-throttler-storage-redis";
-import { RedisService } from "./redis/redis.service";
 import { PermissionsService } from "./permissions/permissions.service";
 import { IsAccessCode } from "./core/validate/";
 
@@ -33,8 +31,7 @@ import { IsAccessCode } from "./core/validate/";
     imports: [
         ConfigModule.forRoot({ isGlobal: true, envFilePath: "../.env" }),
         ThrottlerModule.forRoot({
-            throttlers: [{ ttl: seconds(60), limit: 100 }],
-            storage: new ThrottlerStorageRedisService(new RedisService())
+            throttlers: [{ ttl: seconds(60), limit: 100 }]
         }),
 
         LoggerModule,

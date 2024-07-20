@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "sequelize-typescript";
-import { CreateDto, Form, FormStatus } from "blacket-types";
+import { FormsCreateDto, Form, FormStatus } from "blacket-types";
 import { hash } from "bcrypt";
 
 @Injectable()
@@ -28,7 +28,7 @@ export class FormsService {
         return await this.formRepo.destroy({ where: { id } });
     }
 
-    async createForm(dto: CreateDto, ipAddress: string) {
+    async createForm(dto: FormsCreateDto, ipAddress: string) {
         if (await this.usersService.getUser(dto.username)) return null;
 
         const [

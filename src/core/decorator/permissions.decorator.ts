@@ -1,4 +1,9 @@
 import { Reflector } from "@nestjs/core";
 import { PermissionType } from "blacket-types";
 
-export const Permissions = Reflector.createDecorator<PermissionType[]>();
+interface PermissionsObject {
+    permissions: PermissionType[];
+    message?: string;
+}
+
+export const Permissions = Reflector.createDecorator<PermissionsObject>();

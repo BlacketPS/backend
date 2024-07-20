@@ -3,9 +3,8 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "sequelize-typescript";
-import { safelyParseJSON } from "src/core/functions";
 
-import { Blook, User, UserBlook, SellBlookDto, NotFound, Forbidden } from "blacket-types";
+import { Blook, User, UserBlook, BlooksSellBlookDto, NotFound, Forbidden } from "blacket-types";
 
 @Injectable()
 export class BlooksService {
@@ -20,24 +19,21 @@ export class BlooksService {
     }
 
     async getBlookById(blookId: Blook["id"]): Promise<Blook> {
-        const blook: Blook = safelyParseJSON(await this.redisService.get(`blacket-blook:${blookId}`));
+        const blook = this.redisService.getBlook(blookId);
         if (!blook) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
 
         return blook;
     }
 
     async getBlookByName(blookName: Blook["name"]): Promise<Blook> {
-        const allBlooks: Blook[] = safelyParseJSON(await this.redisService.get("blacket-blooks:*"));
-        if (!allBlooks) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
-
-        const blook: Blook = allBlooks.find((blook: Blook) => blook.name === blookName);
+        const blook = this.redisService.getBlook(blookName.toLowerCase());
         if (!blook) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
 
         return blook;
     }
 
-    async sellBlooks(userId: User["id"], dto: SellBlookDto): Promise<void> {
-        const blook: Blook = await this.getBlookById(dto.blookId);
+    async sellBlooks(userId: User["id"], dto: BlooksSellBlookDto): Promise<void> {
+        const blook = await this.getBlookById(dto.blookId);
 
         const transaction = await this.sequelizeService.transaction();
 

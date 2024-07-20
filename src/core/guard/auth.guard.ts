@@ -26,7 +26,7 @@ export class AuthGuard implements CanActivate {
 
         if (isPublic) return true;
 
-        const request: Request = context.switchToHttp().getRequest();
+        const request = context.switchToHttp().getRequest();
 
         const token = this.extractTokenFromHeader(request);
 
@@ -35,7 +35,7 @@ export class AuthGuard implements CanActivate {
         const decodedToken = safelyParseJSON(Buffer.from(token, "base64").toString());
         if (!decodedToken) throw new UnauthorizedException();
 
-        const session: Session = safelyParseJSON(await this.redisService.get(`blacket-session:${decodedToken.userId}`) as string);
+        const session = await this.redisService.getSession(decodedToken.userId);
         if (!session) throw new UnauthorizedException();
 
         if (decodedToken.id !== session.id) throw new UnauthorizedException();

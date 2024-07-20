@@ -7,7 +7,7 @@ import { Repository } from "sequelize-typescript";
 import { hash, compare } from "bcrypt";
 import * as speakEasy from "speakeasy";
 
-import { User, UserSetting, ChangeSettingDto, ChangeUsernameDto, ChangePasswordDto, BadRequest, NotFound, AuthEntity, EnableOtpDto, DisableOtpDto } from "blacket-types";
+import { User, UserSetting, SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, BadRequest, NotFound, AuthAuthEntity, SettingsEnableOtpDto, SettingsDisableOtpDto } from "blacket-types";
 
 @Injectable()
 export class SettingsService {
@@ -26,7 +26,7 @@ export class SettingsService {
         this.validSettings = Object.keys(new this.userSettingRepo().dataValues).filter((setting: string) => !this.invalidSettings.includes(setting));
     }
 
-    async changeSetting(userId: User["id"], dto: ChangeSettingDto): Promise<void> {
+    async changeSetting(userId: User["id"], dto: SettingsChangeSettingDto): Promise<void> {
         if (!this.validSettings.includes(dto.key)) throw new NotFoundException(NotFound.UNKNOWN_SETTING);
         if (typeof new this.userSettingRepo().dataValues[dto.key] !== typeof dto.value) throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
 
@@ -41,7 +41,7 @@ export class SettingsService {
             });
     }
 
-    async changeUsername(userId: User["id"], dto: ChangeUsernameDto): Promise<void> {
+    async changeUsername(userId: User["id"], dto: SettingsChangeUsernameDto): Promise<void> {
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
@@ -57,7 +57,7 @@ export class SettingsService {
             });
     }
 
-    async changePassword(userId: User["id"], dto: ChangePasswordDto): Promise<AuthEntity> {
+    async changePassword(userId: User["id"], dto: SettingsChangePasswordDto): Promise<AuthAuthEntity> {
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
@@ -72,11 +72,11 @@ export class SettingsService {
                 throw new BadRequestException(err.errors[0].message ?? BadRequest.DEFAULT);
             });
 
-        return { token: await this.authService.sessionToToken(await this.authService.findOrCreateSession(userId)) } as AuthEntity;
+        return { token: await this.authService.sessionToToken(await this.authService.findOrCreateSession(userId)) } as AuthAuthEntity;
     }
 
-    async enableOtp(userId: User["id"], dto: EnableOtpDto): Promise<void> {
-        const tempOtp = await this.redisService.get(`blacket-tempOtp:${userId}`);
+    async enableOtp(userId: User["id"], dto: SettingsEnableOtpDto): Promise<void> {
+        const tempOtp = await this.redisService.getKey("tempOtp", userId);
         if (!tempOtp) throw new NotFoundException(NotFound.UNKNOWN_OTP);
 
         const verified = speakEasy.totp.verify({ secret: tempOtp, token: dto.otpCode, encoding: "base32" });
@@ -90,7 +90,7 @@ export class SettingsService {
         await this.userSettingRepo.update({ otpSecret: tempOtp }, { where: { id: userId } });
     }
 
-    async disableOtp(userId: User["id"], dto: DisableOtpDto): Promise<void> {
+    async disableOtp(userId: User["id"], dto: SettingsDisableOtpDto): Promise<void> {
         const user = await this.usersService.getUser(userId, { includeSettings: true });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 

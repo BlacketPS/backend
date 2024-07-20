@@ -18,11 +18,10 @@ export class LeaderboardService {
     }
 
     async getLeaderboard() {
-        if (await this.redisService.exists("blacket-leaderboard")) {
-            const leaderboard = JSON.parse(await this.redisService.get("blacket-leaderboard"));
+        const leaderboard = await this.redisService.getKey("leaderboard", "*");
 
-            return leaderboard;
-        } else {
+        if (leaderboard) return leaderboard;
+        else {
             const tokens = (await this.userRepo.findAll({
                 order: [["tokens", "DESC"]],
                 attributes: ["id", "username", "titleId", "avatarId", "color", "tokens"],
@@ -41,7 +40,7 @@ export class LeaderboardService {
                 limit: 10
             })).map((user) => user.toJSON());
 
-            await this.redisService.setex("blacket-leaderboard", 300, JSON.stringify({ tokens, experience }));
+            await this.redisService.setKey("leaderboard", "*", { tokens, experience }, 300);
 
             return { tokens, experience };
         }

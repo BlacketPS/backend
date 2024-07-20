@@ -2,7 +2,7 @@ import { Body, ClassSerializerInterceptor, Controller, Post, UseInterceptors } f
 import { MarketService } from "./market.service";
 import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
-import { OpenPackBlookEntity, OpenPackDto } from "blacket-types";
+import { MarketOpenPackEntity, MarketOpenPackDto } from "blacket-types";
 
 @ApiTags("market")
 @Controller("market")
@@ -11,10 +11,10 @@ export class MarketController {
 
     @UseInterceptors(ClassSerializerInterceptor)
     @Post("open-pack")
-    async openPack(@GetCurrentUser() userId: string, @Body() dto: OpenPackDto) {
+    async openPack(@GetCurrentUser() userId: string, @Body() dto: MarketOpenPackDto) {
         const blookId: number = await this.marketService.openPack(userId, dto);
 
-        return new OpenPackBlookEntity({ id: blookId });
+        return new MarketOpenPackEntity({ id: blookId });
     }
 
     @UseInterceptors(ClassSerializerInterceptor)

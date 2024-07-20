@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { LeaderboardService } from "./leaderboard.service";
 import { ApiTags } from "@nestjs/swagger";
-import { LeaderboardEntity } from "blacket-types";
+import { LeaderboardLeaderboardEntity } from "blacket-types";
 
 @ApiTags("leaderboard")
 @Controller("leaderboard")
@@ -12,6 +12,6 @@ export class LeaderboardController {
     async getLeaderboard() {
         const leaderboard = await this.leaderboardService.getLeaderboard();
 
-        return new LeaderboardEntity(leaderboard);
+        return new LeaderboardLeaderboardEntity(leaderboard);
     }
 }

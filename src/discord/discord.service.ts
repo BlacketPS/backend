@@ -2,7 +2,7 @@ import { HttpService } from "@nestjs/axios";
 import { Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { AxiosError } from "axios";
-import { UserDiscord, IAccessToken, DiscordLinkDto, IDiscordUser, Unauthorized, InternalServerError } from "blacket-types";
+import { UserDiscord, DiscordAccessToken, DiscordLinkDto, DiscordDiscordUser, Unauthorized, InternalServerError } from "blacket-types";
 import { UsersService } from "src/users/users.service";
 
 @Injectable()
@@ -13,7 +13,7 @@ export class DiscordService {
         private readonly httpService: HttpService
     ) {}
 
-    async getOAuthAccessTokenResponse(dto: DiscordLinkDto): Promise<IAccessToken> {
+    async getOAuthAccessTokenResponse(dto: DiscordLinkDto): Promise<DiscordAccessToken> {
         if (!dto.code) throw new UnauthorizedException(Unauthorized.DEFAULT);
 
         try {
@@ -30,13 +30,13 @@ export class DiscordService {
                 }
             });
 
-            return data.data as IAccessToken;
+            return data.data as DiscordAccessToken;
         } catch(err) {
             throw new InternalServerErrorException(err.message ?? InternalServerError.DEFAULT);
         }
     }
 
-    async getDiscordUser(accessTokenResponse: IAccessToken): Promise<IDiscordUser> {
+    async getDiscordUser(accessTokenResponse: DiscordAccessToken): Promise<DiscordDiscordUser> {
         try {
             const data = await this.httpService.axiosRef.get("https://discord.com/api/users/@me", {
                 headers: {
@@ -44,13 +44,13 @@ export class DiscordService {
                 }
             });
 
-            return data.data as IDiscordUser;
+            return data.data as DiscordDiscordUser;
         } catch {
             throw new InternalServerErrorException(InternalServerError.DEFAULT);
         }
     }
 
-    async linkAccount(userId: string, accessTokenResponse: IAccessToken, discordUser: IDiscordUser): Promise<void> {
+    async linkAccount(userId: string, accessTokenResponse: DiscordAccessToken, discordUser: DiscordDiscordUser): Promise<void> {
         try {
             await this.usersService.linkDiscordOAuth(userId, accessTokenResponse, discordUser);
         } catch {

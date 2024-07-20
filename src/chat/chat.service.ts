@@ -3,9 +3,8 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { SocketGateway } from "src/socket/socket.gateway";
 import { Repository } from "sequelize-typescript";
-import { safelyParseJSON } from "src/core/functions";
 
-import { Message, User, Room, CreateMessageDto, Forbidden, NotFound } from "blacket-types";
+import { Message, User, Room, ChatCreateMessageDto, Forbidden, NotFound } from "blacket-types";
 
 @Injectable()
 export class ChatService {
@@ -52,8 +51,8 @@ export class ChatService {
         });
     }
 
-    async createMessage(userId: User["id"], roomId: Message["roomId"], dto: CreateMessageDto): Promise<Message> {
-        const room: Room = safelyParseJSON(await this.redisService.get(`blacket-room:${roomId}`));
+    async createMessage(userId: User["id"], roomId: Message["roomId"], dto: ChatCreateMessageDto): Promise<Message> {
+        const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
         if (!room.public) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
@@ -74,7 +73,7 @@ export class ChatService {
     }
 
     async startTyping(userId: User["id"], roomId: Message["roomId"]): Promise<void> {
-        const room: Room = safelyParseJSON(await this.redisService.get(`blacket-room:${roomId}`));
+        const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
         if (!room.public) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);

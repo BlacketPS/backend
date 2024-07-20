@@ -1,7 +1,8 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { User, UserStatistic, UserBlook, UserItem, OpenPackDto, BlookObtainMethod, ItemObtainMethod, NotFound, Forbidden } from "blacket-types";
+import { User, UserStatistic, UserBlook, UserItem, MarketOpenPackDto, BlookObtainMethod, ItemObtainMethod, NotFound, Forbidden } from "blacket-types";
 import { Repository } from "sequelize-typescript";
 import { SequelizeService } from "src/sequelize/sequelize.service";
+import { RedisService } from "src/redis/redis.service";
 import { DataService } from "src/data/data.service";
 
 @Injectable()
@@ -13,6 +14,7 @@ export class MarketService {
 
     constructor(
         private sequelizeService: SequelizeService,
+        private redisService: RedisService,
         private dataService: DataService
     ) {
         this.userRepo = this.sequelizeService.getRepository(User);
@@ -23,8 +25,8 @@ export class MarketService {
 
     // as opening packs is one of the MOST intensive operations we do
     // i'll be probably optimising this a few times and doing performance measures
-    async openPack(userId: string, dto: OpenPackDto) {
-        const pack = await this.dataService.getPack(dto.packId);
+    async openPack(userId: string, dto: MarketOpenPackDto) {
+        const pack = await this.redisService.getPack(dto.packId);
         if (!pack) throw new NotFoundException(NotFound.UNKNOWN_PACK);
 
         if (!pack.enabled) throw new NotFoundException(NotFound.UNKNOWN_PACK);
@@ -37,6 +39,8 @@ export class MarketService {
         if (!blooks.length) throw new NotFoundException(NotFound.UNKNOWN_PACK);
 
         const totalChance = blooks.reduce((acc, curr) => acc + curr.chance, 0);
+        if (totalChance <= 0) throw new NotFoundException(NotFound.UNKNOWN_PACK);
+
         let rand = Math.random() * totalChance;
 
         const blookIndex = blooks.findIndex((blook) => (rand -= blook.chance) < 0);

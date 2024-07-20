@@ -4,7 +4,7 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { Op, type Transaction } from "sequelize";
-import { PermissionType, OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, Permission, Group, UserPermission, UserGroup, IpAddress, UserIpAddress, Title, Font, Resource, IAccessToken, IDiscordUser, InternalServerError } from "blacket-types";
+import { PermissionType, OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, Permission, Group, UserPermission, UserGroup, IpAddress, UserIpAddress, Title, Font, Resource, DiscordAccessToken, DiscordDiscordUser, InternalServerError } from "blacket-types";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -65,7 +65,7 @@ export class UsersService implements OnApplicationBootstrap {
         this.fontRepo = this.sequelizeService.getRepository(Font);
         this.resourceRepo = this.sequelizeService.getRepository(Resource);
 
-        this.defaultPermissions = [PermissionType.CHANGE_USERNAME, PermissionType.CREATE_REPORTS];
+        this.defaultPermissions = [PermissionType.CREATE_REPORTS, PermissionType.CHANGE_USERNAME];
         this.defaultAvatar = await this.resourceRepo.findOne({ where: { id: 1 } });
         this.defaultBanner = await this.resourceRepo.findOne({ where: { id: 2 } });
         this.defaultTitle = await this.titleRepo.findOne({ where: { id: 1 } });
@@ -76,9 +76,9 @@ export class UsersService implements OnApplicationBootstrap {
         cacheUser: true
     }) {
         if (settings.cacheUser) {
-            const cachedUser = await this.redisService.get(`blacket-userCached:${user.toLowerCase()}`);
+            const cachedUser = await this.redisService.getKey("cachedUser", user.toLowerCase());
 
-            if (cachedUser) return JSON.parse(cachedUser);
+            if (cachedUser) return cachedUser;
         }
 
         const include = [];
@@ -112,8 +112,8 @@ export class UsersService implements OnApplicationBootstrap {
         if (!userData) return null;
 
         if (settings.cacheUser) {
-            await this.redisService.setex(`blacket-userCached:${userData.id}`, 10, JSON.stringify(userData));
-            await this.redisService.setex(`blacket-userCached:${userData.username.toLowerCase()}`, 10, JSON.stringify(userData));
+            await this.redisService.setKey("cachedUser", userData.id, userData, 10);
+            await this.redisService.setKey("cachedUser", userData.username.toLowerCase(), userData, 10);
         }
 
         return userData;
@@ -154,7 +154,7 @@ export class UsersService implements OnApplicationBootstrap {
         await this.userRepo.update({ ipAddress: ip }, { where: { id: user.id }, transaction });
     }
 
-    async linkDiscordOAuth(userId: string, accessTokenResponse: IAccessToken, discordUser: IDiscordUser): Promise<void> {
+    async linkDiscordOAuth(userId: string, accessTokenResponse: DiscordAccessToken, discordUser: DiscordDiscordUser): Promise<void> {
         const transaction: Transaction = await this.sequelizeService.transaction();
 
         await this.userOauthRepo.create({

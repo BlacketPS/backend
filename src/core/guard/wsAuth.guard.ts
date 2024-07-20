@@ -18,7 +18,7 @@ export class WsAuthGuard implements CanActivate {
 
         if (isPublic) return true;
 
-        const client: Socket = context.switchToWs().getClient();
+        const client = context.switchToWs().getClient();
         const isAuthorized = this.validate(client);
 
         if (!isAuthorized) throw new UnauthorizedException();

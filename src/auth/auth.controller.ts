@@ -2,7 +2,7 @@ import { Body, Controller, Delete, HttpCode, HttpStatus, Post } from "@nestjs/co
 import { AuthService } from "./auth.service";
 import { GetCurrentUser, Public, RealIp } from "src/core/decorator";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import { AuthEntity, OtpAuthEntity, BadRequest, InternalServerError, NotFound } from "blacket-types";
+import { AuthAuthEntity, AuthOtpEntity, BadRequest, InternalServerError, NotFound } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
 
 @Controller("auth")
@@ -17,7 +17,7 @@ export class AuthController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: "Successfully registered account",
-        type: AuthEntity
+        type: AuthAuthEntity
     })
     @ApiResponse({
         status: HttpStatus.BAD_REQUEST,
@@ -31,7 +31,7 @@ export class AuthController {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         description: InternalServerError.DEFAULT
     })
-    register(@Body() dto: RegisterDto, @RealIp() ip: string): Promise<AuthEntity> {
+    register(@Body() dto: RegisterDto, @RealIp() ip: string): Promise<AuthAuthEntity> {
         return this.authService.register(dto, ip);
     }
 
@@ -40,7 +40,7 @@ export class AuthController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: "Successfully logged in",
-        type: AuthEntity
+        type: AuthAuthEntity
     })
     @ApiResponse({
         status: HttpStatus.BAD_REQUEST,
@@ -50,7 +50,7 @@ export class AuthController {
         status: HttpStatus.NOT_FOUND,
         description: NotFound.UNKNOWN_USER
     })
-    login(@Body() dto: LoginDto, @RealIp() ip: string): Promise<AuthEntity> {
+    login(@Body() dto: LoginDto, @RealIp() ip: string): Promise<AuthAuthEntity> {
         return this.authService.login(dto, ip);
     }
 
@@ -68,12 +68,12 @@ export class AuthController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: "Successfully generated OTP secret",
-        type: OtpAuthEntity
+        type: AuthOtpEntity
     })
-    async generateOtpSecret(@GetCurrentUser() userId: string): Promise<OtpAuthEntity> {
+    async generateOtpSecret(@GetCurrentUser() userId: string): Promise<AuthOtpEntity> {
         const otpSecret = await this.authService.generateOtpSecret(userId);
 
-        return new OtpAuthEntity({ otpSecret });
+        return new AuthOtpEntity({ otpSecret });
     }
 }
 

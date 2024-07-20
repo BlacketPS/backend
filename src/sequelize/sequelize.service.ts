@@ -1,6 +1,5 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { RedisService } from "src/redis/redis.service";
 import { Repository, Sequelize } from "sequelize-typescript";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 import * as Models from "blacket-types/dist/models";
@@ -9,22 +8,17 @@ import { RarityAnimationType, PermissionType } from "blacket-types";
 
 @Injectable()
 export class SequelizeService extends Sequelize implements OnModuleInit {
-    private sessionRepo: Repository<Models.Session>;
     private permissionRepo: Repository<Models.Permission>;
     private resourceRepo: Repository<Models.Resource>;
     private roomRepo: Repository<Models.Room>;
     private blookRepo: Repository<Models.Blook>;
     private rarityRepo: Repository<Models.Rarity>;
-    private packRepo: Repository<Models.Pack>;
-    private itemRepo: Repository<Models.Item>;
     private titleRepo: Repository<Models.Title>;
     private bannerRepo: Repository<Models.Banner>;
     private fontRepo: Repository<Models.Font>;
-    private emojiRepo: Repository<Models.Emoji>;
 
     constructor(
         private readonly configService: ConfigService,
-        private readonly redisService: RedisService,
         private readonly blacketLogger: BlacketLoggerService
     ) {
         super({
@@ -35,33 +29,32 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
             host: configService.get<string>("SERVER_DATABASE_HOST"),
             port: configService.get<number>("SERVER_DATABASE_PORT"),
             repositoryMode: true,
+            pool: { max: 100, min: 1, acquire: 30000, idle: 10000 },
             models: Object.values(Models).map((model) => typeof model === "function" ? model : null).filter((model) => model !== null),
-            // logging: configService.get<string>("NODE_ENV") === "production" ? false : (msg) => blacketLogger.debug(msg, "Database", "Sequelize")
-            logging: false
+            logging: configService.get<string>("NODE_ENV") === "production" ? false : (msg) => blacketLogger.debug(msg, "Database", "Sequelize")
         });
     }
 
     async onModuleInit() {
-        this.sessionRepo = this.getRepository(Models.Session);
         this.permissionRepo = this.getRepository(Models.Permission);
         this.resourceRepo = this.getRepository(Models.Resource);
         this.roomRepo = this.getRepository(Models.Room);
         this.blookRepo = this.getRepository(Models.Blook);
         this.rarityRepo = this.getRepository(Models.Rarity);
-        this.packRepo = this.getRepository(Models.Pack);
-        this.itemRepo = this.getRepository(Models.Item);
         this.titleRepo = this.getRepository(Models.Title);
         this.bannerRepo = this.getRepository(Models.Banner);
         this.fontRepo = this.getRepository(Models.Font);
-        this.emojiRepo = this.getRepository(Models.Emoji);
 
         // development mode setting handler
         if (this.configService.get<string>("NODE_ENV") !== "production") {
             if (this.configService.get<string>("SERVER_DEV_RESEED_DATABASE") === "true") {
-                this.blacketLogger.warn("Creating database. You may want to set \"SERVER_DEV_RESEED_DATABASE\" to false in .env after this is finished.", "Database", "Blacket");
+                this.blacketLogger.info("Creating database...", "Database", "Blacket");
 
                 await this.sync({ force: true });
                 await this.seedDatabase();
+
+                this.blacketLogger.info("Database has been created! Please set \"SERVER_DEV_RESEED_DATABASE\" to false in your .env to prevent this from happening again.", "Database", "Blacket");
+                process.exit(0);
             } else {
                 this.blacketLogger.info("Syncing database...", "Database", "Blacket");
 
@@ -71,54 +64,7 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
             }
         }
 
-        // all next for loops are for redis caching so we don't have to fetch it again to save on performance
-        await this.redisService.flushall();
-
-        for (const session of await this.sessionRepo.findAll() as Models.Session[]) {
-            this.redisService.set(`blacket-session:${session.userId}`, JSON.stringify(session));
-        }
-
-        for (const resource of await this.resourceRepo.findAll() as Models.Resource[]) {
-            this.redisService.set(`blacket-resource:${resource.id}`, JSON.stringify(resource));
-        }
-
-        for (const room of await this.roomRepo.findAll() as Models.Room[]) {
-            this.redisService.set(`blacket-room:${room.id}`, JSON.stringify(room));
-        }
-
-        for (const blook of await this.blookRepo.findAll() as Models.Blook[]) {
-            this.redisService.set(`blacket-blook:${blook.id}`, JSON.stringify({ ...blook.dataValues }));
-        }
-
-        for (const rarity of await this.rarityRepo.findAll() as Models.Rarity[]) {
-            this.redisService.set(`blacket-rarity:${rarity.id}`, JSON.stringify({ ...rarity.dataValues }));
-        }
-
-        for (const pack of await this.packRepo.findAll() as Models.Pack[]) {
-            this.redisService.set(`blacket-pack:${pack.id}`, JSON.stringify({ ...pack.dataValues }));
-        }
-
-        for (const item of await this.itemRepo.findAll() as Models.Item[]) {
-            this.redisService.set(`blacket-item:${item.id}`, JSON.stringify({ ...item.dataValues }));
-        }
-
-        for (const title of await this.titleRepo.findAll() as Models.Title[]) {
-            this.redisService.set(`blacket-title:${title.id}`, JSON.stringify(title));
-        }
-
-        for (const banner of await this.bannerRepo.findAll() as Models.Banner[]) {
-            this.redisService.set(`blacket-banner:${banner.id}`, JSON.stringify({ ...banner.dataValues }));
-        }
-
-        for (const font of await this.fontRepo.findAll() as Models.Font[]) {
-            this.redisService.set(`blacket-font:${font.id}`, JSON.stringify({ ...font.dataValues }));
-        }
-
-        for (const emoji of await this.emojiRepo.findAll() as Models.Emoji[]) {
-            this.redisService.set(`blacket-emoji:${emoji.id}`, JSON.stringify({ ...emoji.dataValues }));
-        }
-
-        // we run this everytime the server starts just incase there are new permissions, doubt there will be but its always a possibility
+        // we run this everytime the server starts just incase there are new permissions
         this.blacketLogger.info("Checking for new permissions...", "Database", "Blacket");
 
         for (const permission of Object.values(PermissionType).filter((permission) => isNaN(Number(permission)))) {
@@ -135,17 +81,18 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
             this.blacketLogger.info(`Permission ${permissionName} has been created!`, "Database", "Blacket");
         }
     }
-    
+
     // this will only run once after the database has been wiped to provide it with initial data
     async seedDatabase() {
         this.blacketLogger.info("Seeding database with initial data...", "Database", "Blacket");
 
         const transaction = await this.transaction();
 
-        await this.resourceRepo.create({ path: "https://cdn.blacket.org/static/content/blooks/Default.png" }, { transaction }); // resource id 1
-        await this.resourceRepo.create({ path: "https://cdn.blacket.org/static/content/banners/Default.png" }, { transaction }); // resource id 2
-        await this.resourceRepo.create({ path: "https://cdn.blacket.org/static/content/fonts/Nunito Bold.ttf" }, { transaction }); // resource id 3
-        await this.resourceRepo.create({ path: "https://cdn.blacket.org/static/content/fonts/Titan One.ttf" }, { transaction }); // resource id 4
+        await this.resourceRepo.create({ path: this.configService.get<string>("VITE_CDN_URL") + "/content/blooks/Default.png" }, { transaction }); // resource id 1
+        await this.resourceRepo.create({ path: this.configService.get<string>("VITE_CDN_URL") + "/content/blooks/backgrounds/Default.png" }, { transaction }); // resource id 2
+        await this.resourceRepo.create({ path: this.configService.get<string>("VITE_CDN_URL") + "/content/banners/Default.png" }, { transaction }); // resource id 3
+        await this.resourceRepo.create({ path: this.configService.get<string>("VITE_CDN_URL") + "/content/fonts/Nunito Bold.ttf" }, { transaction }); // resource id 4
+        await this.resourceRepo.create({ path: this.configService.get<string>("VITE_CDN_URL") + "/content/fonts/Titan One.ttf" }, { transaction }); // resource id 5
 
         await this.roomRepo.create({ id: 0, name: "global", public: true }, { transaction });
 
@@ -159,14 +106,14 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
         await this.rarityRepo.create({ name: "Mystical", color: "#ffffff", experience: 500, animationType: RarityAnimationType.CHROMA }, { transaction });
         await this.rarityRepo.create({ name: "Iridescent", color: "#ffffff", experience: 1000, animationType: RarityAnimationType.IRIDESCENT }, { transaction });
 
-        await this.bannerRepo.create({ name: "Default", imageId: 2 }, { transaction });
+        await this.bannerRepo.create({ name: "Default", imageId: 3 }, { transaction });
 
         await this.titleRepo.create({ name: "Common" }, { transaction });
 
-        await this.blookRepo.create({ name: "Default", chance: 0, price: 0, rarityId: 1, imageId: 1, backgroundId: 1, priority: 0 }, { transaction });
+        await this.blookRepo.create({ name: "Default", chance: 0, price: 0, rarityId: 1, imageId: 1, backgroundId: 2, priority: 0 }, { transaction });
 
-        await this.fontRepo.create({ name: "Nunito Bold", resourceId: 3 }, { transaction });
-        await this.fontRepo.create({ name: "Titan One", resourceId: 4 }, { transaction });
+        await this.fontRepo.create({ name: "Nunito Bold", resourceId: 4 }, { transaction });
+        await this.fontRepo.create({ name: "Titan One", resourceId: 5 }, { transaction });
 
         await transaction.commit().catch(async (error) => this.blacketLogger.error(error, "Database", "Sequelize"));
 

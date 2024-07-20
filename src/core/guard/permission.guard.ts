@@ -1,8 +1,8 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { Permissions } from "../decorator";
-import { PermissionType } from "blacket-types";
+import { Forbidden, PermissionType, Unauthorized } from "blacket-types";
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -14,15 +14,18 @@ export class PermissionGuard implements CanActivate {
     async canActivate(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest();
 
-        const requiredPermissions = this.reflector.get<PermissionType[]>(Permissions, context.getHandler());
+        const requiredPermissions = this.reflector.get(Permissions, context.getHandler());
         if (!requiredPermissions) return true;
 
-        if (!request.session) return false;
+        if (!request.session) throw new ForbiddenException(Forbidden.DEFAULT);
 
         const userId = request.session?.userId;
-        if (!userId) return false;
+        if (!userId) throw new UnauthorizedException(Unauthorized.DEFAULT);
 
         const permissions = await this.permissionsService.getUserPermissions(userId);
-        return this.permissionsService.hasPermissions(permissions, requiredPermissions);
+        const hasPermissions = this.permissionsService.hasPermissions(permissions, requiredPermissions.permissions);
+
+        if (!hasPermissions) throw new ForbiddenException(requiredPermissions.message || Forbidden.DEFAULT);
+        else return true;
     }
 }

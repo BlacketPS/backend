@@ -2,7 +2,7 @@ import { Body, ClassSerializerInterceptor, Controller, HttpCode, HttpStatus, Put
 import { BlooksService } from "./blooks.service";
 import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
-import { SellBlookDto } from "blacket-types";
+import { BlooksSellBlookDto } from "blacket-types";
 
 @ApiTags("blooks")
 @Controller("blooks")
@@ -14,7 +14,7 @@ export class BlooksController {
     @UseInterceptors(ClassSerializerInterceptor)
     @Put("sell-blooks")
     @HttpCode(HttpStatus.NO_CONTENT)
-    sellBlooks(@GetCurrentUser() userId: string, @Body() dto: SellBlookDto) {
+    sellBlooks(@GetCurrentUser() userId: string, @Body() dto: BlooksSellBlookDto) {
         return this.blooksService.sellBlooks(userId, dto);
     }
 }

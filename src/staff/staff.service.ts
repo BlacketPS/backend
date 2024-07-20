@@ -68,15 +68,23 @@ export class StaffService {
         return this.itemRepo.findAll({ order: [["priority", "ASC"]] });
     }
 
-    createResource(userId: string, dto: StaffAdminCreateResourceDto) {
-        return this.resourceRepo.create(dto);
+    async createResource(userId: string, dto: StaffAdminCreateResourceDto) {
+        const resource = await this.resourceRepo.create(dto);
+
+        await this.redisService.setResource(resource.id, resource);
+
+        return resource;
     }
 
-    updateResource(userId: string, resourceId: number, dto: StaffAdminUpdateResourceDto) {
+    async updateResource(userId: string, resourceId: number, dto: StaffAdminUpdateResourceDto) {
+        await this.redisService.setResource(resourceId, dto);
+
         return this.resourceRepo.update(dto, { where: { id: resourceId } });
     }
 
-    deleteResource(userId: string, resourceId: number) {
+    async deleteResource(userId: string, resourceId: number) {
+        await this.redisService.deleteResource(resourceId);
+
         return this.resourceRepo.destroy({ where: { id: resourceId } })
             .catch((error) => {
                 if (error instanceof ForeignKeyConstraintError) throw new ConflictException(Conflict.STAFF_ADMIN_RESOURCE_IN_USE);
@@ -84,15 +92,23 @@ export class StaffService {
             });
     }
 
-    createRarity(userId: string, dto: StaffAdminCreateRarityDto) {
-        return this.rarityRepo.create(dto);
+    async createRarity(userId: string, dto: StaffAdminCreateRarityDto) {
+        const rarity = await this.rarityRepo.create(dto);
+
+        await this.redisService.setRarity(rarity.id, rarity);
+
+        return rarity;
     }
 
-    updateRarity(userId: string, rarityId: number, dto: StaffAdminUpdateRarityDto) {
+    async updateRarity(userId: string, rarityId: number, dto: StaffAdminUpdateRarityDto) {
+        await this.redisService.setRarity(rarityId, dto);
+
         return this.rarityRepo.update(dto, { where: { id: rarityId } });
     }
 
-    deleteRarity(userId: string, rarityId: number) {
+    async deleteRarity(userId: string, rarityId: number) {
+        await this.redisService.deleteRarity(rarityId);
+
         return this.rarityRepo.destroy({ where: { id: rarityId } })
             .catch((error) => {
                 if (error instanceof ForeignKeyConstraintError) throw new ConflictException(Conflict.STAFF_ADMIN_RARITY_IN_USE);
@@ -107,15 +123,21 @@ export class StaffService {
             order: [["priority", "DESC"]]
         });
 
-        return this.packRepo.create({
+        const pack = await this.packRepo.create({
             ...dto,
             priority: lastPack ? lastPack.priority + 1 : 1
         });
+
+        await this.redisService.setPack(pack.id, pack);
+
+        return pack;
     }
 
     async updatePack(userId: string, packId: number, dto: StaffAdminUpdatePackDto) {
         await this.packRepo.findByPk(packId);
         await this.resourceRepo.findByPk(dto.imageId);
+
+        await this.redisService.setPack(packId, dto);
 
         return this.packRepo.update(dto, { where: { id: packId } });
     }
@@ -130,12 +152,16 @@ export class StaffService {
 
             const newPriority = dto.packMap.find((packMap) => packMap.packId === pack.id).priority;
             await pack.update({ priority: newPriority }, { transaction });
+
+            await this.redisService.setPack(pack.id, pack);
         }
 
         await transaction.commit();
     }
 
-    deletePack(userId: string, packId: number) {
+    async deletePack(userId: string, packId: number) {
+        await this.blookRepo.destroy({ where: { packId } });
+
         return this.packRepo.destroy({ where: { id: packId } });
     }
 
@@ -149,10 +175,14 @@ export class StaffService {
             where: { packId: dto.packId ?? null }
         });
 
-        return await this.blookRepo.create({
+        const blook = await this.blookRepo.create({
             ...dto,
             priority: lastBlook ? lastBlook.priority + 1 : 1
         });
+
+        await this.redisService.setBlook(blook.id, blook);
+
+        return blook;
     }
 
     async updateBlook(userId: string, blookId: number, dto: StaffAdminUpdateBlookDto) {
@@ -161,6 +191,8 @@ export class StaffService {
         await this.rarityRepo.findByPk(dto.rarityId);
         await this.resourceRepo.findByPk(dto.imageId);
         await this.resourceRepo.findByPk(dto.backgroundId);
+
+        await this.redisService.setBlook(blookId, dto);
 
         return await this.blookRepo.update(dto, { where: { id: blookId } });
     }
@@ -175,12 +207,16 @@ export class StaffService {
 
             const blook = blooks.find((blook) => blook.id === blookMap.blookId);
             await blook.update({ priority: blookMap.priority }, { transaction });
+
+            await this.redisService.setBlook(blook.id, blook);
         }
 
         await transaction.commit();
     }
 
     async deleteBlook(userId: string, blookId: number) {
+        await this.redisService.deleteBlook(blookId);
+
         await this.userBlookRepo.destroy({ where: { blookId } });
 
         return this.blookRepo.destroy({ where: { id: blookId } });
@@ -224,7 +260,7 @@ export class StaffService {
         await transaction.commit();
     }
 
-    deleteItem(userId: string, itemId: number) {
+    async deleteItem(userId: string, itemId: number) {
         return this.itemRepo.destroy({ where: { id: itemId } });
     }
 }

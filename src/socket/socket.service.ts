@@ -25,7 +25,7 @@ export class SocketService {
         const decodedToken = safelyParseJSON(Buffer.from(token, "base64").toString());
         if (!decodedToken) return this.emitMessageAndCloseSocket(client, "unauthorized", { message: "invalid token" });
 
-        const session: Session = safelyParseJSON(await this.redisService.get(`blacket-session:${decodedToken.userId}`) as string);
+        const session = await this.redisService.getSession(decodedToken.userId);
         if (!session) return this.emitMessageAndCloseSocket(client, "unauthorized", { message: "invalid session" });
 
         if (decodedToken.id !== session.id) return this.emitMessageAndCloseSocket(client, "unauthorized", { message: "token mismatch" });

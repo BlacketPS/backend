@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from "@nestj
 import { ChatService } from "./chat.service";
 import { ApiTags } from "@nestjs/swagger";
 import { GetCurrentUser } from "src/core/decorator";
-import { CreateMessageDto } from "blacket-types";
+import { ChatCreateMessageDto } from "blacket-types";
 
 @ApiTags("chat")
 @Controller("chat")
@@ -15,7 +15,7 @@ export class ChatController {
     }
 
     @Post("messages/:roomId")
-    async createMessage(@GetCurrentUser() userId: string, @Param("roomId") roomId: number, @Body() dto: CreateMessageDto) {
+    async createMessage(@GetCurrentUser() userId: string, @Param("roomId") roomId: number, @Body() dto: ChatCreateMessageDto) {
         return await this.chatService.createMessage(userId, roomId, dto);
     }
 
