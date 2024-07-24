@@ -94,15 +94,7 @@ export class UsersService implements OnApplicationBootstrap {
 
         const userData = await this.userRepo.findOne({
             where: this.sequelizeService.or({ id: user }, { username: { [Op.iLike]: user } }),
-            attributes: {
-                exclude: [
-                    "customAvatarId",
-                    "customBannerId"
-                ]
-            },
             include: [
-                { model: this.resourceRepo, as: "customAvatar" },
-                { model: this.resourceRepo, as: "customBanner" },
                 { model: this.userPermissionRepo, as: "permissions", attributes: ["permissionId"] },
                 ...include
             ]

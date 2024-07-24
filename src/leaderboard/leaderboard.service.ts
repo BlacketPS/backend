@@ -25,18 +25,12 @@ export class LeaderboardService {
             const tokens = (await this.userRepo.findAll({
                 order: [["tokens", "DESC"]],
                 attributes: ["id", "username", "titleId", "avatarId", "color", "tokens"],
-                include: [
-                    { model: this.resourceRepo, as: "customAvatar" }
-                ],
                 limit: 10
             })).map((user) => user.toJSON());
 
             const experience = (await this.userRepo.findAll({
                 order: [["experience", "DESC"]],
                 attributes: ["id", "username", "titleId", "avatarId", "color", "experience"],
-                include: [
-                    { model: this.resourceRepo, as: "customAvatar" }
-                ],
                 limit: 10
             })).map((user) => user.toJSON());
 
