@@ -7,6 +7,7 @@ export enum DataKey {
     RARITY = "rarity",
     PACK = "pack",
     ITEM = "item",
+    ITEM_SHOP = "itemShop",
     TITLE = "title",
     BANNER = "banner",
     BADGE = "badge",

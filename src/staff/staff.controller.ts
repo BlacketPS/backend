@@ -15,7 +15,10 @@ import {
     StaffAdminUpdateRarityDto,
     StaffAdminCreateItemDto,
     StaffAdminUpdateItemDto,
-    StaffAdminUpdateItemPrioritiesDto
+    StaffAdminUpdateItemPrioritiesDto,
+    StaffAdminCreateItemShopItemDto,
+    StaffAdminUpdateItemShopItemPriorities,
+    StaffAdminUpdateItemShopItemDto
 } from "blacket-types";
 
 @ApiTags("staff")
@@ -172,5 +175,38 @@ export class StaffController {
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteItem(@GetCurrentUser() userId: string, @Param("id") itemId: number) {
         return await this.staffService.deleteItem(userId, itemId);
+    }
+    
+    @Permissions({ permissions: [PermissionType.MANAGE_GAME_DATA] })
+    @Get("admin/item-shop")
+    async getItemShop() {
+        return await this.staffService.getItemShop();
+    }
+
+    @Permissions({ permissions: [PermissionType.MANAGE_GAME_DATA] })
+    @Post("admin/item-shop")
+    async createItemShopItem(@GetCurrentUser() userId: string, @Body() dto: StaffAdminCreateItemShopItemDto) {
+        return await this.staffService.createItemShopItem(userId, dto);
+    }
+
+    @Permissions({ permissions: [PermissionType.MANAGE_GAME_DATA] })
+    @Put("admin/item-shop/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateItemShopItem(@GetCurrentUser() userId: string, @Param("id") itemShopItemId: number, @Body() dto: StaffAdminUpdateItemShopItemDto) {
+        return await this.staffService.updateItemShopItem(userId, itemShopItemId, dto);
+    }
+
+    @Permissions({ permissions: [PermissionType.MANAGE_GAME_DATA] })
+    @Put("admin/item-shop/update-priorities")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateItemShopItemPriorities(@GetCurrentUser() userId: string, @Body() dto: StaffAdminUpdateItemShopItemPriorities) {
+        return await this.staffService.updateItemShopItemPriorities(userId, dto);
+    }
+
+    @Permissions({ permissions: [PermissionType.MANAGE_GAME_DATA] })
+    @Delete("admin/item-shop/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteItemShopItem(@GetCurrentUser() userId: string, @Param("id") itemShopItemId: number) {
+        return await this.staffService.deleteItemShopItem(userId, itemShopItemId);
     }
 }

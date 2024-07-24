@@ -4,7 +4,7 @@ import { RedisService } from "src/redis/redis.service";
 import { SocketGateway } from "src/socket/socket.gateway";
 import { Repository } from "sequelize-typescript";
 
-import { Message, User, Room, ChatCreateMessageDto, Forbidden, NotFound } from "blacket-types";
+import { Message, User, ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "blacket-types";
 
 @Injectable()
 export class ChatService {
@@ -67,7 +67,7 @@ export class ChatService {
             mentions
         });
 
-        this.socketGateway.server.emit("chat-messages-create", message);
+        this.socketGateway.server.emit(SocketMessageType.CHAT_MESSAGES_CREATE, message);
 
         return message;
     }
@@ -78,6 +78,6 @@ export class ChatService {
 
         if (!room.public) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
 
-        this.socketGateway.server.emit("chat-typing-started", { userId, roomId });
+        this.socketGateway.server.emit(SocketMessageType.CHAT_TYPING_STARTED, { userId, roomId });
     }
 }

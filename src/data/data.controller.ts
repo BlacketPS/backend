@@ -38,6 +38,12 @@ export class DataController {
     }
 
     @Public()
+    @Get("item-shop")
+    getItemShop() {
+        return this.redisService.getAllFromKey(DataKey.ITEM_SHOP);
+    }
+
+    @Public()
     @Get("titles")
     getTitles() {
         return this.redisService.getAllFromKey(DataKey.TITLE);

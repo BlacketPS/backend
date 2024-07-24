@@ -8,6 +8,7 @@ import {
     Pack,
     Blook,
     Item,
+    ItemShop,
     UserBlook,
     Conflict,
     BadRequest,
@@ -23,7 +24,10 @@ import {
     StaffAdminUpdateRarityDto,
     StaffAdminCreateItemDto,
     StaffAdminUpdateItemDto,
-    StaffAdminUpdateItemPrioritiesDto
+    StaffAdminUpdateItemPrioritiesDto,
+    StaffAdminCreateItemShopItemDto,
+    StaffAdminUpdateItemShopItemDto,
+    StaffAdminUpdateItemShopItemPriorities
 } from "blacket-types";
 import { ForeignKeyConstraintError } from "sequelize";
 
@@ -34,6 +38,7 @@ export class StaffService {
     private packRepo: Repository<Pack>;
     private blookRepo: Repository<Blook>;
     private itemRepo: Repository<Item>;
+    private itemShopRepo: Repository<ItemShop>;
     private userBlookRepo: Repository<UserBlook>;
 
     constructor(
@@ -45,6 +50,7 @@ export class StaffService {
         this.packRepo = this.sequelizeService.getRepository(Pack);
         this.blookRepo = this.sequelizeService.getRepository(Blook);
         this.itemRepo = this.sequelizeService.getRepository(Item);
+        this.itemShopRepo = this.sequelizeService.getRepository(ItemShop);
         this.userBlookRepo = this.sequelizeService.getRepository(UserBlook);
     }
 
@@ -66,6 +72,10 @@ export class StaffService {
 
     getItems() {
         return this.itemRepo.findAll({ order: [["priority", "ASC"]] });
+    }
+
+    getItemShop() {
+        return this.itemShopRepo.findAll({ order: [["priority", "ASC"]] });
     }
 
     async createResource(userId: string, dto: StaffAdminCreateResourceDto) {
@@ -230,10 +240,14 @@ export class StaffService {
             order: [["priority", "DESC"]]
         });
 
-        return this.itemRepo.create({
+        const item = await this.itemRepo.create({
             ...dto,
             priority: lastItem ? lastItem.priority + 1 : 1
         });
+
+        await this.redisService.setItem(item.id, item);
+
+        return item;
     }
 
     async updateItem(userId: string, itemId: number, dto: StaffAdminUpdateItemDto) {
@@ -241,6 +255,8 @@ export class StaffService {
 
         await this.rarityRepo.findByPk(dto.rarityId);
         await this.resourceRepo.findByPk(dto.imageId);
+
+        await this.redisService.setItem(itemId, dto);
 
         return this.itemRepo.update(dto, { where: { id: itemId } });
     }
@@ -255,12 +271,62 @@ export class StaffService {
 
             const item = items.find((item) => item.id === itemMap.itemId);
             await item.update({ priority: itemMap.priority }, { transaction });
+
+            await this.redisService.setItem(item.id, item);
         }
 
         await transaction.commit();
     }
 
     async deleteItem(userId: string, itemId: number) {
+        await this.redisService.deleteItem(itemId);
+
         return this.itemRepo.destroy({ where: { id: itemId } });
+    }
+
+    async createItemShopItem (userId: string, dto: StaffAdminCreateItemShopItemDto) {
+        const lastItemShopItem = await this.itemShopRepo.findOne({
+            order: [["priority", "DESC"]]
+        });
+
+        const itemShopItem = await this.itemShopRepo.create({
+            ...dto,
+            priority: lastItemShopItem ? lastItemShopItem.priority + 1 : 1
+        });
+
+        await this.redisService.setItemShopItem(itemShopItem.id, itemShopItem);
+
+        return itemShopItem;
+    }
+
+    async updateItemShopItem(userId: string, itemShopItemId: number, dto: StaffAdminUpdateItemShopItemDto) {
+        const itemShopItem = await this.itemShopRepo.findByPk(itemShopItemId);
+        
+        await this.redisService.setItemShopItem(itemShopItemId, dto);
+
+        return itemShopItem.update(dto);
+    }
+
+    async updateItemShopItemPriorities(userId: string, dto: StaffAdminUpdateItemShopItemPriorities) {
+        const itemShopItems = await this.itemShopRepo.findAll();
+
+        const transaction = await this.sequelizeService.transaction();
+
+        for (const itemShopItemMap of dto.itemShopItemMap) {
+            if (!itemShopItems.find((itemShopItem) => itemShopItem.id === itemShopItemMap.itemShopItemId)) throw new BadRequestException(BadRequest.STAFF_ADMIN_INVALID_PRIORITIES);
+
+            const itemShopItem = itemShopItems.find((itemShopItem) => itemShopItem.id === itemShopItemMap.itemShopItemId);
+            await itemShopItem.update({ priority: itemShopItemMap.priority }, { transaction });
+
+            await this.redisService.setItemShopItem(itemShopItem.id, itemShopItem);
+        }
+
+        await transaction.commit();
+    }
+
+    async deleteItemShopItem(userId: string, itemShopItemId: number) {
+        await this.redisService.deleteItemShopItem(itemShopItemId);
+
+        return this.itemShopRepo.destroy({ where: { id: itemShopItemId } });
     }
 }

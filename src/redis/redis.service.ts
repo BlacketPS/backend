@@ -3,7 +3,7 @@ import { Redis } from "ioredis";
 import { Repository } from "sequelize-typescript";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { ConfigService } from "@nestjs/config";
-import { Resource, Session, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji } from "blacket-types";
+import { Resource, Session, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop } from "blacket-types";
 import { safelyParseJSON } from "src/core/functions";
 
 @Injectable()
@@ -150,6 +150,10 @@ export class RedisService extends Redis {
     getItem = async (id: number): Promise<Item> => await this.getKey("item", id);
     setItem = async (id: number, item: Partial<Item>): Promise<void> => await this.setKey("item", id, item);
     deleteItem = async (id: number): Promise<void> => await this.deleteKey("item", id);
+
+    getItemShopItem = async (id: number): Promise<ItemShop> => await this.getKey("itemShop", id);
+    setItemShopItem = async (id: number, item: Partial<ItemShop>): Promise<void> => await this.setKey("itemShop", id, item);
+    deleteItemShopItem = async (id: number): Promise<void> => await this.deleteKey("itemShop", id);
 
     getTitle = async (id: number): Promise<Title> => await this.getKey("title", id);
     setTitle = async (id: number, title: Partial<Item>): Promise<void> => await this.setKey("title", id, title);
