@@ -100,7 +100,6 @@ export class UsersService implements OnApplicationBootstrap {
             ]
         });
 
-
         if (!userData) return null;
 
         if (settings.cacheUser) {
@@ -117,7 +116,7 @@ export class UsersService implements OnApplicationBootstrap {
         return count > 0;
     }
 
-    // transactions are goofy, if you don't use a current transaction you'll get a fk constraint error
+    // transactions are goofy, if you don't use a current transaction you'll get a fk constraint error.
     async createUser(username: string, password: string, transaction?: Transaction): Promise<User> {
         const user = await this.userRepo.create({
             username: username,
