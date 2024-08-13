@@ -53,6 +53,12 @@ export class StaffController {
     }
 
     @Permissions({ permissions: [PermissionType.BLACKLIST_USERS] })
+    @Get("admin/groups")
+    async getGroups() {
+        return await this.staffService.getGroups();
+    }
+
+    @Permissions({ permissions: [PermissionType.BLACKLIST_USERS] })
     @Get("admin/rarities")
     async getRarities() {
         return await this.staffService.getRarities();

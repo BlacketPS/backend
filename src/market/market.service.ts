@@ -59,6 +59,6 @@ export class MarketService {
     }
 
     async gimmeItem(userId: string) {
-        return await this.userItemRepo.create({ userId, itemId: 5, usesLeft: 6, initalObtainerId: userId, obtainedBy: ItemObtainMethod.ITEM_SHOP });
+        return await this.userItemRepo.create({ userId, itemId: 1, usesLeft: 1, initalObtainerId: userId, obtainedBy: ItemObtainMethod.ITEM_SHOP });
     }
 }

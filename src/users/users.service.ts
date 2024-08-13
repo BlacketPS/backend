@@ -4,7 +4,7 @@ import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { Op, type Transaction } from "sequelize";
-import { PermissionType, OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, Permission, Group, UserPermission, UserGroup, IpAddress, UserIpAddress, Title, Font, Resource, DiscordAccessToken, DiscordDiscordUser, InternalServerError } from "blacket-types";
+import { PermissionType, OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, Permission, Group, UserPermission, UserGroup, IpAddress, UserIpAddress, Title, Font, Resource, DiscordAccessToken, DiscordDiscordUser, InternalServerError, UserPaymentMethod } from "blacket-types";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -15,7 +15,9 @@ export interface GetUserSettings {
     includeTitles?: boolean;
     includeBanners?: boolean;
     includeStatistics?: boolean;
+    includeDiscord?: boolean;
     includeSettings?: boolean;
+    includePaymentMethods?: boolean;
 }
 
 @Injectable()
@@ -29,6 +31,7 @@ export class UsersService implements OnApplicationBootstrap {
     private userItemRepo: Repository<UserItem>;
     private userStatisticRepo: Repository<UserStatistic>;
     private userSettingRepo: Repository<UserSetting>;
+    private userPaymentMethodRepo: Repository<UserPaymentMethod>;
     private userPermissionRepo: Repository<UserPermission>;
     private ipAddressRepo: Repository<IpAddress>;
     private userIpAddressRepo: Repository<UserIpAddress>;
@@ -58,6 +61,7 @@ export class UsersService implements OnApplicationBootstrap {
         this.userItemRepo = this.sequelizeService.getRepository(UserItem);
         this.userStatisticRepo = this.sequelizeService.getRepository(UserStatistic);
         this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
+        this.userPaymentMethodRepo = this.sequelizeService.getRepository(UserPaymentMethod);
         this.userPermissionRepo = this.sequelizeService.getRepository(UserPermission);
         this.ipAddressRepo = this.sequelizeService.getRepository(IpAddress);
         this.userIpAddressRepo = this.sequelizeService.getRepository(UserIpAddress);
@@ -67,14 +71,14 @@ export class UsersService implements OnApplicationBootstrap {
 
         this.defaultPermissions = [PermissionType.CREATE_REPORTS, PermissionType.CHANGE_USERNAME];
         this.defaultAvatar = await this.resourceRepo.findOne({ where: { id: 1 } });
-        this.defaultBanner = await this.resourceRepo.findOne({ where: { id: 2 } });
+        this.defaultBanner = await this.resourceRepo.findOne({ where: { id: 3 } });
         this.defaultTitle = await this.titleRepo.findOne({ where: { id: 1 } });
         this.defaultFont = await this.fontRepo.findOne({ where: { id: 1 } });
     }
 
     async getUser(user: string, settings: GetUserSettings = {
         cacheUser: true
-    }) {
+    }): Promise<User | null> {
         if (settings.cacheUser) {
             const cachedUser = await this.redisService.getKey("cachedUser", user.toLowerCase());
 
@@ -89,8 +93,10 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeItemsCurrent) include.push({ model: this.userItemRepo, as: "items", attributes: ["id", "itemId", "usesLeft"], where: { usesLeft: { [Op.gt]: 0 } }, required: false });
         if (settings.includeItemsAll) include.push({ model: this.userItemRepo, as: "items", attributes: ["id", "itemId", "usesLeft"], required: false });
         if (settings.includeStatistics) include.push({ model: this.userStatisticRepo, as: "statistics", attributes: { exclude: [this.userStatisticRepo.primaryKeyAttribute] } });
+        if (settings.includeDiscord) include.push({ model: this.userDiscordRepo, as: "discord", attributes: { exclude: ["userId"] }, required: false });
         if (settings.includeTitles) include.push({ model: this.userTitleRepo, as: "titles", attributes: { exclude: [this.userTitleRepo.primaryKeyAttribute] } });
         if (settings.includeSettings) include.push({ model: this.userSettingRepo, as: "settings", attributes: { exclude: [this.userSettingRepo.primaryKeyAttribute] } });
+        if (settings.includePaymentMethods) include.push({ model: this.userPaymentMethodRepo, as: "paymentMethods", attributes: { exclude: ["userId", "squareCustomerId", "squarePaymentMethodId"] }, required: false });
 
         const userData = await this.userRepo.findOne({
             where: this.sequelizeService.or({ id: user }, { username: { [Op.iLike]: user } }),
@@ -163,17 +169,7 @@ export class UsersService implements OnApplicationBootstrap {
             userId,
             discordId: discordUser.id,
             username: discordUser.username,
-            discriminator: discordUser.discriminator,
-            global_name: discordUser.global_name,
-            avatar: discordUser.avatar,
-            mfa_enabled: discordUser.mfa_enabled,
-            banner: discordUser.banner,
-            accent_color: discordUser.accent_color,
-            locale: discordUser.locale,
-            flags: discordUser.flags,
-            premium_type: discordUser.premium_type,
-            public_flags: discordUser.public_flags,
-            avatar_decoration: discordUser.avatar_decoration
+            avatar: discordUser.avatar
         }, { transaction });
 
         await transaction.commit().catch(() => {

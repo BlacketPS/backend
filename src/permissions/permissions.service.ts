@@ -68,17 +68,21 @@ export class PermissionsService {
     }
 
     async getUserPermissions(userId: User["id"]): Promise<number[]> {
-        /* const user = await this.userRepo.findByPk(userId, {
+        /*
+        const user = await this.userRepo.findByPk(userId, {
             include: [
                 { model: this.userGroupRepo, include: [this.groupRepo] },
                 { model: this.userPermissionRepo, include: [this.permissionRepo] }
-            ],
+            ]
         });
     
-        const groupPermissions = user.groups.map((group) => this.groups.find((g) => g.id === group.groupId).permissions).flat().map((p) => p.id);
+        const groupPermissions = user.groups.flatMap((group) => this.groups.find((g) => g.id === group.groupId).permissions).map((p) => p.id);
         const userPermissions = user.permissions.map((p) => p.permissionId);
+
+        const combinedAndDedupedPermissions = [...new Set([...groupPermissions, ...userPermissions])];
         
-        return [...groupPermissions, ...userPermissions]; */
+        return combinedAndDedupedPermissions;
+        */
         return [
             1,
             2,
@@ -120,6 +124,6 @@ export class PermissionsService {
             38,
             39,
             40
-          ]
+          ];
     }
 }

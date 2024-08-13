@@ -97,13 +97,13 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
         await this.roomRepo.create({ id: 0, name: "global", public: true }, { transaction });
 
         await this.rarityRepo.create({ name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON }, { transaction });
-        await this.rarityRepo.create({ name: "Uncommon", color: "#ffffff", experience: 5, animationType: RarityAnimationType.UNCOMMON }, { transaction });
-        await this.rarityRepo.create({ name: "Rare", color: "#ffffff", experience: 10, animationType: RarityAnimationType.RARE }, { transaction });
+        await this.rarityRepo.create({ name: "Uncommon", color: "#ffffff", experience: 1, animationType: RarityAnimationType.UNCOMMON }, { transaction });
+        await this.rarityRepo.create({ name: "Rare", color: "#ffffff", experience: 5, animationType: RarityAnimationType.RARE }, { transaction });
         await this.rarityRepo.create({ name: "Epic", color: "#ffffff", experience: 25, animationType: RarityAnimationType.EPIC }, { transaction });
         await this.rarityRepo.create({ name: "Legendary", color: "#ffffff", experience: 100, animationType: RarityAnimationType.LEGENDARY }, { transaction });
         await this.rarityRepo.create({ name: "Chroma", color: "#ffffff", experience: 250, animationType: RarityAnimationType.CHROMA }, { transaction });
-        await this.rarityRepo.create({ name: "Unique", color: "#ffffff", experience: 500, animationType: RarityAnimationType.CHROMA }, { transaction });
-        await this.rarityRepo.create({ name: "Mystical", color: "#ffffff", experience: 500, animationType: RarityAnimationType.CHROMA }, { transaction });
+        await this.rarityRepo.create({ name: "Mystical", color: "#ffffff", experience: 1000, animationType: RarityAnimationType.CHROMA }, { transaction });
+        await this.rarityRepo.create({ name: "Unique", color: "#ffffff", experience: 1000, animationType: RarityAnimationType.CHROMA }, { transaction });
         await this.rarityRepo.create({ name: "Iridescent", color: "#ffffff", experience: 1000, animationType: RarityAnimationType.IRIDESCENT }, { transaction });
 
         await this.bannerRepo.create({ name: "Default", imageId: 3 }, { transaction });

@@ -27,13 +27,15 @@ import {
     StaffAdminUpdateItemPrioritiesDto,
     StaffAdminCreateItemShopItemDto,
     StaffAdminUpdateItemShopItemDto,
-    StaffAdminUpdateItemShopItemPriorities
+    StaffAdminUpdateItemShopItemPriorities,
+    Group
 } from "blacket-types";
 import { ForeignKeyConstraintError } from "sequelize";
 
 @Injectable()
 export class StaffService {
     private resourceRepo: Repository<Resource>;
+    private groupRepo: Repository<Group>;
     private rarityRepo: Repository<Rarity>;
     private packRepo: Repository<Pack>;
     private blookRepo: Repository<Blook>;
@@ -46,6 +48,7 @@ export class StaffService {
         private readonly redisService: RedisService
     ) {
         this.resourceRepo = this.sequelizeService.getRepository(Resource);
+        this.groupRepo = this.sequelizeService.getRepository(Group);
         this.rarityRepo = this.sequelizeService.getRepository(Rarity);
         this.packRepo = this.sequelizeService.getRepository(Pack);
         this.blookRepo = this.sequelizeService.getRepository(Blook);
@@ -56,6 +59,10 @@ export class StaffService {
 
     getResources() {
         return this.resourceRepo.findAll();
+    }
+
+    getGroups() {
+        return this.groupRepo.findAll();
     }
 
     getRarities() {

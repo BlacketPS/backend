@@ -1,5 +1,6 @@
-import { Injectable, ExecutionContext } from "@nestjs/common";
-import { ThrottlerGuard } from "@nestjs/throttler";
+import { Injectable } from "@nestjs/common";
+import { ThrottlerException, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerLimitDetail } from "@nestjs/throttler/dist/throttler.guard.interface";
 import { getClientIp } from "@supercharge/request-ip";
 import { Request } from "express";
 
@@ -12,7 +13,7 @@ export class UserThrottlerGuard extends ThrottlerGuard {
         else return req.session.userId;
     }
 
-    generateKey(_: ExecutionContext, suffix: string) {
-        return suffix;
+    async throwThrottlingException(_, throttlerLimitDetail: ThrottlerLimitDetail): Promise<void> {
+        throw new ThrottlerException(`You are being rate limited. Please wait ${throttlerLimitDetail.ttl}ms before trying again.`);
     }
 }

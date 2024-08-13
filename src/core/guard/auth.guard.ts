@@ -1,9 +1,9 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { CoreService } from "src/core/core.service";
 import { RedisService } from "src/redis/redis.service";
 import { Request } from "express";
 import { Reflector } from "@nestjs/core";
 import { IS_PUBLIC_KEY } from "../decorator";
-import { safelyParseJSON } from "../functions";
 
 export interface Session {
     id: string;
@@ -14,6 +14,7 @@ export interface Session {
 @Injectable()
 export class AuthGuard implements CanActivate {
     constructor(
+        private readonly coreService: CoreService,
         private readonly redisService: RedisService,
         private reflector: Reflector
     ) { }
@@ -32,7 +33,7 @@ export class AuthGuard implements CanActivate {
 
         if (!token) throw new UnauthorizedException();
 
-        const decodedToken = safelyParseJSON(Buffer.from(token, "base64").toString());
+        const decodedToken = this.coreService.safelyParseJSON(Buffer.from(token, "base64").toString());
         if (!decodedToken) throw new UnauthorizedException();
 
         const session = await this.redisService.getSession(decodedToken.userId);

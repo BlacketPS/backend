@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
+import { CoreService } from "src/core/core.service";
 import { RedisService } from "src/redis/redis.service";
 import { Server, Socket } from "socket.io";
 import { Session } from "src/core/guard";
-import { safelyParseJSON } from "src/core/functions";
 import { SocketMessageType } from "blacket-types";
 
 @Injectable()
@@ -10,6 +10,7 @@ export class SocketService {
     public server: Server;
 
     constructor(
+        private readonly coreService: CoreService,
         private readonly redisService: RedisService
     ) { }
 
@@ -23,7 +24,7 @@ export class SocketService {
 
         if (!token) return this.emitMessageAndCloseSocket(client, SocketMessageType.UNAUTHORIZED, { message: "no token provided" });
 
-        const decodedToken = safelyParseJSON(Buffer.from(token, "base64").toString());
+        const decodedToken = this.coreService.safelyParseJSON(Buffer.from(token, "base64").toString());
         if (!decodedToken) return this.emitMessageAndCloseSocket(client, SocketMessageType.UNAUTHORIZED, { message: "invalid token" });
 
         const session = await this.redisService.getSession(decodedToken.userId);

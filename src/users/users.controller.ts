@@ -21,12 +21,14 @@ export class UsersController {
             includeBlooksCurrent: true,
             includeItemsCurrent: true,
             includeSettings: true,
+            includePaymentMethods: true,
             includeStatistics: true,
-            includeTitles: true
+            includeTitles: true,
+            includeDiscord: true
         });
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
-        else return new PrivateUser(typeof userData.toJSON === "function" ? userData.toJSON() : userData);
+        else return new PrivateUser((typeof userData.toJSON === "function" ? userData.toJSON() : userData) as any);
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
@@ -38,10 +40,11 @@ export class UsersController {
             includeBlooksCurrent: true,
             includeItemsCurrent: true,
             includeStatistics: true,
-            includeTitles: true
+            includeTitles: true,
+            includeDiscord: true
         });
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
-        else return new PublicUser(typeof userData.toJSON === "function" ? userData.toJSON() : userData);
+        else return new PublicUser((typeof userData.toJSON === "function" ? userData.toJSON() : userData) as any);
     }
 }

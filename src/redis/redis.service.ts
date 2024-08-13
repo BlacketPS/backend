@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { Redis } from "ioredis";
 import { Repository } from "sequelize-typescript";
+import { CoreService } from "src/core/core.service";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { ConfigService } from "@nestjs/config";
 import { Resource, Session, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop } from "blacket-types";
-import { safelyParseJSON } from "src/core/functions";
 
 @Injectable()
 export class RedisService extends Redis {
@@ -23,6 +23,7 @@ export class RedisService extends Redis {
     private emojiRepo: Repository<Emoji>;
 
     constructor(
+        private coreService: CoreService,
         private sequelizeService: SequelizeService,
         private configService: ConfigService
     ) {
@@ -94,11 +95,11 @@ export class RedisService extends Redis {
         let data = keys.length ? await this.mget(keys) : [];
         data = data.filter((item, index) => data.indexOf(item) === index);
 
-        return data.map((item: string) => safelyParseJSON(item));
+        return data.map((item: string) => this.coreService.safelyParseJSON(item));
     }
 
     async getKey<T>(key: string, value: any): Promise<T | any> {
-        return safelyParseJSON(await this.get(`${this.prefix}:${key}:${value}`));
+        return this.coreService.safelyParseJSON(await this.get(`${this.prefix}:${key}:${value}`));
     }
 
     async setKey(key: string, value: any, data: any, ttl?: number) {
