@@ -9,8 +9,8 @@ model blook {
   packId                                Int?
   onlyOnDay                             Int?
   priority                              Int          @default(0)
-  createdAt                             DateTime     @db.Timestamptz(6)
-  updatedAt                             DateTime     @db.Timestamptz(6)
+  createdAt                             DateTime     @db.Timestamptz(6) @default(now())
+  updatedAt                             DateTime     @db.Timestamptz(6) @updatedAt
   auction                               auction[]
   resource_blook_backgroundIdToresource resource     @relation("blook_backgroundIdToresource", fields: [backgroundId], references: [id], onDelete: NoAction)
   resource_blook_imageIdToresource      resource     @relation("blook_imageIdToresource", fields: [imageId], references: [id], onDelete: NoAction)

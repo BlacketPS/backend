@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { Repository } from "sequelize-typescript";
 import { TokenDistribution, User, Forbidden } from "blacket-types";
 import { UsersService } from "src/users/users.service";
@@ -20,7 +20,7 @@ export class QuestsService {
     private dailyTokensDistributionTotalChance = this.dailyTokensDistribution.reduce((acc, curr) => acc + curr.chance, 0);
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private usersService: UsersService
     ) {
         this.userRepo = this.sequelizeService.getRepository(User);

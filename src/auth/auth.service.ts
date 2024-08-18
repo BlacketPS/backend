@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
 import { ConfigService } from "@nestjs/config";
@@ -19,7 +19,7 @@ export class AuthService {
     private sessionRepo: Repository<Session>;
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private redisService: RedisService,
         private usersService: UsersService,
         private configService: ConfigService,
@@ -68,8 +68,8 @@ export class AuthService {
             Forbidden.AUTH_BANNED
                 .replace("%s", user.punishments[0].reason)
                 .replace("%s", `${user.punishments[0].expiresAt.getTime() - Date.now() > 1000 * 60 * 60 * 24 * 365
-                        ? "never"
-                        : `on ${user.punishments[0].expiresAt.toLocaleDateString()} at ${user.punishments[0].expiresAt.toLocaleTimeString()} UTC`
+                    ? "never"
+                    : `on ${user.punishments[0].expiresAt.toLocaleDateString()} at ${user.punishments[0].expiresAt.toLocaleTimeString()} UTC`
                     }`)
         );
 

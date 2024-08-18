@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { RedisService } from "src/redis/redis.service";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "sequelize-typescript";
 import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, UserBlook, UserTitle } from "blacket-types";
@@ -14,7 +14,7 @@ export class CosmeticsService {
 
     constructor(
         private redisService: RedisService,
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private usersService: UsersService
     ) {
         this.userRepo = this.sequelizeService.getRepository(User);

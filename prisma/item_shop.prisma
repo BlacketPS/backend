@@ -6,8 +6,8 @@ model item_shop {
   enabled   Boolean  @default(true)
   weekly    Boolean  @default(false)
   priority  Int      @default(0)
-  createdAt DateTime @db.Timestamptz(6)
-  updatedAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6) @default(now())
+  updatedAt DateTime @db.Timestamptz(6) @default(now())
   type      Int
   titleId   Int?
   blook     blook?   @relation(fields: [blookId], references: [id])

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
@@ -18,7 +18,7 @@ export class SettingsService {
     private invalidSettings: string[] = ["id", "otpSecret"];
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private redisService: RedisService,
         private authService: AuthService,
         private usersService: UsersService
@@ -67,7 +67,7 @@ export class SettingsService {
         await this.authService.destroySession(userId);
 
         await this.userRepo.update({ password: await hash(dto.newPassword, 10) }, { where: { id: userId } });
-        
+
         return { token: await this.authService.sessionToToken(await this.authService.findOrCreateSession(userId)) } as AuthAuthEntity;
     }
 

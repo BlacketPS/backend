@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { SocketGateway } from "src/socket/socket.gateway";
 import { Repository } from "sequelize-typescript";
@@ -11,7 +11,7 @@ export class ChatService {
     private messageRepo: Repository<Message>;
 
     constructor(
-        private readonly sequelizeService: SequelizeService,
+        private readonly sequelizeService: PrismaService,
         private readonly redisService: RedisService,
         private readonly socketGateway: SocketGateway
     ) {

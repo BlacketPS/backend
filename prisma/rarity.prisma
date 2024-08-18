@@ -4,8 +4,8 @@ model rarity {
   color         String   @db.VarChar(255)
   animationType Int
   experience    Int
-  createdAt     DateTime @db.Timestamptz(6)
-  updatedAt     DateTime @db.Timestamptz(6)
+  createdAt     DateTime @db.Timestamptz(6) @default(now())
+  updatedAt     DateTime @db.Timestamptz(6) @default(now())
   blook         blook[]
   item          item[]
 }

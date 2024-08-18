@@ -2,8 +2,8 @@ model font {
   id         Int       @id @default(autoincrement())
   name       String    @unique @db.VarChar(255)
   resourceId Int
-  createdAt  DateTime  @db.Timestamptz(6)
-  updatedAt  DateTime  @db.Timestamptz(6)
+  createdAt  DateTime  @db.Timestamptz(6) @default(now())
+  updatedAt  DateTime  @db.Timestamptz(6) @default(now())
   resource   resource  @relation(fields: [resourceId], references: [id], onDelete: NoAction)
   product    product[]
   user       user[]

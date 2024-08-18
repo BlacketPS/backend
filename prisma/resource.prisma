@@ -1,8 +1,8 @@
 model resource {
   id                                 Int       @id @default(autoincrement())
   path                               String    @db.VarChar(255)
-  createdAt                          DateTime  @db.Timestamptz(6)
-  updatedAt                          DateTime  @db.Timestamptz(6)
+  createdAt                          DateTime  @db.Timestamptz(6) @default(now())
+  updatedAt                          DateTime  @db.Timestamptz(6) @default(now())
   banner                             banner[]
   blook_blook_backgroundIdToresource blook[]   @relation("blook_backgroundIdToresource")
   blook_blook_imageIdToresource      blook[]   @relation("blook_imageIdToresource")

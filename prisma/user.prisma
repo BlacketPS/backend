@@ -58,8 +58,8 @@ model user_banner {
   id        Int      @id @default(autoincrement())
   userId    String   @db.VarChar(255)
   bannerId  Int
-  createdAt DateTime @db.Timestamptz(6)
-  updatedAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6) @default(now())
+  updatedAt DateTime @db.Timestamptz(6) @default(now())
   banner    banner   @relation(fields: [bannerId], references: [id], onDelete: NoAction)
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -71,8 +71,8 @@ model user_blook {
   sold                                   Boolean  @default(false)
   initalObtainerId                       String   @db.VarChar(255)
   obtainedBy                             Int      @default(1)
-  createdAt                              DateTime @db.Timestamptz(6)
-  updatedAt                              DateTime @db.Timestamptz(6)
+  createdAt                              DateTime @db.Timestamptz(6) @default(now())
+  updatedAt                              DateTime @db.Timestamptz(6) @default(now())
   blook                                  blook    @relation(fields: [blookId], references: [id], onDelete: Cascade)
   user_user_blook_initalObtainerIdTouser user     @relation("user_blook_initalObtainerIdTouser", fields: [initalObtainerId], references: [id], onDelete: Cascade)
   user_user_blook_userIdTouser           user     @relation("user_blook_userIdTouser", fields: [userId], references: [id], onDelete: Cascade)
@@ -83,8 +83,8 @@ model user_discord {
   userId    String   @db.VarChar(255)
   username  String   @db.VarChar(255)
   avatar    String?  @db.VarChar(255)
-  createdAt DateTime @db.Timestamptz(6)
-  updatedAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6) @default(now())
+  updatedAt DateTime @db.Timestamptz(6) @default(now())
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -92,8 +92,8 @@ model user_group {
   id        Int      @id @default(autoincrement())
   groupId   Int
   userId    String   @db.VarChar(255)
-  createdAt DateTime @db.Timestamptz(6)
-  updatedAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6) @default(now())
+  updatedAt DateTime @db.Timestamptz(6) @default(now())
   group     group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -103,8 +103,8 @@ model user_guild {
   guildId   Int
   userId    String   @db.VarChar(255)
   userRole  Int      @default(1)
-  createdAt DateTime @db.Timestamptz(6)
-  updatedAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6) @default(now())
+  updatedAt DateTime @db.Timestamptz(6) @default(now())
   guild     guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -113,8 +113,8 @@ model user_guild_request {
   id        Int      @id @default(autoincrement())
   guildId   Int
   userId    String   @db.VarChar(255)
-  createdAt DateTime @db.Timestamptz(6)
-  updatedAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6) @default(now())
+  updatedAt DateTime @db.Timestamptz(6) @default(now())
   guild     guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -137,8 +137,8 @@ model user_item {
   usesLeft                              Int      @default(0)
   initalObtainerId                      String   @db.VarChar(255)
   obtainedBy                            Int      @default(1)
-  createdAt                             DateTime @db.Timestamptz(6)
-  updatedAt                             DateTime @db.Timestamptz(6)
+  createdAt                             DateTime @db.Timestamptz(6) @default(now())
+  updatedAt                             DateTime @db.Timestamptz(6) @default(now())
   user_user_item_initalObtainerIdTouser user     @relation("user_item_initalObtainerIdTouser", fields: [initalObtainerId], references: [id], onDelete: NoAction)
   item                                  item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
   user_user_item_userIdTouser           user     @relation("user_item_userIdTouser", fields: [userId], references: [id], onDelete: Cascade)
@@ -153,8 +153,8 @@ model user_oauth {
   refreshToken String   @db.VarChar(255)
   scope        String   @db.VarChar(255)
   expiresAt    DateTime @db.Timestamptz(6)
-  createdAt    DateTime @db.Timestamptz(6)
-  updatedAt    DateTime @db.Timestamptz(6)
+  createdAt    DateTime @db.Timestamptz(6) @default(now())
+  updatedAt    DateTime @db.Timestamptz(6) @default(now())
   user         user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -164,8 +164,8 @@ model user_payment_method {
   squareCustomerId      String   @db.VarChar(255)
   squarePaymentMethodId String   @db.VarChar(255)
   lastFour              String   @db.VarChar(255)
-  createdAt             DateTime @db.Timestamptz(6)
-  updatedAt             DateTime @db.Timestamptz(6)
+  createdAt             DateTime @db.Timestamptz(6) @default(now())
+  updatedAt             DateTime @db.Timestamptz(6) @default(now())
   cardBrand             String   @db.VarChar(255)
   primary               Boolean  @default(false)
   user                  user     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -188,8 +188,8 @@ model user_punishment {
   reason                             String   @db.VarChar(255)
   expiresAt                          DateTime @db.Timestamptz(6)
   staffId                            String   @db.VarChar(255)
-  createdAt                          DateTime @db.Timestamptz(6)
-  updatedAt                          DateTime @db.Timestamptz(6)
+  createdAt                          DateTime @db.Timestamptz(6) @default(now())
+  updatedAt                          DateTime @db.Timestamptz(6) @default(now())
   audit                              audit[]
   user_user_punishment_staffIdTouser user     @relation("user_punishment_staffIdTouser", fields: [staffId], references: [id], onDelete: Cascade)
   user_user_punishment_userIdTouser  user     @relation("user_punishment_userIdTouser", fields: [userId], references: [id], onDelete: Cascade)
@@ -201,8 +201,8 @@ model user_relationship {
   targetId                              String   @db.VarChar(255)
   friendNickname                        String?  @db.VarChar(255)
   type                                  Int
-  createdAt                             DateTime @db.Timestamptz(6)
-  updatedAt                             DateTime @db.Timestamptz(6)
+  createdAt                             DateTime @db.Timestamptz(6) @default(now())
+  updatedAt                             DateTime @db.Timestamptz(6) @default(now())
   user_user_relationship_targetIdTouser user     @relation("user_relationship_targetIdTouser", fields: [targetId], references: [id], onDelete: Cascade)
   user_user_relationship_userIdTouser   user     @relation("user_relationship_userIdTouser", fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -227,8 +227,8 @@ model user_title {
   id        Int      @id @default(autoincrement())
   userId    String   @db.VarChar(255)
   titleId   Int
-  createdAt DateTime @db.Timestamptz(6)
-  updatedAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6) @default(now())
+  updatedAt DateTime @db.Timestamptz(6) @default(now())
   title     title    @relation(fields: [titleId], references: [id], onDelete: NoAction)
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

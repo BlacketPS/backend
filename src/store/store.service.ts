@@ -2,7 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import { Client } from "square";
 import { Conflict, NotFound, StoreCreatePaymentMethodDto, UserPaymentMethod } from "blacket-types";
 import { CoreService } from "src/core/core.service";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { Repository } from "sequelize-typescript";
 
 @Injectable()
@@ -12,7 +12,7 @@ export class StoreService {
     constructor(
         private client: Client,
         private coreService: CoreService,
-        private sequelizeService: SequelizeService
+        private sequelizeService: PrismaService
     ) {
         this.userPaymentMethodRepo = this.sequelizeService.getRepository(UserPaymentMethod);
     }

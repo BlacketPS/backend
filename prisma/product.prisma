@@ -13,8 +13,8 @@ model product {
   lifetimePrice  Float?
   groupId        Int?
   priority       Int      @default(0)
-  createdAt      DateTime @db.Timestamptz(6)
-  updatedAt      DateTime @db.Timestamptz(6)
+  createdAt      DateTime @db.Timestamptz(6) @default(now())
+  updatedAt      DateTime @db.Timestamptz(6) @default(now())
   blook          blook?   @relation(fields: [blookId], references: [id])
   font           font?    @relation(fields: [fontId], references: [id])
   group          group?   @relation(fields: [groupId], references: [id])

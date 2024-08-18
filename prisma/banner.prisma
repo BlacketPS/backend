@@ -3,8 +3,8 @@ model banner {
   name        String        @unique @db.VarChar(255)
   imageId     Int
   priority    Int           @default(0)
-  createdAt   DateTime      @db.Timestamptz(6)
-  updatedAt   DateTime      @db.Timestamptz(6)
+  createdAt   DateTime      @db.Timestamptz(6) @default(now())
+  updatedAt   DateTime      @db.Timestamptz(6) @default(now())
   resource    resource      @relation(fields: [imageId], references: [id], onDelete: NoAction)
   user_banner user_banner[]
 }

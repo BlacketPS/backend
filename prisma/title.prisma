@@ -2,8 +2,8 @@ model title {
   id         Int          @id @default(autoincrement())
   name       String       @unique @db.VarChar(255)
   priority   Int          @default(0)
-  createdAt  DateTime     @db.Timestamptz(6)
-  updatedAt  DateTime     @db.Timestamptz(6)
+  createdAt  DateTime     @db.Timestamptz(6) @default(now())
+  updatedAt  DateTime     @db.Timestamptz(6) @default(now())
   item_shop  item_shop[]
   product    product[]
   user       user[]

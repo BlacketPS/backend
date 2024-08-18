@@ -5,7 +5,7 @@ import { ThrottlerModule, seconds } from "@nestjs/throttler";
 
 import { CoreModule } from "./core/core.module";
 import { LoggerModule } from "./core/logger/logger.module";
-import { SequelizeModule } from "./sequelize/sequelize.module";
+import { PrismaModule } from "./prisma/prisma.module";
 import { RedisModule } from "./redis/redis.module";
 import { SocketModule } from "./socket/socket.module";
 import { DefaultModule } from "./default/default.module";
@@ -43,7 +43,7 @@ import { IsAccessCode } from "./core/validate/";
 
         CoreModule,
         LoggerModule,
-        SequelizeModule,
+        PrismaModule,
         RedisModule,
         SocketModule,
         DefaultModule,

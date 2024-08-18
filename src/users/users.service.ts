@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, OnApplicationBootstrap } from "@nestjs/common";
 import { Repository } from "sequelize-typescript";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { hash } from "bcrypt";
@@ -48,7 +48,7 @@ export class UsersService implements OnApplicationBootstrap {
     private defaultFont: Font;
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private redisService: RedisService,
         private permissionsService: PermissionsService
     ) { }

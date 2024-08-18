@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { Repository } from "sequelize-typescript";
 import {
@@ -47,7 +47,7 @@ export class StaffService {
     private userBlookRepo: Repository<UserBlook>;
 
     constructor(
-        private readonly sequelizeService: SequelizeService,
+        private readonly sequelizeService: PrismaService,
         private readonly redisService: RedisService
     ) {
         this.resourceRepo = this.sequelizeService.getRepository(Resource);
@@ -114,7 +114,7 @@ export class StaffService {
 
     async createGroup(userId: string, dto: StaffAdminCreateGroupDto) {
         if (dto.imageId) await this.resourceRepo.findByPk(dto.imageId);
-        
+
         const lastGroup = await this.groupRepo.findOne({
             order: [["priority", "DESC"]]
         });

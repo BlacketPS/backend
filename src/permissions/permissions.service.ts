@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Group, PermissionType, User, UserGroup } from "blacket-types";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { Repository, setScopeOptionsGetters } from "sequelize-typescript";
 
 @Injectable()
@@ -10,7 +10,7 @@ export class PermissionsService {
     private groupRepo: Repository<Group>;
 
     constructor(
-        private readonly sequelizeService: SequelizeService
+        private readonly sequelizeService: PrismaService
     ) {
         this.userRepo = this.sequelizeService.getRepository(User);
         this.userGroupRepo = this.sequelizeService.getRepository(UserGroup);

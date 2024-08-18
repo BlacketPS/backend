@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "sequelize-typescript";
@@ -11,7 +11,7 @@ export class BlooksService {
     private userBlookRepo: Repository<UserBlook>;
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private redisService: RedisService,
         private usersService: UsersService
     ) {

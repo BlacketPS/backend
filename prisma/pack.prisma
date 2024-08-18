@@ -7,8 +7,8 @@ model pack {
   innerColor String   @db.VarChar(255)
   outerColor String   @db.VarChar(255)
   priority   Int      @default(0)
-  createdAt  DateTime @db.Timestamptz(6)
-  updatedAt  DateTime @db.Timestamptz(6)
+  createdAt  DateTime @db.Timestamptz(6) @default(now())
+  updatedAt  DateTime @db.Timestamptz(6) @default(now())
   blook      blook[]
   resource   resource @relation(fields: [imageId], references: [id], onDelete: NoAction)
 }

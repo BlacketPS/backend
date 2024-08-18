@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Redis } from "ioredis";
 import { Repository } from "sequelize-typescript";
 import { CoreService } from "src/core/core.service";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
 import { Resource, Session, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Group, Blacklist, IpAddress, UserPunishment } from "blacket-types";
 
@@ -28,7 +28,7 @@ export class RedisService extends Redis {
 
     constructor(
         private coreService: CoreService,
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private configService: ConfigService
     ) {
         super({});

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "sequelize-typescript";
 import { FormsCreateDto, Form, FormStatus } from "blacket-types";
@@ -10,7 +10,7 @@ export class FormsService {
     private formRepo: Repository<Form>;
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private usersService: UsersService
     ) {
         this.formRepo = this.sequelizeService.getRepository(Form);

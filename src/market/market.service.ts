@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { User, UserStatistic, UserBlook, UserItem, MarketOpenPackDto, BlookObtainMethod, ItemObtainMethod, NotFound, Forbidden, openPack, Blook, InternalServerError } from "blacket-types";
 import { Repository } from "sequelize-typescript";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { DataService } from "src/data/data.service";
 
@@ -13,7 +13,7 @@ export class MarketService {
     private userItemRepo: Repository<UserItem>;
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private redisService: RedisService,
         private dataService: DataService
     ) {
@@ -42,7 +42,7 @@ export class MarketService {
             .catch((err) => {
                 if (err.message === NotFound.UNKNOWN_PACK) throw new NotFoundException(NotFound.UNKNOWN_PACK);
             });
-        
+
         if (!blookId) throw new NotFoundException(NotFound.UNKNOWN_PACK);
         if (typeof blookId === "object") throw new InternalServerErrorException(InternalServerError.DEFAULT);
 

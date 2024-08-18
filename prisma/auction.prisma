@@ -20,8 +20,8 @@ model auction_bid {
   userId    String   @db.VarChar(255)
   auctionId Int
   amount    Int
-  createdAt DateTime @db.Timestamptz(6)
-  updatedAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6) @default(now())
+  updatedAt DateTime @db.Timestamptz(6) @default(now())
   auction   auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
   user      user     @relation(fields: [userId], references: [id], onDelete: NoAction)
 }

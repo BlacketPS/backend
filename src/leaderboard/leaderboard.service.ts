@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Repository } from "sequelize-typescript";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { Resource, User } from "blacket-types";
 
@@ -10,7 +10,7 @@ export class LeaderboardService {
     private resourceRepo: Repository<Resource>;
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private sequelizeService: PrismaService,
         private redisService: RedisService
     ) {
         this.userRepo = this.sequelizeService.getRepository(User);

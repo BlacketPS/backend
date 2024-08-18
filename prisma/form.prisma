@@ -7,7 +7,7 @@ model form {
   status       Int      @default(1)
   deniedReason String?  @db.VarChar(255)
   accepterId   String?  @db.VarChar(255)
-  createdAt    DateTime @db.Timestamptz(6)
-  updatedAt    DateTime @db.Timestamptz(6)
+  createdAt    DateTime @db.Timestamptz(6) @default(now())
+  updatedAt    DateTime @db.Timestamptz(6) @default(now())
   user         user?    @relation(fields: [accepterId], references: [id])
 }
