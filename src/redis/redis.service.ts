@@ -4,14 +4,17 @@ import { Repository } from "sequelize-typescript";
 import { CoreService } from "src/core/core.service";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { ConfigService } from "@nestjs/config";
-import { Resource, Session, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop } from "blacket-types";
+import { Resource, Session, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Group, Blacklist, IpAddress, UserPunishment } from "blacket-types";
 
 @Injectable()
 export class RedisService extends Redis {
     private prefix: string;
 
+    private blacklistRepo: Repository<Blacklist>;
     private sessionRepo: Repository<Session>;
     private resourceRepo: Repository<Resource>;
+    private groupRepo: Repository<Group>;
+    private ipAddressRepo: Repository<IpAddress>;
     private roomRepo: Repository<Room>;
     private blookRepo: Repository<Blook>;
     private rarityRepo: Repository<Rarity>;
@@ -21,6 +24,7 @@ export class RedisService extends Redis {
     private bannerRepo: Repository<Banner>;
     private fontRepo: Repository<Font>;
     private emojiRepo: Repository<Emoji>;
+    private userPunishmentRepo: Repository<UserPunishment>;
 
     constructor(
         private coreService: CoreService,
@@ -31,8 +35,11 @@ export class RedisService extends Redis {
 
         this.prefix = this.configService.get<string>("SERVER_DATABASE_NAME");
 
+        this.blacklistRepo = this.sequelizeService.getRepository(Blacklist);
         this.sessionRepo = this.sequelizeService.getRepository(Session);
         this.resourceRepo = this.sequelizeService.getRepository(Resource);
+        this.groupRepo = this.sequelizeService.getRepository(Group);
+        this.ipAddressRepo = this.sequelizeService.getRepository(IpAddress);
         this.roomRepo = this.sequelizeService.getRepository(Room);
         this.blookRepo = this.sequelizeService.getRepository(Blook);
         this.rarityRepo = this.sequelizeService.getRepository(Rarity);
@@ -42,14 +49,25 @@ export class RedisService extends Redis {
         this.bannerRepo = this.sequelizeService.getRepository(Banner);
         this.fontRepo = this.sequelizeService.getRepository(Font);
         this.emojiRepo = this.sequelizeService.getRepository(Emoji);
+        this.userPunishmentRepo = this.sequelizeService.getRepository(UserPunishment);
     }
 
     async onModuleInit() {
         await this.flushall();
 
         // some of these also set the name, this is so we can get all data just from the name without having to fetch every blook, item, etc
+        for (const blacklist of await this.blacklistRepo.findAll({
+            include: [
+                { model: this.ipAddressRepo, as: "ipAddress" },
+                { model: this.userPunishmentRepo, as: "punishment" }
+            ]
+        })) {
+            this.set(`${this.prefix}:blacklist:${blacklist.ipAddress.ipAddress.replaceAll(":", "|")}`, JSON.stringify(blacklist.dataValues));
+        }
+
         for (const session of await this.sessionRepo.findAll()) this.set(`${this.prefix}:session:${session.userId}`, JSON.stringify(session.dataValues));
         for (const resource of await this.resourceRepo.findAll()) this.set(`${this.prefix}:resource:${resource.id}`, JSON.stringify(resource.dataValues));
+        for (const group of await this.groupRepo.findAll()) this.set(`${this.prefix}:group:${group.id}`, JSON.stringify(group.dataValues));
         for (const room of await this.roomRepo.findAll()) {
             this.set(`${this.prefix}:room:${room.id}`, JSON.stringify(room.dataValues));
             this.set(`${this.prefix}:room:${room.name.toLowerCase()}`, JSON.stringify(room.dataValues));
@@ -124,6 +142,10 @@ export class RedisService extends Redis {
 
     // start of "getters", "setters", and "deleters"
     // lambda format for smaller code size
+    getBlacklist = async (ipAddress: string): Promise<Blacklist> => await this.getKey("blacklist", ipAddress.replaceAll(":", "|"));
+    setBlacklist = async (ipAddress: string, blacklist: Partial<Blacklist>): Promise<void> => await this.setKey("blacklist", ipAddress.replaceAll(":", "|"), blacklist);
+    deleteBlacklist = async (ipAddress: string): Promise<void> => await this.deleteKey("blacklist", ipAddress.replaceAll(":", "|"));
+
     getSession = async (userId: string): Promise<Session> => await this.getKey("session", userId);
     setSession = async (userId: string, session: Partial<Session>): Promise<void> => await this.setKey("session", userId, session);
     deleteSession = async (userId: string): Promise<void> => await this.deleteKey("session", userId);
@@ -131,6 +153,10 @@ export class RedisService extends Redis {
     getResource = async (id: number): Promise<Resource> => await this.getKey("resource", id);
     setResource = async (id: number, resource: Partial<Resource>): Promise<void> => await this.setKey("resource", id, resource);
     deleteResource = async (id: number): Promise<void> => await this.deleteKey("resource", id);
+
+    getGroup = async (id: number): Promise<Group> => await this.getKey("group", id);
+    setGroup = async (id: number, group: Partial<Group>): Promise<void> => await this.setKey("group", id, group);
+    deleteGroup = async (id: number): Promise<void> => await this.deleteKey("group", id);
 
     getRoom = async (id: number): Promise<Room> => await this.getKey("room", id);
     setRoom = async (id: number, room: Partial<Room>): Promise<void> => await this.setKey("room", id, room);

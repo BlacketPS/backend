@@ -2,9 +2,10 @@ import { Injectable, InternalServerErrorException, OnApplicationBootstrap } from
 import { Repository } from "sequelize-typescript";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
+import { PermissionsService } from "src/permissions/permissions.service";
 import { hash } from "bcrypt";
 import { Op, type Transaction } from "sequelize";
-import { PermissionType, OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, Permission, Group, UserPermission, UserGroup, IpAddress, UserIpAddress, Title, Font, Resource, DiscordAccessToken, DiscordDiscordUser, InternalServerError, UserPaymentMethod } from "blacket-types";
+import { PermissionType, OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource, DiscordAccessToken, DiscordDiscordUser, InternalServerError, UserPaymentMethod, UserGroup, Group } from "blacket-types";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -31,14 +32,14 @@ export class UsersService implements OnApplicationBootstrap {
     private userItemRepo: Repository<UserItem>;
     private userStatisticRepo: Repository<UserStatistic>;
     private userSettingRepo: Repository<UserSetting>;
+    private userGroupRepo: Repository<UserGroup>;
     private userPaymentMethodRepo: Repository<UserPaymentMethod>;
-    private userPermissionRepo: Repository<UserPermission>;
     private ipAddressRepo: Repository<IpAddress>;
     private userIpAddressRepo: Repository<UserIpAddress>;
     private titleRepo: Repository<Title>;
     private fontRepo: Repository<Font>;
     private resourceRepo: Repository<Resource>;
-    private permissionRepo: Repository<Permission>;
+    private groupRepo: Repository<Group>;
 
     private defaultPermissions: PermissionType[];
     private defaultAvatar: Resource;
@@ -48,7 +49,8 @@ export class UsersService implements OnApplicationBootstrap {
 
     constructor(
         private sequelizeService: SequelizeService,
-        private redisService: RedisService
+        private redisService: RedisService,
+        private permissionsService: PermissionsService
     ) { }
 
     async onApplicationBootstrap() {
@@ -61,13 +63,14 @@ export class UsersService implements OnApplicationBootstrap {
         this.userItemRepo = this.sequelizeService.getRepository(UserItem);
         this.userStatisticRepo = this.sequelizeService.getRepository(UserStatistic);
         this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
+        this.userGroupRepo = this.sequelizeService.getRepository(UserGroup);
         this.userPaymentMethodRepo = this.sequelizeService.getRepository(UserPaymentMethod);
-        this.userPermissionRepo = this.sequelizeService.getRepository(UserPermission);
         this.ipAddressRepo = this.sequelizeService.getRepository(IpAddress);
         this.userIpAddressRepo = this.sequelizeService.getRepository(UserIpAddress);
         this.titleRepo = this.sequelizeService.getRepository(Title);
         this.fontRepo = this.sequelizeService.getRepository(Font);
         this.resourceRepo = this.sequelizeService.getRepository(Resource);
+        this.groupRepo = this.sequelizeService.getRepository(Group);
 
         this.defaultPermissions = [PermissionType.CREATE_REPORTS, PermissionType.CHANGE_USERNAME];
         this.defaultAvatar = await this.resourceRepo.findOne({ where: { id: 1 } });
@@ -101,11 +104,10 @@ export class UsersService implements OnApplicationBootstrap {
         const userData = await this.userRepo.findOne({
             where: this.sequelizeService.or({ id: user }, { username: { [Op.iLike]: user } }),
             include: [
-                { model: this.userPermissionRepo, as: "permissions", attributes: ["permissionId"] },
+                { model: this.userGroupRepo, as: "groups", include: [this.groupRepo], required: false },
                 ...include
             ]
         });
-
         if (!userData) return null;
 
         if (settings.cacheUser) {
@@ -130,15 +132,12 @@ export class UsersService implements OnApplicationBootstrap {
             avatarId: this.defaultAvatar.id,
             bannerId: this.defaultBanner.id,
             titleId: this.defaultTitle.id,
-            fontId: this.defaultFont.id
+            fontId: this.defaultFont.id,
+            permissions: this.defaultPermissions
         }, { transaction });
 
         await this.userStatisticRepo.create({ id: user.id }, { transaction });
         await this.userSettingRepo.create({ id: user.id }, { transaction });
-
-        for (const permission of this.defaultPermissions) {
-            await this.userPermissionRepo.create({ userId: user.id, permissionId: permission }, { transaction });
-        }
 
         return user;
     }

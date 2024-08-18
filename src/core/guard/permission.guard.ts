@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Unauthor
 import { Reflector } from "@nestjs/core";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { Permissions } from "../decorator";
-import { Forbidden, PermissionType, Unauthorized } from "blacket-types";
+import { Forbidden, Unauthorized } from "blacket-types";
 
 @Injectable()
 export class PermissionGuard implements CanActivate {

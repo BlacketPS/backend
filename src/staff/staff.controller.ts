@@ -18,7 +18,10 @@ import {
     StaffAdminUpdateItemPrioritiesDto,
     StaffAdminCreateItemShopItemDto,
     StaffAdminUpdateItemShopItemPriorities,
-    StaffAdminUpdateItemShopItemDto
+    StaffAdminUpdateItemShopItemDto,
+    StaffAdminCreateGroupDto,
+    StaffAdminUpdateGroupDto,
+    StaffAdminUpdateGroupPrioritiesDto
 } from "blacket-types";
 
 @ApiTags("staff")
@@ -56,6 +59,33 @@ export class StaffController {
     @Get("admin/groups")
     async getGroups() {
         return await this.staffService.getGroups();
+    }
+
+    @Permissions({ permissions: [PermissionType.MANAGE_GROUPS] })
+    @Post("admin/groups")
+    async createGroup(@GetCurrentUser() userId: string, @Body() dto: StaffAdminCreateGroupDto) {
+        return await this.staffService.createGroup(userId, dto);
+    }
+
+    @Permissions({ permissions: [PermissionType.MANAGE_GROUPS] })
+    @Put("admin/groups/update-priorities")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateGroupPriorities(@GetCurrentUser() userId: string, @Body() dto: StaffAdminUpdateGroupPrioritiesDto) {
+        return await this.staffService.updateGroupPriorities(userId, dto);
+    }
+
+    @Permissions({ permissions: [PermissionType.MANAGE_GROUPS] })
+    @Put("admin/groups/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateGroup(@GetCurrentUser() userId: string, @Param("id") groupId: number, @Body() dto: StaffAdminUpdateGroupDto) {
+        return await this.staffService.updateGroup(userId, groupId, dto);
+    }
+
+    @Permissions({ permissions: [PermissionType.MANAGE_GROUPS] })
+    @Delete("admin/groups/:id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteGroup(@GetCurrentUser() userId: string, @Param("id") groupId: number) {
+        return await this.staffService.deleteGroup(userId, groupId);
     }
 
     @Permissions({ permissions: [PermissionType.BLACKLIST_USERS] })

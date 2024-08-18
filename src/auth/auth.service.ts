@@ -1,19 +1,20 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { SequelizeService } from "src/sequelize/sequelize.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { Repository } from "sequelize-typescript";
-import { type Transaction } from "sequelize";
+import { type Transaction, Op } from "sequelize";
 import { compare } from "bcrypt";
 import * as speakEasy from "speakeasy";
 
-import { AuthAuthEntity, BadRequest, NotFound, Session, Unauthorized, User, UserSetting } from "blacket-types";
+import { AuthAuthEntity, BadRequest, Forbidden, NotFound, PunishmentType, Session, Unauthorized, User, UserPunishment, UserSetting } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
 
 @Injectable()
 export class AuthService {
     private userRepo: Repository<User>;
+    private userPunishmentRepo: Repository<UserPunishment>;
     private userSettingRepo: Repository<UserSetting>;
     private sessionRepo: Repository<Session>;
 
@@ -24,6 +25,7 @@ export class AuthService {
         private configService: ConfigService,
     ) {
         this.userRepo = this.sequelizeService.getRepository(User);
+        this.userPunishmentRepo = this.sequelizeService.getRepository(UserPunishment);
         this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
         this.sessionRepo = this.sequelizeService.getRepository(Session);
     }
@@ -47,7 +49,12 @@ export class AuthService {
     }
 
     async login(dto: LoginDto, ip: string): Promise<AuthAuthEntity> {
-        const user = await this.userRepo.findOne({ where: { username: dto.username }, include: [{ model: this.userSettingRepo }] });
+        const user = await this.userRepo.findOne({
+            where: { username: dto.username }, include: [
+                { model: this.userSettingRepo },
+                { model: this.userPunishmentRepo, as: "punishments", where: { type: PunishmentType.BAN, expiresAt: { [Op.gt]: new Date() } }, order: [["createdAt", "DESC"]], limit: 1, required: false }
+            ]
+        });
 
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
@@ -57,10 +64,18 @@ export class AuthService {
         if (user.settings.otpSecret && !dto.otpCode) throw new UnauthorizedException(Unauthorized.AUTH_MISSING_OTP);
         else if (user.settings.otpSecret && !speakEasy.totp.verify({ secret: user.settings.otpSecret, encoding: "base32", token: dto.otpCode })) throw new BadRequestException(BadRequest.AUTH_INCORRECT_OTP);
 
-        const session = await this.findOrCreateSession(user.id);
+        if (user.punishments.length > 0) throw new ForbiddenException(
+            Forbidden.AUTH_BANNED
+                .replace("%s", user.punishments[0].reason)
+                .replace("%s", `${user.punishments[0].expiresAt.getTime() - Date.now() > 1000 * 60 * 60 * 24 * 365
+                        ? "never"
+                        : `on ${user.punishments[0].expiresAt.toLocaleDateString()} at ${user.punishments[0].expiresAt.toLocaleTimeString()} UTC`
+                    }`)
+        );
 
         await this.usersService.updateUserIp(user, ip);
 
+        const session = await this.findOrCreateSession(user.id);
         return { token: await this.sessionToToken(session) } as AuthAuthEntity;
     }
 

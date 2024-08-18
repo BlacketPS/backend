@@ -1,4 +1,4 @@
-import { Body, ClassSerializerInterceptor, Controller, HttpCode, HttpStatus, Put, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Put } from "@nestjs/common";
 import { BlooksService } from "./blooks.service";
 import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
@@ -11,7 +11,6 @@ export class BlooksController {
         private readonly blooksService: BlooksService
     ) { }
 
-    @UseInterceptors(ClassSerializerInterceptor)
     @Put("sell-blooks")
     @HttpCode(HttpStatus.NO_CONTENT)
     sellBlooks(@GetCurrentUser() userId: string, @Body() dto: BlooksSellBlookDto) {

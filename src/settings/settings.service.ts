@@ -11,6 +11,7 @@ import { User, UserSetting, SettingsChangeSettingDto, SettingsChangeUsernameDto,
 
 @Injectable()
 export class SettingsService {
+    private userRepo: Repository<User>;
     private userSettingRepo: Repository<UserSetting>;
 
     private validSettings: string[];
@@ -22,7 +23,9 @@ export class SettingsService {
         private authService: AuthService,
         private usersService: UsersService
     ) {
+        this.userRepo = this.sequelizeService.getRepository(User);
         this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
+
         this.validSettings = Object.keys(new this.userSettingRepo().dataValues).filter((setting: string) => !this.invalidSettings.includes(setting));
     }
 
@@ -49,9 +52,7 @@ export class SettingsService {
 
         if (await this.usersService.userExists(dto.newUsername)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
 
-        user.username = dto.newUsername;
-
-        await user.save()
+        await this.userRepo.update({ username: dto.newUsername }, { where: { id: userId } })
             .catch((err) => {
                 throw new BadRequestException(err.errors[0].message ?? BadRequest.DEFAULT);
             });
@@ -63,15 +64,10 @@ export class SettingsService {
 
         if (!await compare(dto.oldPassword, user.password)) throw new BadRequestException(BadRequest.AUTH_INCORRECT_PASSWORD);
 
-        user.password = await hash(dto.newPassword, 10);
-
         await this.authService.destroySession(userId);
 
-        await user.save()
-            .catch((err) => {
-                throw new BadRequestException(err.errors[0].message ?? BadRequest.DEFAULT);
-            });
-
+        await this.userRepo.update({ password: await hash(dto.newPassword, 10) }, { where: { id: userId } });
+        
         return { token: await this.authService.sessionToToken(await this.authService.findOrCreateSession(userId)) } as AuthAuthEntity;
     }
 

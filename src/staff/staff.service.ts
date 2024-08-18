@@ -4,6 +4,7 @@ import { RedisService } from "src/redis/redis.service";
 import { Repository } from "sequelize-typescript";
 import {
     Resource,
+    Group,
     Rarity,
     Pack,
     Blook,
@@ -28,7 +29,9 @@ import {
     StaffAdminCreateItemShopItemDto,
     StaffAdminUpdateItemShopItemDto,
     StaffAdminUpdateItemShopItemPriorities,
-    Group
+    StaffAdminCreateGroupDto,
+    StaffAdminUpdateGroupDto,
+    StaffAdminUpdateGroupPrioritiesDto
 } from "blacket-types";
 import { ForeignKeyConstraintError } from "sequelize";
 
@@ -105,6 +108,59 @@ export class StaffService {
         return this.resourceRepo.destroy({ where: { id: resourceId } })
             .catch((error) => {
                 if (error instanceof ForeignKeyConstraintError) throw new ConflictException(Conflict.STAFF_ADMIN_RESOURCE_IN_USE);
+                else throw error;
+            });
+    }
+
+    async createGroup(userId: string, dto: StaffAdminCreateGroupDto) {
+        if (dto.imageId) await this.resourceRepo.findByPk(dto.imageId);
+        
+        const lastGroup = await this.groupRepo.findOne({
+            order: [["priority", "DESC"]]
+        });
+
+        const group = await this.groupRepo.create({
+            ...dto,
+            priority: lastGroup ? lastGroup.priority + 1 : 1
+        });
+
+        await this.redisService.setGroup(group.id, group);
+
+        return group;
+    }
+
+    async updateGroup(userId: string, groupId: number, dto: StaffAdminUpdateGroupDto) {
+        await this.groupRepo.findByPk(groupId);
+        if (dto.imageId) await this.resourceRepo.findByPk(dto.imageId);
+
+        await this.redisService.setGroup(groupId, dto);
+
+        return this.groupRepo.update(dto, { where: { id: groupId } });
+    }
+
+    async updateGroupPriorities(userId: string, dto: StaffAdminUpdateGroupPrioritiesDto) {
+        const groups = await this.groupRepo.findAll();
+
+        const transaction = await this.sequelizeService.transaction();
+
+        for (const groupMap of dto.groupMap) {
+            if (!groups.find((group) => group.id === groupMap.groupId)) throw new BadRequestException(BadRequest.STAFF_ADMIN_INVALID_PRIORITIES);
+
+            const group = groups.find((group) => group.id === groupMap.groupId);
+            await group.update({ priority: groupMap.priority }, { transaction });
+
+            await this.redisService.setGroup(group.id, group);
+        }
+
+        await transaction.commit();
+    }
+
+    async deleteGroup(userId: string, groupId: number) {
+        await this.redisService.deleteGroup(groupId);
+
+        return this.groupRepo.destroy({ where: { id: groupId } })
+            .catch((error) => {
+                if (error instanceof ForeignKeyConstraintError) throw new ConflictException(Conflict.STAFF_ADMIN_GROUP_IN_USE);
                 else throw error;
             });
     }
@@ -291,7 +347,7 @@ export class StaffService {
         return this.itemRepo.destroy({ where: { id: itemId } });
     }
 
-    async createItemShopItem (userId: string, dto: StaffAdminCreateItemShopItemDto) {
+    async createItemShopItem(userId: string, dto: StaffAdminCreateItemShopItemDto) {
         const lastItemShopItem = await this.itemShopRepo.findOne({
             order: [["priority", "DESC"]]
         });
@@ -308,7 +364,7 @@ export class StaffService {
 
     async updateItemShopItem(userId: string, itemShopItemId: number, dto: StaffAdminUpdateItemShopItemDto) {
         const itemShopItem = await this.itemShopRepo.findByPk(itemShopItemId);
-        
+
         await this.redisService.setItemShopItem(itemShopItemId, dto);
 
         return itemShopItem.update(dto);

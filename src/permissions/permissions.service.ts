@@ -1,30 +1,20 @@
 import { Injectable } from "@nestjs/common";
-import { Permission, PermissionType, User, UserGroup, UserPermission, Group } from "blacket-types";
+import { Group, PermissionType, User, UserGroup } from "blacket-types";
 import { SequelizeService } from "src/sequelize/sequelize.service";
-import { Repository } from "sequelize-typescript";
+import { Repository, setScopeOptionsGetters } from "sequelize-typescript";
 
 @Injectable()
 export class PermissionsService {
     private userRepo: Repository<User>;
     private userGroupRepo: Repository<UserGroup>;
-    private userPermissionRepo: Repository<UserPermission>;
-    private permissionRepo: Repository<Permission>;
     private groupRepo: Repository<Group>;
-
-    private groups: Group[] = [];
 
     constructor(
         private readonly sequelizeService: SequelizeService
     ) {
         this.userRepo = this.sequelizeService.getRepository(User);
         this.userGroupRepo = this.sequelizeService.getRepository(UserGroup);
-        this.userPermissionRepo = this.sequelizeService.getRepository(UserPermission);
-        this.permissionRepo = this.sequelizeService.getRepository(Permission);
         this.groupRepo = this.sequelizeService.getRepository(Group);
-    }
-
-    async onModuleInit() {
-        this.groups = await this.groupRepo.findAll();
     }
 
     /* getPermissionsField(permissions: Permission[]): number {
@@ -68,62 +58,11 @@ export class PermissionsService {
     }
 
     async getUserPermissions(userId: User["id"]): Promise<number[]> {
-        /*
-        const user = await this.userRepo.findByPk(userId, {
-            include: [
-                { model: this.userGroupRepo, include: [this.groupRepo] },
-                { model: this.userPermissionRepo, include: [this.permissionRepo] }
-            ]
-        });
-    
-        const groupPermissions = user.groups.flatMap((group) => this.groups.find((g) => g.id === group.groupId).permissions).map((p) => p.id);
-        const userPermissions = user.permissions.map((p) => p.permissionId);
+        const user = await this.userRepo.findByPk(userId, { include: [{ model: this.userGroupRepo, as: "groups", include: [this.groupRepo] }] });
+        if (!user) return [];
 
-        const combinedAndDedupedPermissions = [...new Set([...groupPermissions, ...userPermissions])];
-        
-        return combinedAndDedupedPermissions;
-        */
-        return [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            33,
-            34,
-            35,
-            36,
-            37,
-            38,
-            39,
-            40
-          ];
+        const groupPermissions = user.groups.reduce((acc, group) => [...acc, ...group.group.permissions], []);
+
+        return [...new Set([...user.permissions, ...groupPermissions])];
     }
 }

@@ -4,11 +4,10 @@ import { Repository, Sequelize } from "sequelize-typescript";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 import * as Models from "blacket-types/dist/models";
 
-import { RarityAnimationType, PermissionType } from "blacket-types";
+import { RarityAnimationType } from "blacket-types";
 
 @Injectable()
 export class SequelizeService extends Sequelize implements OnModuleInit {
-    private permissionRepo: Repository<Models.Permission>;
     private resourceRepo: Repository<Models.Resource>;
     private roomRepo: Repository<Models.Room>;
     private blookRepo: Repository<Models.Blook>;
@@ -36,7 +35,6 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
     }
 
     async onModuleInit() {
-        this.permissionRepo = this.getRepository(Models.Permission);
         this.resourceRepo = this.getRepository(Models.Resource);
         this.roomRepo = this.getRepository(Models.Room);
         this.blookRepo = this.getRepository(Models.Blook);
@@ -62,23 +60,6 @@ export class SequelizeService extends Sequelize implements OnModuleInit {
 
                 this.blacketLogger.info("Database synced!", "Database", "Blacket");
             }
-        }
-
-        // we run this everytime the server starts just incase there are new permissions
-        this.blacketLogger.info("Checking for new permissions...", "Database", "Blacket");
-
-        for (const permission of Object.values(PermissionType).filter((permission) => isNaN(Number(permission)))) {
-            if (await this.permissionRepo.findByPk(PermissionType[permission])) {
-                this.blacketLogger.info(`Permission ${permission} already exists, skipping...`, "Database", "Blacket");
-
-                continue;
-            }
-
-            const permissionName = permission as string;
-
-            this.blacketLogger.info(`NEW PERMISSION FOUND! Creating new permission ${permissionName} with ID ${PermissionType[permission]}...`, "Database", "Blacket");
-            await this.permissionRepo.create({ id: PermissionType[permission], name: permissionName });
-            this.blacketLogger.info(`Permission ${permissionName} has been created!`, "Database", "Blacket");
         }
     }
 

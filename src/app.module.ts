@@ -28,7 +28,6 @@ import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
 
-import { PermissionsService } from "./permissions/permissions.service";
 import { IsAccessCode } from "./core/validate/";
 
 @Module({
@@ -70,8 +69,6 @@ import { IsAccessCode } from "./core/validate/";
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_GUARD, useClass: UserThrottlerGuard },
         { provide: APP_GUARD, useClass: PermissionGuard },
-
-        PermissionsService,
 
         IsAccessCode
     ]
