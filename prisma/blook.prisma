@@ -1,0 +1,22 @@
+model blook {
+  id                                    Int          @id @default(autoincrement())
+  name                                  String       @unique @db.VarChar(255)
+  chance                                Float        @default(0)
+  price                                 Int          @default(0)
+  rarityId                              Int
+  imageId                               Int
+  backgroundId                          Int
+  packId                                Int?
+  onlyOnDay                             Int?
+  priority                              Int          @default(0)
+  createdAt                             DateTime     @db.Timestamptz(6)
+  updatedAt                             DateTime     @db.Timestamptz(6)
+  auction                               auction[]
+  resource_blook_backgroundIdToresource resource     @relation("blook_backgroundIdToresource", fields: [backgroundId], references: [id], onDelete: NoAction)
+  resource_blook_imageIdToresource      resource     @relation("blook_imageIdToresource", fields: [imageId], references: [id], onDelete: NoAction)
+  pack                                  pack?        @relation(fields: [packId], references: [id])
+  rarity                                rarity       @relation(fields: [rarityId], references: [id], onDelete: NoAction)
+  item_shop                             item_shop[]
+  product                               product[]
+  user_blook                            user_blook[]
+}

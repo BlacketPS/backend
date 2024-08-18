@@ -1,0 +1,27 @@
+model auction {
+  id          Int           @id @default(autoincrement())
+  type        Int
+  itemId      Int?
+  blookId     Int?
+  price       Int
+  sellerId    String        @db.VarChar(255)
+  buyItNow    Boolean       @default(false)
+  expiresAt   DateTime      @db.Timestamptz(6)
+  createdAt   DateTime      @db.Timestamptz(6)
+  updatedAt   DateTime      @db.Timestamptz(6)
+  blook       blook?        @relation(fields: [blookId], references: [id])
+  item        item?         @relation(fields: [itemId], references: [id])
+  user        user          @relation(fields: [sellerId], references: [id], onDelete: NoAction)
+  auction_bid auction_bid[]
+}
+
+model auction_bid {
+  id        Int      @id @default(autoincrement())
+  userId    String   @db.VarChar(255)
+  auctionId Int
+  amount    Int
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  auction   auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  user      user     @relation(fields: [userId], references: [id], onDelete: NoAction)
+}

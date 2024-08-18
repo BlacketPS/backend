@@ -1,0 +1,16 @@
+model item_shop {
+  id        Int      @id @default(autoincrement())
+  itemId    Int?
+  blookId   Int?
+  price     Int      @default(0)
+  enabled   Boolean  @default(true)
+  weekly    Boolean  @default(false)
+  priority  Int      @default(0)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  type      Int
+  titleId   Int?
+  blook     blook?   @relation(fields: [blookId], references: [id])
+  item      item?    @relation(fields: [itemId], references: [id])
+  title     title?   @relation(fields: [titleId], references: [id])
+}

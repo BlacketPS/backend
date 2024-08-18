@@ -1,0 +1,19 @@
+model room {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(255)
+  public    Boolean     @default(true)
+  createdAt DateTime    @db.Timestamptz(6)
+  updatedAt DateTime    @db.Timestamptz(6)
+  message   message[]
+  room_user room_user[]
+}
+
+model room_user {
+  id        Int      @id @default(autoincrement())
+  roomId    Int
+  userId    String   @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  room      room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      user     @relation(fields: [userId], references: [id], onDelete: NoAction)
+}

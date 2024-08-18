@@ -1,0 +1,24 @@
+model product {
+  id             Int      @id @default(autoincrement())
+  name           String   @unique @db.VarChar(255)
+  description    String?
+  imageId        Int
+  type           Int
+  itemId         Int?
+  blookId        Int?
+  titleId        Int?
+  fontId         Int?
+  isSubscription Boolean  @default(false)
+  monthlyPrice   Float?
+  lifetimePrice  Float?
+  groupId        Int?
+  priority       Int      @default(0)
+  createdAt      DateTime @db.Timestamptz(6)
+  updatedAt      DateTime @db.Timestamptz(6)
+  blook          blook?   @relation(fields: [blookId], references: [id])
+  font           font?    @relation(fields: [fontId], references: [id])
+  group          group?   @relation(fields: [groupId], references: [id])
+  resource       resource @relation(fields: [imageId], references: [id], onDelete: NoAction)
+  item           item?    @relation(fields: [itemId], references: [id])
+  title          title?   @relation(fields: [titleId], references: [id])
+}

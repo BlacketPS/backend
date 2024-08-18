@@ -35,6 +35,7 @@
     "nest-square": "^36.0.0",
     "nestjs-throttler-storage-redis": "^0.4.4",
     "pg": "^8.11.3",
+    "prisma": "^5.18.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "sequelize": "^6.37.1",
@@ -59,5 +60,8 @@
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.1.3"
-  }
+  },
+  "trustedDependencies": [
+    "@nestjs/core"
+  ]
 }

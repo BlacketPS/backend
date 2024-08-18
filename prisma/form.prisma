@@ -1,0 +1,13 @@
+model form {
+  id           String   @id @db.VarChar(255)
+  username     String   @db.VarChar(255)
+  password     String   @db.VarChar(255)
+  ipAddress    String   @db.VarChar(255)
+  reasonToPlay String   @db.VarChar(255)
+  status       Int      @default(1)
+  deniedReason String?  @db.VarChar(255)
+  accepterId   String?  @db.VarChar(255)
+  createdAt    DateTime @db.Timestamptz(6)
+  updatedAt    DateTime @db.Timestamptz(6)
+  user         user?    @relation(fields: [accepterId], references: [id])
+}

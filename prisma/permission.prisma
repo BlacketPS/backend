@@ -1,0 +1,8 @@
+model permission {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique @db.VarChar(255)
+  createdAt        DateTime           @db.Timestamptz(6)
+  updatedAt        DateTime           @db.Timestamptz(6)
+  group_permission group_permission[]
+  user_permission  user_permission[]
+}

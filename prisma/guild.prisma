@@ -1,0 +1,14 @@
+model guild {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @unique @db.VarChar(255)
+  description        String               @db.VarChar(255)
+  color              String               @default("#ffffff")
+  experience         Int                  @default(0)
+  imageId            Int?
+  acceptingRequests  Boolean              @default(true)
+  createdAt          DateTime             @db.Timestamptz(6)
+  updatedAt          DateTime             @db.Timestamptz(6)
+  resource           resource?            @relation(fields: [imageId], references: [id], onDelete: NoAction)
+  user_guild         user_guild[]
+  user_guild_request user_guild_request[]
+}

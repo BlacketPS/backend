@@ -1,0 +1,234 @@
+model user {
+  id                                                 String                @id @db.VarChar(255)
+  username                                           String                @unique @db.VarChar(255)
+  password                                           String?
+  avatarId                                           Int
+  customAvatarId                                     Int?
+  bannerId                                           Int
+  customBannerId                                     Int?
+  titleId                                            Int
+  fontId                                             Int
+  color                                              String                @default("#ffffff")
+  tokens                                             Float                 @default(0)
+  experience                                         Int                   @default(0)
+  lastClaimed                                        DateTime?             @db.Timestamptz(6)
+  ipAddress                                          String?               @db.VarChar(255)
+  createdAt                                          DateTime              @db.Timestamptz(6)
+  updatedAt                                          DateTime              @db.Timestamptz(6)
+  permissions                                        Json?                 @default("[]") @db.Json
+  auction                                            auction[]
+  auction_bid                                        auction_bid[]
+  audit_audit_secondaryUserIdTouser                  audit[]               @relation("audit_secondaryUserIdTouser")
+  audit_audit_userIdTouser                           audit[]               @relation("audit_userIdTouser")
+  form                                               form[]
+  history_history_newOwnerIdTouser                   history[]             @relation("history_newOwnerIdTouser")
+  history_history_previousOwnerIdTouser              history[]             @relation("history_previousOwnerIdTouser")
+  message                                            message[]
+  room_user                                          room_user[]
+  sessions                                           sessions[]
+  resource_user_avatarIdToresource                   resource              @relation("user_avatarIdToresource", fields: [avatarId], references: [id], onDelete: Cascade)
+  resource_user_bannerIdToresource                   resource              @relation("user_bannerIdToresource", fields: [bannerId], references: [id], onDelete: Cascade)
+  resource_user_customAvatarIdToresource             resource?             @relation("user_customAvatarIdToresource", fields: [customAvatarId], references: [id])
+  resource_user_customBannerIdToresource             resource?             @relation("user_customBannerIdToresource", fields: [customBannerId], references: [id])
+  font                                               font                  @relation(fields: [fontId], references: [id], onDelete: NoAction)
+  title                                              title                 @relation(fields: [titleId], references: [id], onDelete: NoAction)
+  user_banner                                        user_banner[]
+  user_blook_user_blook_initalObtainerIdTouser       user_blook[]          @relation("user_blook_initalObtainerIdTouser")
+  user_blook_user_blook_userIdTouser                 user_blook[]          @relation("user_blook_userIdTouser")
+  user_discord                                       user_discord[]
+  user_group                                         user_group[]
+  user_guild                                         user_guild[]
+  user_guild_request                                 user_guild_request[]
+  user_ip_address                                    user_ip_address[]
+  user_item_user_item_initalObtainerIdTouser         user_item[]           @relation("user_item_initalObtainerIdTouser")
+  user_item_user_item_userIdTouser                   user_item[]           @relation("user_item_userIdTouser")
+  user_oauth                                         user_oauth[]
+  user_payment_method                                user_payment_method[]
+  user_permission                                    user_permission[]
+  user_punishment_user_punishment_staffIdTouser      user_punishment[]     @relation("user_punishment_staffIdTouser")
+  user_punishment_user_punishment_userIdTouser       user_punishment[]     @relation("user_punishment_userIdTouser")
+  user_relationship_user_relationship_targetIdTouser user_relationship[]   @relation("user_relationship_targetIdTouser")
+  user_relationship_user_relationship_userIdTouser   user_relationship[]   @relation("user_relationship_userIdTouser")
+  user_setting                                       user_setting?
+  user_statistic                                     user_statistic?
+  user_title                                         user_title[]
+}
+
+model user_banner {
+  id        Int      @id @default(autoincrement())
+  userId    String   @db.VarChar(255)
+  bannerId  Int
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  banner    banner   @relation(fields: [bannerId], references: [id], onDelete: NoAction)
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_blook {
+  id                                     Int      @id @default(autoincrement())
+  userId                                 String   @db.VarChar(255)
+  blookId                                Int
+  sold                                   Boolean  @default(false)
+  initalObtainerId                       String   @db.VarChar(255)
+  obtainedBy                             Int      @default(1)
+  createdAt                              DateTime @db.Timestamptz(6)
+  updatedAt                              DateTime @db.Timestamptz(6)
+  blook                                  blook    @relation(fields: [blookId], references: [id], onDelete: Cascade)
+  user_user_blook_initalObtainerIdTouser user     @relation("user_blook_initalObtainerIdTouser", fields: [initalObtainerId], references: [id], onDelete: Cascade)
+  user_user_blook_userIdTouser           user     @relation("user_blook_userIdTouser", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_discord {
+  discordId String   @id @db.VarChar(255)
+  userId    String   @db.VarChar(255)
+  username  String   @db.VarChar(255)
+  avatar    String?  @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_group {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  userId    String   @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  group     group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_guild {
+  id        Int      @id @default(autoincrement())
+  guildId   Int
+  userId    String   @db.VarChar(255)
+  userRole  Int      @default(1)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  guild     guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_guild_request {
+  id        Int      @id @default(autoincrement())
+  guildId   Int
+  userId    String   @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  guild     guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_ip_address {
+  id          Int        @id @default(autoincrement())
+  userId      String     @db.VarChar(255)
+  ipAddressId Int
+  uses        Int        @default(0)
+  createdAt   DateTime   @db.Timestamptz(6)
+  updatedAt   DateTime   @db.Timestamptz(6)
+  ip_address  ip_address @relation(fields: [ipAddressId], references: [id], onDelete: Cascade)
+  user        user       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_item {
+  id                                    Int      @id @default(autoincrement())
+  userId                                String   @db.VarChar(255)
+  itemId                                Int
+  usesLeft                              Int      @default(0)
+  initalObtainerId                      String   @db.VarChar(255)
+  obtainedBy                            Int      @default(1)
+  createdAt                             DateTime @db.Timestamptz(6)
+  updatedAt                             DateTime @db.Timestamptz(6)
+  user_user_item_initalObtainerIdTouser user     @relation("user_item_initalObtainerIdTouser", fields: [initalObtainerId], references: [id], onDelete: NoAction)
+  item                                  item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user_user_item_userIdTouser           user     @relation("user_item_userIdTouser", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_oauth {
+  id           Int      @id @default(autoincrement())
+  userId       String   @db.VarChar(255)
+  type         Int
+  tokenType    String   @db.VarChar(255)
+  accessToken  String   @db.VarChar(255)
+  refreshToken String   @db.VarChar(255)
+  scope        String   @db.VarChar(255)
+  expiresAt    DateTime @db.Timestamptz(6)
+  createdAt    DateTime @db.Timestamptz(6)
+  updatedAt    DateTime @db.Timestamptz(6)
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_payment_method {
+  id                    Int      @id @default(autoincrement())
+  userId                String   @db.VarChar(255)
+  squareCustomerId      String   @db.VarChar(255)
+  squarePaymentMethodId String   @db.VarChar(255)
+  lastFour              String   @db.VarChar(255)
+  createdAt             DateTime @db.Timestamptz(6)
+  updatedAt             DateTime @db.Timestamptz(6)
+  cardBrand             String   @db.VarChar(255)
+  primary               Boolean  @default(false)
+  user                  user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_permission {
+  id           Int        @id @default(autoincrement())
+  userId       String     @db.VarChar(255)
+  permissionId Int
+  createdAt    DateTime   @db.Timestamptz(6)
+  updatedAt    DateTime   @db.Timestamptz(6)
+  permission   permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  user         user       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_punishment {
+  id                                 Int      @id @default(autoincrement())
+  userId                             String   @db.VarChar(255)
+  type                               Int
+  reason                             String   @db.VarChar(255)
+  expiresAt                          DateTime @db.Timestamptz(6)
+  staffId                            String   @db.VarChar(255)
+  createdAt                          DateTime @db.Timestamptz(6)
+  updatedAt                          DateTime @db.Timestamptz(6)
+  audit                              audit[]
+  user_user_punishment_staffIdTouser user     @relation("user_punishment_staffIdTouser", fields: [staffId], references: [id], onDelete: Cascade)
+  user_user_punishment_userIdTouser  user     @relation("user_punishment_userIdTouser", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_relationship {
+  id                                    Int      @id @default(autoincrement())
+  userId                                String   @db.VarChar(255)
+  targetId                              String   @db.VarChar(255)
+  friendNickname                        String?  @db.VarChar(255)
+  type                                  Int
+  createdAt                             DateTime @db.Timestamptz(6)
+  updatedAt                             DateTime @db.Timestamptz(6)
+  user_user_relationship_targetIdTouser user     @relation("user_relationship_targetIdTouser", fields: [targetId], references: [id], onDelete: Cascade)
+  user_user_relationship_userIdTouser   user     @relation("user_relationship_userIdTouser", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_setting {
+  id                 String  @id @db.VarChar(255)
+  openPacksInstantly Boolean @default(false)
+  friendRequests     Int     @default(1)
+  categoriesClosed   Json    @default("[]") @db.Json
+  otpSecret          String? @db.VarChar(255)
+  user               user    @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model user_statistic {
+  id           String @id @db.VarChar(255)
+  packsOpened  Int    @default(0)
+  messagesSent Int    @default(0)
+  user         user   @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model user_title {
+  id        Int      @id @default(autoincrement())
+  userId    String   @db.VarChar(255)
+  titleId   Int
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  title     title    @relation(fields: [titleId], references: [id], onDelete: NoAction)
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

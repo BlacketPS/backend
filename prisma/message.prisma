@@ -1,0 +1,16 @@
+model message {
+  id            Int       @id @default(autoincrement())
+  authorId      String    @db.VarChar(255)
+  roomId        Int
+  content       String
+  mentions      Json      @default("[]") @db.Json
+  replyingToId  Int?
+  edited        Boolean   @default(false)
+  deleted       Boolean   @default(false)
+  createdAt     DateTime  @db.Timestamptz(6)
+  updatedAt     DateTime  @db.Timestamptz(6)
+  user          user      @relation(fields: [authorId], references: [id], onDelete: NoAction)
+  message       message?  @relation("messageTomessage", fields: [replyingToId], references: [id])
+  other_message message[] @relation("messageTomessage")
+  room          room      @relation(fields: [roomId], references: [id], onDelete: NoAction)
+}

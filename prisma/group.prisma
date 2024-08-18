@@ -1,0 +1,26 @@
+model group {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique @db.VarChar(255)
+  description      String?            @db.VarChar(255)
+  imageId          Int?
+  priority         Int                @default(0)
+  createdAt        DateTime           @db.Timestamptz(6)
+  updatedAt        DateTime           @db.Timestamptz(6)
+  deletedAt        DateTime?          @db.Timestamptz(6)
+  permissions      Json               @default("[]") @db.Json
+  audit            audit[]
+  resource         resource?          @relation(fields: [imageId], references: [id], onDelete: NoAction)
+  group_permission group_permission[]
+  product          product[]
+  user_group       user_group[]
+}
+
+model group_permission {
+  id           Int        @id @default(autoincrement())
+  groupId      Int
+  permissionId Int
+  createdAt    DateTime   @db.Timestamptz(6)
+  updatedAt    DateTime   @db.Timestamptz(6)
+  group        group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  permission   permission @relation(fields: [permissionId], references: [id], onDelete: NoAction)
+}

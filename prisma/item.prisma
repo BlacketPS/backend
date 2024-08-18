@@ -1,0 +1,22 @@
+model item {
+  id              Int         @id @default(autoincrement())
+  name            String      @unique @db.VarChar(255)
+  description     String      @db.VarChar(255)
+  rarityId        Int
+  imageId         Int
+  type            Int         @default(1)
+  canUse          Boolean     @default(false)
+  canAuction      Boolean     @default(false)
+  canTrade        Boolean     @default(false)
+  maxUses         Int         @default(1)
+  boosterDuration Int?        @default(0)
+  priority        Int         @default(0)
+  createdAt       DateTime    @db.Timestamptz(6)
+  updatedAt       DateTime    @db.Timestamptz(6)
+  auction         auction[]
+  resource        resource    @relation(fields: [imageId], references: [id], onDelete: NoAction)
+  rarity          rarity      @relation(fields: [rarityId], references: [id], onDelete: NoAction)
+  item_shop       item_shop[]
+  product         product[]
+  user_item       user_item[]
+}
