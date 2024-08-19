@@ -2,48 +2,27 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { SocketGateway } from "src/socket/socket.gateway";
-import { Repository } from "sequelize-typescript";
 
-import { Message, User, ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "blacket-types";
+import { ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "blacket-types";
+import { Message, User } from "@prisma/client";
 
 @Injectable()
 export class ChatService {
-    private messageRepo: Repository<Message>;
-
     constructor(
-        private readonly sequelizeService: PrismaService,
+        private readonly prismaService: PrismaService,
         private readonly redisService: RedisService,
         private readonly socketGateway: SocketGateway
-    ) {
-        this.messageRepo = this.sequelizeService.getRepository(Message);
-    }
+    ) { }
 
     async getMessages(room: Message["roomId"] = 0, limit: number = 50) {
-        return await this.messageRepo.findAll({
-            order: [
-                [
-                    "createdAt",
-                    "DESC"
-                ]
-            ],
-            limit: limit,
-            include: [
-                {
-                    model: this.messageRepo,
-                    as: "replyingTo",
-                    attributes: {
-                        exclude: [
-                            "roomId",
-                            "replyingToId"
-                        ]
-                    }
-                }
-            ],
-            attributes: {
-                exclude: [
-                    "roomId",
-                    "replyingToId"
-                ]
+        return await this.prismaService.message.findMany({
+            orderBy: {
+                createdAt: "desc"
+            },
+            take: limit,
+            include: {
+                room: true,
+                reply: true
             },
             where: {
                 roomId: room
@@ -59,12 +38,16 @@ export class ChatService {
 
         const mentions = Array.from(new Set(dto.content.match(/<@(\d+)>/g))).map((mention) => mention.replace(/<|@|>/g, ""));
 
-        const message = await this.messageRepo.create({
-            authorId: userId,
-            roomId: roomId,
-            content: dto.content,
-            replyingToId: dto.replyingTo,
-            mentions
+        const message = await this.prismaService.message.create({
+            data: {
+                author: { connect: { id: userId } },
+                room: { connect: { id: roomId } },
+                content: dto.content,
+                reply: dto.replyingTo ? { connect: { id: dto.replyingTo } } : undefined,
+                mentions: {
+                    connect: mentions.map((mention) => ({ id: mention }))
+                }
+            }
         });
 
         this.socketGateway.server.emit(SocketMessageType.CHAT_MESSAGES_CREATE, message);

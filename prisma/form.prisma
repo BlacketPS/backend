@@ -5,8 +5,8 @@ enum FormStatus {
 }
 
 model Form {
-    id           String     @id
-    username     String
+    id           String     @id @default(cuid())
+    username     String     @unique
     password     String
     ipAddress    String
     reasonToPlay String

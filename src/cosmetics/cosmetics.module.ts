@@ -1,10 +1,9 @@
 import { Module } from "@nestjs/common";
 import { CosmeticsService } from "./cosmetics.service";
 import { CosmeticsController } from "./cosmetics.controller";
-import { UsersModule } from "src/users/users.module";
 
 @Module({
-    imports: [UsersModule],
+    imports: [],
     providers: [CosmeticsService],
     controllers: [CosmeticsController]
 })

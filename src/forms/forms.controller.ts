@@ -30,7 +30,7 @@ export class FormsController {
 
         if (!form) throw new FormAlreadyExistsException();
 
-        return new FormsCreateFormEntity(form.toJSON());
+        return new FormsCreateFormEntity(form);
     }
 
     @Public()
@@ -46,6 +46,6 @@ export class FormsController {
 
         if (!form) throw new FormNotFoundException();
 
-        return new FormsGetFormEntity(form.toJSON());
+        return new FormsGetFormEntity(form);
     }
 }

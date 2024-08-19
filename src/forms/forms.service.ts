@@ -1,41 +1,38 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
-import { Repository } from "sequelize-typescript";
-import { FormsCreateDto, Form, FormStatus } from "blacket-types";
+import { FormsCreateDto } from "blacket-types";
 import { hash } from "bcrypt";
 
 @Injectable()
 export class FormsService {
-    private formRepo: Repository<Form>;
-
     constructor(
-        private sequelizeService: PrismaService,
+        private prismaService: PrismaService,
         private usersService: UsersService
-    ) {
-        this.formRepo = this.sequelizeService.getRepository(Form);
-    }
+    ) { }
 
     async getFormById(id: string) {
-        return await this.formRepo.findOne({ where: { id } });
+        return await this.prismaService.form.findUnique({ where: { id } });
     }
 
     async getFormByUsername(username: string) {
-        return await this.formRepo.findOne({ where: { username } });
+        return await this.prismaService.form.findUnique({ where: { username } });
     }
 
     async dropFormById(id: string) {
-        return await this.formRepo.destroy({ where: { id } });
+        return await this.prismaService.form.delete({ where: { id } });
     }
 
     async createForm(dto: FormsCreateDto, ipAddress: string) {
         if (await this.usersService.getUser(dto.username)) return null;
 
-        const [
-            form,
-            created
-        ] = await this.formRepo.findOrCreate({ where: { username: dto.username, status: FormStatus.PENDING }, defaults: { password: await hash(dto.password, 10), reasonToPlay: dto.reasonToPlay, ipAddress } });
-
-        return created ? form : null;
+        return await this.prismaService.form.create({
+            data: {
+                username: dto.username,
+                password: await hash(dto.password, 10),
+                reasonToPlay: dto.reasonToPlay,
+                ipAddress
+            }
+        });
     }
 }
