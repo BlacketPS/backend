@@ -55,15 +55,19 @@ export class StoreService {
     }
 
     async removePaymentMethod(userId: string, paymentMethodId: number) {
-        const paymentMethod = await this.prismaService.userPaymentMethod.findUnique({ where: { userId, id: paymentMethodId } });
+        const paymentMethod = await this.prismaService.userPaymentMethod.findUnique({
+            select: { squareCustomerId: true, squarePaymentMethodId: true },
+            where: { userId, id: paymentMethodId }
+        });
         if (!paymentMethod) throw new NotFoundException(NotFound.UNKNOWN_PAYMENT_METHOD);
 
         await this.client.customersApi.deleteCustomerCard(paymentMethod.squareCustomerId, paymentMethod.squarePaymentMethodId);
 
         this.prismaService.$transaction(async (prisma) => {
             prisma.userPaymentMethod.delete({ where: { userId, id: paymentMethodId } });
+
             const { id } = await prisma.userPaymentMethod.findFirst({ select: { id: true }, orderBy: { createdAt: "desc" }, where: { userId } });
-            prisma.userPaymentMethod.update({ where: { id: id }, data: { primary: true } });
+            if (id) await prisma.userPaymentMethod.update({ where: { id: id }, data: { primary: true } });
         });
     }
 }

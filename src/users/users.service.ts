@@ -99,6 +99,8 @@ export class UsersService implements OnApplicationBootstrap {
         });
         if (!userData) return null;
 
+        if (userData.discord.length === 0) userData.discord = null;
+
         if (settings.cacheUser) {
             await this.redisService.setKey("cachedUser", userData.id, userData, 10);
             await this.redisService.setKey("cachedUser", userData.username.toLowerCase(), userData, 10);

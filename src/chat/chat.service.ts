@@ -14,7 +14,7 @@ export class ChatService {
         private readonly socketGateway: SocketGateway
     ) { }
 
-    async getMessages(room: Message["roomId"] = 0, limit: number = 50) {
+    async getMessages(room: number = 0, limit: number = 50) {
         return await this.prismaService.message.findMany({
             orderBy: {
                 createdAt: "desc"
