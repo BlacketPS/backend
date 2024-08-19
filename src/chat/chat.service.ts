@@ -22,7 +22,12 @@ export class ChatService {
             take: limit,
             include: {
                 room: true,
-                reply: true
+                replyingTo: true,
+                mentions: true
+            },
+            omit: {
+                replyingToId: true,
+                roomId: true
             },
             where: {
                 roomId: room
@@ -43,10 +48,13 @@ export class ChatService {
                 author: { connect: { id: userId } },
                 room: { connect: { id: roomId } },
                 content: dto.content,
-                reply: dto.replyingTo ? { connect: { id: dto.replyingTo } } : undefined,
+                replyingTo: dto.replyingTo ? { connect: { id: dto.replyingTo } } : undefined,
                 mentions: {
                     connect: mentions.map((mention) => ({ id: mention }))
                 }
+            },
+            include: {
+                mentions: true
             }
         });
 

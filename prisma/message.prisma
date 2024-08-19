@@ -1,16 +1,16 @@
 model Message {
-    id           Int       @id @default(autoincrement())
+    id           String    @id @default(cuid())
     roomId       Int
     content      String
     mentions     User[]    @relation("mentionedUser")
-    replyingToId Int?
+    replyingToId String?
     edited       Boolean   @default(false)
     deleted      Boolean   @default(false)
     createdAt    DateTime  @default(now())
     updatedAt    DateTime  @default(now()) @updatedAt
     authorId     String    @db.VarChar(255)
     author       User      @relation(fields: [authorId], references: [id], onDelete: NoAction)
-    reply        Message?  @relation("reply", fields: [replyingToId], references: [id])
+    replyingTo   Message?  @relation("reply", fields: [replyingToId], references: [id])
     replies      Message[] @relation("reply")
     room         Room      @relation(fields: [roomId], references: [id], onDelete: NoAction)
 }

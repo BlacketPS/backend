@@ -85,11 +85,11 @@ export class RedisService extends Redis {
         const oldData = await this.getKey(key, value);
 
         if (!ttl) {
-            await this.set(`${this.prefix}:${key}:${value}`, JSON.stringify({ ...oldData, ...data ? data.toJSON() : data }));
-            if (data?.name || oldData?.name) await this.set(`${this.prefix}:${key}:${data.name.toLowerCase()}`, JSON.stringify({ ...oldData, ...data ? data.toJSON() : data }));
+            await this.set(`${this.prefix}:${key}:${value}`, JSON.stringify({ ...oldData, ...data }));
+            if (data?.name || oldData?.name) await this.set(`${this.prefix}:${key}:${data.name.toLowerCase()}`, JSON.stringify({ ...oldData, ...data }));
         } else {
-            await this.setex(`${this.prefix}:${key}:${value}`, ttl, JSON.stringify({ ...oldData, ...data ? data.toJSON() : data }));
-            if (data?.name || oldData?.name) await this.setex(`${this.prefix}:${key}:${data.name.toLowerCase()}`, ttl, JSON.stringify({ ...oldData, ...data ? data.toJSON() : data }));
+            await this.setex(`${this.prefix}:${key}:${value}`, ttl, JSON.stringify({ ...oldData, ...data }));
+            if (data?.name || oldData?.name) await this.setex(`${this.prefix}:${key}:${data.name.toLowerCase()}`, ttl, JSON.stringify({ ...oldData, ...data }));
         }
     }
 

@@ -156,9 +156,11 @@ model UserIpAddress {
     uses        Int       @default(0)
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @default(now()) @updatedAt
-    ipAddressId Int       @unique
+    ipAddressId Int
     ipAddress   IpAddress @relation(fields: [ipAddressId], references: [id], onDelete: Cascade)
     user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, ipAddressId])
 }
 
 model UserItem {

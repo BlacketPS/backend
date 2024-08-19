@@ -13,7 +13,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         super({
             datasources: {
                 db: {
-                    url: configService.get("DATABASE_URL")
+                    url: configService.get("SERVER_DATABASE_URL")
+                }
+            },
+            omit: {
+                userSetting: {
+                    id: true
+                },
+                userStatistic: {
+                    id: true
                 }
             }
         });
@@ -37,14 +45,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     async seedDatabase() {
         this.blacketLogger.info("Seeding database with initial data...", "Database", "Blacket");
 
+        // truncate entire database
         await this.$transaction([
+            this.resource.deleteMany({}),
+            this.room.deleteMany({}),
+            this.rarity.deleteMany({}),
+            this.banner.deleteMany({}),
+            this.title.deleteMany({}),
+            this.blook.deleteMany({}),
+            this.font.deleteMany({}),
+            this.user.deleteMany({}),
+
             this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/blooks/Default.png" } }), // resource id 1
             this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/blooks/backgrounds/Default.png" } }), // resource id 2
             this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/banners/Default.png" } }), // resource id 3
             this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/fonts/Nunito Bold.ttf" } }), // resource id 4
             this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/fonts/Titan One.ttf" } }), // resource id 5
 
-            this.room.create({ data: { name: "global", public: true } }),
+            // @autoincrement likes to start at 1 for some reason
+            this.room.create({ data: { name: "global", public: true, id: 0 } }),
 
             this.rarity.create({ data: { name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON } }),
             this.rarity.create({ data: { name: "Uncommon", color: "#ffffff", experience: 1, animationType: RarityAnimationType.UNCOMMON } }),

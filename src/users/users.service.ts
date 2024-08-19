@@ -141,8 +141,9 @@ export class UsersService implements OnApplicationBootstrap {
 
     async updateUserIp(user: User, ip: string): Promise<void> {
         const ipAddress = await this.prismaService.ipAddress.upsert({ where: { ipAddress: ip }, update: {}, create: { ipAddress: ip } });
-        const userIpAddress = await this.prismaService.userIpAddress.upsert({ where: { userId: user.id, ipAddressId: ipAddress.id }, update: {}, create: { userId: user.id, ipAddressId: ipAddress.id } });
-
+        // https://github.com/prisma/prisma/issues/5436
+        // const userIpAddress = await this.prismaService.userIpAddress.upsert({ where: { userId: user.id, ipAddressId: ipAddress.id }, update: {}, create: { userId: user.id, ipAddressId: ipAddress.id } });
+        const userIpAddress = await this.prismaService.userIpAddress.findFirst({ where: { userId: user.id, ipAddressId: ipAddress.id } }) ?? await this.prismaService.userIpAddress.create({ data: { userId: user.id, ipAddressId: ipAddress.id } });
         await this.prismaService.userIpAddress.update({ data: { uses: { increment: 1 } }, where: { id: userIpAddress.id } });
         await this.prismaService.user.update({ where: { id: user.id }, data: { ipAddress: ip } });
     }
