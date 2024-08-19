@@ -71,6 +71,7 @@ export class SettingsService {
         const tempOtp = await this.redisService.getKey("tempOtp", userId);
         if (!tempOtp) throw new NotFoundException(NotFound.UNKNOWN_OTP);
 
+        // FIXME: no idea why this throws "str.toUpperCase is not a function"
         const verified = speakEasy.totp.verify({ secret: tempOtp, token: dto.otpCode, encoding: "base32" });
         if (!verified) throw new BadRequestException(BadRequest.AUTH_INCORRECT_OTP);
 
