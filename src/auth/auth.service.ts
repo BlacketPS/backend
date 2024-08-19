@@ -3,57 +3,40 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
 import { ConfigService } from "@nestjs/config";
-import { Repository } from "sequelize-typescript";
-import { type Transaction, Op } from "sequelize";
 import { compare } from "bcrypt";
 import * as speakEasy from "speakeasy";
 
-import { AuthAuthEntity, BadRequest, Forbidden, NotFound, PunishmentType, Session, Unauthorized, User, UserPunishment, UserSetting } from "blacket-types";
+import { AuthAuthEntity, BadRequest, Forbidden, NotFound, Unauthorized } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
+import { PunishmentType, Session, User } from "@prisma/client";
 
 @Injectable()
 export class AuthService {
-    private userRepo: Repository<User>;
-    private userPunishmentRepo: Repository<UserPunishment>;
-    private userSettingRepo: Repository<UserSetting>;
-    private sessionRepo: Repository<Session>;
-
     constructor(
-        private sequelizeService: PrismaService,
+        private prismaService: PrismaService,
         private redisService: RedisService,
         private usersService: UsersService,
         private configService: ConfigService,
-    ) {
-        this.userRepo = this.sequelizeService.getRepository(User);
-        this.userPunishmentRepo = this.sequelizeService.getRepository(UserPunishment);
-        this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
-        this.sessionRepo = this.sequelizeService.getRepository(Session);
-    }
+    ) { }
 
     async register(dto: RegisterDto, ip: string): Promise<AuthAuthEntity> {
         if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") === "true") throw new BadRequestException(BadRequest.AUTH_FORMS_ENABLED);
 
-        const transaction = await this.sequelizeService.transaction();
+        if (await this.usersService.userExists(dto.username)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
 
-        if (await this.usersService.userExists(dto.username, transaction)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
+        const user = await this.usersService.createUser(dto.username, dto.password);
 
-        const user = await this.usersService.createUser(dto.username, dto.password, transaction);
+        await this.usersService.updateUserIp(user, ip);
 
-        await this.usersService.updateUserIp(user, ip, transaction);
+        const session = await this.findOrCreateSession(user.id);
 
-        const session = await this.findOrCreateSession(user.id, transaction);
-
-        return await transaction.commit().then(async () => {
-            return { token: await this.sessionToToken(session) } as AuthAuthEntity;
-        });
+        return { token: await this.sessionToToken(session) } as AuthAuthEntity;
     }
 
     async login(dto: LoginDto, ip: string): Promise<AuthAuthEntity> {
-        const user = await this.userRepo.findOne({
-            where: { username: dto.username }, include: [
-                { model: this.userSettingRepo },
-                { model: this.userPunishmentRepo, as: "punishments", where: { type: PunishmentType.BAN, expiresAt: { [Op.gt]: new Date() } }, order: [["createdAt", "DESC"]], limit: 1, required: false }
-            ]
+        const user = await this.prismaService.user.findUnique({
+            where: { username: dto.username },
+            include: { settings: true, punishments: { where: { type: PunishmentType.BAN, expiresAt: { gt: new Date() } }, orderBy: { createdAt: "desc" } } }
         });
 
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
@@ -86,7 +69,9 @@ export class AuthService {
     async generateOtpSecret(userId: User["id"]): Promise<string> {
         if (await this.redisService.getKey("tempOtp", userId)) return await this.redisService.getKey("tempOtp", userId);
 
-        const user = await this.usersService.getUser(userId, { includeSettings: true });
+        // const user = await this.usersService.getUser(userId, { includeSettings: true });
+        // xotic cant code im not doing types for userservice.getuser lol
+        const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { settings: true } });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
         if (user.settings.otpSecret) throw new BadRequestException(BadRequest.AUTH_OTP_ALREADY_ENABLED);
@@ -98,21 +83,24 @@ export class AuthService {
         return secret.base32;
     }
 
-    async findOrCreateSession(userId: User["id"], transaction?: Transaction): Promise<Session> {
-        const [session] = await this.sessionRepo.findOrCreate({ where: { userId }, defaults: { userId }, transaction });
-
+    async findOrCreateSession(userId: User["id"]): Promise<Session> {
+        const session = await this.prismaService.session.upsert({
+            where: { userId },
+            create: { user: { connect: { id: userId } } },
+            update: {}
+        });
         await this.redisService.setSession(session.userId, session);
 
         return session;
     }
 
     async destroySession(userId: User["id"]): Promise<void> {
-        const session = await this.sessionRepo.findOne({ where: { userId } });
+        const session = await this.prismaService.session.findUnique({ where: { userId } });
 
         if (session) {
             this.redisService.deleteSession(session.userId);
 
-            session.destroy();
+            await this.prismaService.session.delete({ where: { id: session.id } });
         }
     }
 

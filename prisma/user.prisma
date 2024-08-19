@@ -153,10 +153,10 @@ model UserGuildRequest {
 model UserIpAddress {
     id          Int       @id @default(autoincrement())
     userId      String
-    ipAddressId Int
     uses        Int       @default(0)
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @default(now()) @updatedAt
+    ipAddressId Int       @unique
     ipAddress   IpAddress @relation(fields: [ipAddressId], references: [id], onDelete: Cascade)
     user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

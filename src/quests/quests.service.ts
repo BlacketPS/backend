@@ -1,12 +1,10 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { Repository } from "sequelize-typescript";
 import { TokenDistribution, User, Forbidden } from "blacket-types";
 import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class QuestsService {
-    private userRepo: Repository<User>;
     private dailyTokensDistribution: TokenDistribution[] = [
         { chance: 30, amount: 500 },
         { chance: 23, amount: 550 },
@@ -22,8 +20,7 @@ export class QuestsService {
     constructor(
         private prismaService: PrismaService,
         private usersService: UsersService
-    ) {
-    }
+    ) { }
 
     private getRandomDailyTokens(): number {
         // math.random is inclusive 0 and exclusive 1

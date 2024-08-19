@@ -1,11 +1,10 @@
-import { Injectable, InternalServerErrorException, OnApplicationBootstrap } from "@nestjs/common";
-import { Repository } from "sequelize-typescript";
+import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { hash } from "bcrypt";
-import { Op, type Transaction } from "sequelize";
-import { PermissionType, OAuthType, UserDiscord, UserOauth, User, UserTitle, UserBanner, UserBlook, UserItem, UserStatistic, UserSetting, IpAddress, UserIpAddress, Title, Font, Resource, DiscordAccessToken, DiscordDiscordUser, InternalServerError, UserPaymentMethod, UserGroup, Group } from "blacket-types";
+import { DiscordAccessToken, DiscordDiscordUser } from "blacket-types";
+import { Font, PermissionType, Prisma, Resource, Title, User, OAuthType, PrismaPromise } from "@prisma/client";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -23,24 +22,6 @@ export interface GetUserSettings {
 
 @Injectable()
 export class UsersService implements OnApplicationBootstrap {
-    private userRepo: Repository<User>;
-    private userOauthRepo: Repository<UserOauth>;
-    private userDiscordRepo: Repository<UserDiscord>;
-    private userTitleRepo: Repository<UserTitle>;
-    private userBannerRepo: Repository<UserBanner>;
-    private userBlookRepo: Repository<UserBlook>;
-    private userItemRepo: Repository<UserItem>;
-    private userStatisticRepo: Repository<UserStatistic>;
-    private userSettingRepo: Repository<UserSetting>;
-    private userGroupRepo: Repository<UserGroup>;
-    private userPaymentMethodRepo: Repository<UserPaymentMethod>;
-    private ipAddressRepo: Repository<IpAddress>;
-    private userIpAddressRepo: Repository<UserIpAddress>;
-    private titleRepo: Repository<Title>;
-    private fontRepo: Repository<Font>;
-    private resourceRepo: Repository<Resource>;
-    private groupRepo: Repository<Group>;
-
     private defaultPermissions: PermissionType[];
     private defaultAvatar: Resource;
     private defaultBanner: Resource;
@@ -48,35 +29,17 @@ export class UsersService implements OnApplicationBootstrap {
     private defaultFont: Font;
 
     constructor(
-        private sequelizeService: PrismaService,
+        private prismaService: PrismaService,
         private redisService: RedisService,
         private permissionsService: PermissionsService
     ) { }
 
     async onApplicationBootstrap() {
-        this.userRepo = this.sequelizeService.getRepository(User);
-        this.userOauthRepo = this.sequelizeService.getRepository(UserOauth);
-        this.userDiscordRepo = this.sequelizeService.getRepository(UserDiscord);
-        this.userTitleRepo = this.sequelizeService.getRepository(UserTitle);
-        this.userBannerRepo = this.sequelizeService.getRepository(UserBanner);
-        this.userBlookRepo = this.sequelizeService.getRepository(UserBlook);
-        this.userItemRepo = this.sequelizeService.getRepository(UserItem);
-        this.userStatisticRepo = this.sequelizeService.getRepository(UserStatistic);
-        this.userSettingRepo = this.sequelizeService.getRepository(UserSetting);
-        this.userGroupRepo = this.sequelizeService.getRepository(UserGroup);
-        this.userPaymentMethodRepo = this.sequelizeService.getRepository(UserPaymentMethod);
-        this.ipAddressRepo = this.sequelizeService.getRepository(IpAddress);
-        this.userIpAddressRepo = this.sequelizeService.getRepository(UserIpAddress);
-        this.titleRepo = this.sequelizeService.getRepository(Title);
-        this.fontRepo = this.sequelizeService.getRepository(Font);
-        this.resourceRepo = this.sequelizeService.getRepository(Resource);
-        this.groupRepo = this.sequelizeService.getRepository(Group);
-
         this.defaultPermissions = [PermissionType.CREATE_REPORTS, PermissionType.CHANGE_USERNAME];
-        this.defaultAvatar = await this.resourceRepo.findOne({ where: { id: 1 } });
-        this.defaultBanner = await this.resourceRepo.findOne({ where: { id: 3 } });
-        this.defaultTitle = await this.titleRepo.findOne({ where: { id: 1 } });
-        this.defaultFont = await this.fontRepo.findOne({ where: { id: 1 } });
+        this.defaultAvatar = await this.prismaService.resource.findUnique({ where: { id: 1 } });
+        this.defaultBanner = await this.prismaService.resource.findUnique({ where: { id: 3 } });
+        this.defaultTitle = await this.prismaService.title.findUnique({ where: { id: 1 } });
+        this.defaultFont = await this.prismaService.font.findUnique({ where: { id: 1 } });
     }
 
     async getUser(user: string, settings: GetUserSettings = {
@@ -88,7 +51,7 @@ export class UsersService implements OnApplicationBootstrap {
             if (cachedUser) return cachedUser;
         }
 
-        const include = [];
+        /* const include = [];
 
         if (settings.includeBanners) include.push({ model: this.userBannerRepo, as: "banners", attributes: { exclude: [this.userBannerRepo.primaryKeyAttribute] } });
         if (settings.includeBlooksCurrent) include.push({ model: this.userBlookRepo, as: "blooks", attributes: ["blookId"], where: { sold: false }, required: false });
@@ -107,6 +70,33 @@ export class UsersService implements OnApplicationBootstrap {
                 { model: this.userGroupRepo, as: "groups", include: [this.groupRepo], required: false },
                 ...include
             ]
+        }); */
+
+        const include: Prisma.UserInclude = {};
+
+        if (settings.includeBanners) include.banners = true;
+        if (settings.includeBlooksCurrent) include.blooks = { select: { blookId: true }, where: { sold: false } };
+        if (settings.includeBlooksAll) include.blooks = true;
+        if (settings.includeItemsCurrent) include.items = { select: { id: true, itemId: true, usesLeft: true }, where: { usesLeft: { gt: 0 } } };
+        if (settings.includeItemsAll) include.items = { select: { id: true, itemId: true, usesLeft: true } };
+        if (settings.includeStatistics) include.statistics = true;
+        if (settings.includeDiscord) include.discord = true;
+        if (settings.includeTitles) include.titles = true;
+        if (settings.includeSettings) include.settings = true;
+        if (settings.includePaymentMethods) include.paymentMethods = true;
+
+        const userData = await this.prismaService.user.findFirst({
+            where: {
+                OR: [
+                    { id: user },
+                    { username: user }
+                ]
+            },
+            include: {
+                groups: true,
+                settings: true,
+                ...include
+            }
         });
         if (!userData) return null;
 
@@ -118,66 +108,71 @@ export class UsersService implements OnApplicationBootstrap {
         return userData;
     }
 
-    async userExists(user: string, transaction?: Transaction): Promise<boolean> {
-        const count = await this.userRepo.count({ where: this.sequelizeService.or({ id: user }, { username: user }), transaction });
+    async userExists(user: string): Promise<boolean> {
+        const count = await this.prismaService.user.count({
+            where: {
+                OR: [
+                    { id: user },
+                    { username: user }
+                ]
+            }
+        });
 
         return count > 0;
     }
 
-    // transactions are goofy, if you don't use a current transaction you'll get a fk constraint error.
-    async createUser(username: string, password: string, transaction?: Transaction): Promise<User> {
-        const user = await this.userRepo.create({
-            username: username,
-            password: await hash(password, 10),
-            avatarId: this.defaultAvatar.id,
-            bannerId: this.defaultBanner.id,
-            titleId: this.defaultTitle.id,
-            fontId: this.defaultFont.id,
-            permissions: this.defaultPermissions
-        }, { transaction });
-
-        await this.userStatisticRepo.create({ id: user.id }, { transaction });
-        await this.userSettingRepo.create({ id: user.id }, { transaction });
+    async createUser(username: string, password: string): Promise<User> {
+        const user = await this.prismaService.user.create({
+            data: {
+                id: (Math.floor(Date.now() / 1000)).toString() + Math.floor(1000000 + Math.random() * 9000000).toString(),
+                username,
+                password: await hash(password, 10),
+                avatarId: this.defaultAvatar.id,
+                bannerId: this.defaultBanner.id,
+                titleId: this.defaultTitle.id,
+                fontId: this.defaultFont.id,
+                permissions: this.defaultPermissions
+            }
+        });
+        await this.prismaService.userStatistic.create({ data: { id: user.id } });
+        await this.prismaService.userSetting.create({ data: { id: user.id } });
 
         return user;
     }
 
-    async updateUserIp(user: User, ip: string, transaction?: Transaction): Promise<void> {
-        const [ipAddress] = await this.ipAddressRepo.findOrCreate({ where: { ipAddress: ip }, defaults: { ipAddress: ip }, transaction });
-        const [userIpAddress] = await this.userIpAddressRepo.findOrCreate({ where: { userId: user.id, ipAddressId: ipAddress.id }, defaults: { userId: user.id, ipAddressId: ipAddress.id }, transaction });
+    async updateUserIp(user: User, ip: string): Promise<void> {
+        const ipAddress = await this.prismaService.ipAddress.upsert({ where: { ipAddress: ip }, update: {}, create: { ipAddress: ip } });
+        const userIpAddress = await this.prismaService.userIpAddress.upsert({ where: { userId: user.id, ipAddressId: ipAddress.id }, update: {}, create: { userId: user.id, ipAddressId: ipAddress.id } });
 
-        await this.userIpAddressRepo.increment("uses", { where: { id: userIpAddress.id }, transaction });
-        await this.userRepo.update({ ipAddress: ip }, { where: { id: user.id }, transaction });
+        await this.prismaService.userIpAddress.update({ data: { uses: { increment: 1 } }, where: { id: userIpAddress.id } });
+        await this.prismaService.user.update({ where: { id: user.id }, data: { ipAddress: ip } });
     }
 
     async linkDiscordOAuth(userId: string, accessTokenResponse: DiscordAccessToken, discordUser: DiscordDiscordUser): Promise<void> {
-        const transaction: Transaction = await this.sequelizeService.transaction();
-
-        await this.userOauthRepo.create({
-            userId,
-            accessToken: accessTokenResponse.access_token,
-            refreshToken: accessTokenResponse.refresh_token,
-            tokenType: accessTokenResponse.token_type,
-            scope: accessTokenResponse.scope,
-            expiresAt: new Date(Date.now() + accessTokenResponse.expires_in * 1000),
-            type: OAuthType.DISCORD,
-            createdAt: new Date()
-        }, { transaction });
-
-        await this.userDiscordRepo.create({
-            userId,
-            discordId: discordUser.id,
-            username: discordUser.username,
-            avatar: discordUser.avatar
-        }, { transaction });
-
-        await transaction.commit().catch(() => {
-            transaction.rollback();
-            throw new InternalServerErrorException(InternalServerError.DEFAULT);
-        });
+        await this.prismaService.$transaction([
+            this.prismaService.userOAuth.create({
+                data: {
+                    userId,
+                    accessToken: accessTokenResponse.access_token,
+                    refreshToken: accessTokenResponse.refresh_token,
+                    tokenType: accessTokenResponse.token_type,
+                    scope: accessTokenResponse.scope,
+                    expiresAt: new Date(Date.now() + accessTokenResponse.expires_in * 1000),
+                    type: OAuthType.DISCORD
+                }
+            }),
+            this.prismaService.userDiscord.create({
+                data: {
+                    userId,
+                    discordId: discordUser.id,
+                    username: discordUser.username,
+                    avatar: discordUser.avatar
+                }
+            })
+        ]);
     }
 
-    async addTokens(userId: User["id"], amount: number, transaction?: Transaction): Promise<void> {
-        await this.userRepo.increment("tokens", { by: amount, where: { id: userId }, transaction });
+    async addTokens(userId: User["id"], amount: number): Promise<void> {
+        await this.prismaService.user.update({ where: { id: userId }, data: { tokens: { increment: amount } } });
     }
 }
