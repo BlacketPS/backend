@@ -44,15 +44,15 @@ export class StaffController {
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Put("admin/resources/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async updateResource(@GetCurrentUser() userId: string, @Param("id") resourceId: number, @Body() dto: StaffAdminCreateResourceDto) {
-        return await this.staffService.updateResource(userId, resourceId, dto);
+    async updateResource(@GetCurrentUser() userId: string, @Param("id") resourceId: string, @Body() dto: StaffAdminCreateResourceDto) {
+        return await this.staffService.updateResource(userId, parseInt(resourceId), dto);
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Delete("admin/resources/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteResource(@GetCurrentUser() userId: string, @Param("id") resourceId: number) {
-        return await this.staffService.deleteResource(userId, resourceId);
+    async deleteResource(@GetCurrentUser() userId: string, @Param("id") resourceId: string) {
+        return await this.staffService.deleteResource(userId, parseInt(resourceId));
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.BLACKLIST_USERS] })
@@ -77,15 +77,15 @@ export class StaffController {
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GROUPS] })
     @Put("admin/groups/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async updateGroup(@GetCurrentUser() userId: string, @Param("id") groupId: number, @Body() dto: StaffAdminUpdateGroupDto) {
-        return await this.staffService.updateGroup(userId, groupId, dto);
+    async updateGroup(@GetCurrentUser() userId: string, @Param("id") groupId: string, @Body() dto: StaffAdminUpdateGroupDto) {
+        return await this.staffService.updateGroup(userId, parseInt(groupId), dto);
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GROUPS] })
     @Delete("admin/groups/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteGroup(@GetCurrentUser() userId: string, @Param("id") groupId: number) {
-        return await this.staffService.deleteGroup(userId, groupId);
+    async deleteGroup(@GetCurrentUser() userId: string, @Param("id") groupId: string) {
+        return await this.staffService.deleteGroup(userId, parseInt(groupId));
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.BLACKLIST_USERS] })
@@ -103,15 +103,15 @@ export class StaffController {
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Put("admin/rarities/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async updateRarity(@GetCurrentUser() userId: string, @Param("id") rarityId: number, @Body() dto: StaffAdminUpdateRarityDto) {
-        return await this.staffService.updateRarity(userId, rarityId, dto);
+    async updateRarity(@GetCurrentUser() userId: string, @Param("id") rarityId: string, @Body() dto: StaffAdminUpdateRarityDto) {
+        return await this.staffService.updateRarity(userId, parseInt(rarityId), dto);
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Delete("admin/rarities/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteRarity(@GetCurrentUser() userId: string, @Param("id") rarityId: number) {
-        return await this.staffService.deleteRarity(userId, rarityId);
+    async deleteRarity(@GetCurrentUser() userId: string, @Param("id") rarityId: string) {
+        return await this.staffService.deleteRarity(userId, parseInt(rarityId));
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.BLACKLIST_USERS] })
@@ -136,15 +136,15 @@ export class StaffController {
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Put("admin/packs/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async updatePack(@GetCurrentUser() userId: string, @Param("id") packId: number, @Body() dto: StaffAdminUpdatePackDto) {
-        return await this.staffService.updatePack(userId, packId, dto);
+    async updatePack(@GetCurrentUser() userId: string, @Param("id") packId: string, @Body() dto: StaffAdminUpdatePackDto) {
+        return await this.staffService.updatePack(userId, parseInt(packId), dto);
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Delete("admin/packs/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deletePack(@GetCurrentUser() userId: string, @Param("id") packId: number) {
-        return await this.staffService.deletePack(userId, packId);
+    async deletePack(@GetCurrentUser() userId: string, @Param("id") packId: string) {
+        return await this.staffService.deletePack(userId, parseInt(packId));
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.BLACKLIST_USERS] })
@@ -169,15 +169,15 @@ export class StaffController {
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Put("admin/blooks/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async updateBlook(@GetCurrentUser() userId: string, @Param("id") blookId: number, @Body() dto: StaffAdminUpdateBlookDto) {
-        return await this.staffService.updateBlook(userId, blookId, dto);
+    async updateBlook(@GetCurrentUser() userId: string, @Param("id") blookId: string, @Body() dto: StaffAdminUpdateBlookDto) {
+        return await this.staffService.updateBlook(userId, parseInt(blookId), dto);
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Delete("admin/blooks/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteBlook(@GetCurrentUser() userId: string, @Param("id") blookId: number) {
-        return await this.staffService.deleteBlook(userId, blookId);
+    async deleteBlook(@GetCurrentUser() userId: string, @Param("id") blookId: string) {
+        return await this.staffService.deleteBlook(userId, parseInt(blookId));
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.BLACKLIST_USERS] })
@@ -202,15 +202,15 @@ export class StaffController {
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Put("admin/items/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async updateItem(@GetCurrentUser() userId: string, @Param("id") itemId: number, @Body() dto: StaffAdminUpdateItemDto) {
-        return await this.staffService.updateItem(userId, itemId, dto);
+    async updateItem(@GetCurrentUser() userId: string, @Param("id") itemId: string, @Body() dto: StaffAdminUpdateItemDto) {
+        return await this.staffService.updateItem(userId, parseInt(itemId), dto);
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Delete("admin/items/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteItem(@GetCurrentUser() userId: string, @Param("id") itemId: number) {
-        return await this.staffService.deleteItem(userId, itemId);
+    async deleteItem(@GetCurrentUser() userId: string, @Param("id") itemId: string) {
+        return await this.staffService.deleteItem(userId, parseInt(itemId));
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
@@ -228,8 +228,8 @@ export class StaffController {
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Put("admin/item-shop/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async updateItemShopItem(@GetCurrentUser() userId: string, @Param("id") itemShopItemId: number, @Body() dto: StaffAdminUpdateItemShopItemDto) {
-        return await this.staffService.updateItemShopItem(userId, itemShopItemId, dto);
+    async updateItemShopItem(@GetCurrentUser() userId: string, @Param("id") itemShopItemId: string, @Body() dto: StaffAdminUpdateItemShopItemDto) {
+        return await this.staffService.updateItemShopItem(userId, parseInt(itemShopItemId), dto);
     }
 
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
@@ -242,7 +242,7 @@ export class StaffController {
     @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_DATA] })
     @Delete("admin/item-shop/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteItemShopItem(@GetCurrentUser() userId: string, @Param("id") itemShopItemId: number) {
-        return await this.staffService.deleteItemShopItem(userId, itemShopItemId);
+    async deleteItemShopItem(@GetCurrentUser() userId: string, @Param("id") itemShopItemId: string) {
+        return await this.staffService.deleteItemShopItem(userId, parseInt(itemShopItemId));
     }
 }

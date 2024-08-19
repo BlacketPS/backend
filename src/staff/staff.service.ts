@@ -95,7 +95,7 @@ export class StaffService {
 
         const group = await this.prismaService.group.create({
             data: {
-                resource: dto.imageId ? { connect: { id: dto.imageId } } : null,
+                image: { connect: { id: dto.imageId ?? 1 } },
                 description: dto.description,
                 name: dto.name,
                 priority: lastGroup ? lastGroup.priority + 1 : 1
@@ -111,12 +111,11 @@ export class StaffService {
         await this.prismaService.group.findUnique({ where: { id: groupId } });
         if (dto.imageId) await this.prismaService.resource.findUnique({ where: { id: dto.imageId } });
 
-        // FIXME
         await this.redisService.setGroup(groupId, dto);
 
         return this.prismaService.group.update({
             data: {
-                resource: dto.imageId ? { connect: { id: dto.imageId } } : null,
+                image: dto.imageId ? { connect: { id: dto.imageId } } : null,
                 description: dto.description,
                 name: dto.name
             }, where: { id: groupId }
@@ -171,10 +170,7 @@ export class StaffService {
     }
 
     async updateRarity(userId: string, rarityId: number, dto: StaffAdminUpdateRarityDto) {
-        // FIXME
         await this.redisService.setRarity(rarityId, dto);
-
-        // FIXME
         return this.prismaService.rarity.update({ data: dto, where: { id: rarityId } });
     }
 
@@ -267,9 +263,8 @@ export class StaffService {
 
 
                 image: { connect: { id: dto.imageId } },
-                priority: lastBlook ? lastBlook.priority + 1 : 1
-                // FIXME
-                // onlyOnDay: dto.onlyOnDay,
+                priority: lastBlook ? lastBlook.priority + 1 : 1,
+                onlyOnDay: dto.onlyOnDay
             }
         });
 
@@ -284,17 +279,17 @@ export class StaffService {
         await this.prismaService.rarity.findUnique({ where: { id: dto.rarityId } });
         await this.prismaService.resource.findUnique({ where: { id: dto.imageId } });
         await this.prismaService.resource.findUnique({ where: { id: dto.backgroundId } });
-        // FIXME
         await this.redisService.setBlook(blookId, dto);
 
         return await this.prismaService.blook.update({
             data: {
                 name: dto.name,
-                rarity: { connect: { id: dto.rarityId } },
-                pack: { connect: { id: dto.packId } },
-                background: { connect: { id: dto.backgroundId } },
-                image: { connect: { id: dto.imageId } }
-                // onlyOnDay: dto.only
+                // TODO: make some sort of helper function to reduce boilerplate here
+                rarity: dto.rarityId ? { connect: { id: dto.rarityId } } : null,
+                pack: dto.packId ? { connect: { id: dto.packId } } : null,
+                background: dto.backgroundId ? { connect: { id: dto.backgroundId } } : null,
+                image: dto.imageId ? { connect: { id: dto.imageId } } : null,
+                onlyOnDay: dto.onlyOnDay
             }, where: { id: blookId }
         });
     }
