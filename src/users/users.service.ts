@@ -4,7 +4,7 @@ import { RedisService } from "src/redis/redis.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { hash } from "bcrypt";
 import { DiscordAccessToken, DiscordDiscordUser } from "blacket-types";
-import { Font, PermissionType, Prisma, Resource, Title, User, OAuthType, PrismaPromise } from "@prisma/client";
+import { Font, PermissionType, Prisma, Resource, Title, User, OAuthType } from "@prisma/client";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
