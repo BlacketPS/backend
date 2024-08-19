@@ -1,11 +1,11 @@
 enum DayType {
-    MONDAY    @map("1")
-    TUESDAY   @map("2")
-    WEDNESDAY @map("3")
-    THURSDAY  @map("4")
-    FRIDAY    @map("5")
-    SATURDAY  @map("6")
-    SUNDAY    @map("7")
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+    SUNDAY
 }
 
 model Blook {

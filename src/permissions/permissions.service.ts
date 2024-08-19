@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { Group, PermissionType, User, UserGroup } from "blacket-types";
+import { Group, User, UserGroup } from "blacket-types";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Repository, setScopeOptionsGetters } from "sequelize-typescript";
+import { PermissionType } from "@prisma/client";
 
 @Injectable()
 export class PermissionsService {
@@ -10,44 +11,8 @@ export class PermissionsService {
     private groupRepo: Repository<Group>;
 
     constructor(
-        private readonly sequelizeService: PrismaService
-    ) {
-        this.userRepo = this.sequelizeService.getRepository(User);
-        this.userGroupRepo = this.sequelizeService.getRepository(UserGroup);
-        this.groupRepo = this.sequelizeService.getRepository(Group);
-    }
-
-    /* getPermissionsField(permissions: Permission[]): number {
-        return this.addPermissions(0, permissions);
-    }
-
-    addPermission(permission: number, permissionToAdd: Permission): number {
-        return permission | permissionToAdd;
-    }
-
-    addPermissions(permission: number, permissionsToAdd: Permission[]): number {
-        return permissionsToAdd.reduce((acc, p) => acc | p, permission);
-    }
-
-    combinePermissions(permissionOne: number, permissionTwo: number): number {
-        return permissionOne | permissionTwo;
-    }
-
-    removePermission(permission: number, permissionToRemove: Permission): number {
-        return permission & ~permissionToRemove;
-    }
-
-    removePermissions(permission: number, permissionsToRemove: Permission[]): number {
-        return permissionsToRemove.reduce((acc, p) => acc & ~p, permission);
-    }
-
-    hasPermission(permission: number, permissionToCheck: Permission): boolean {
-        return (permission & permissionToCheck) === permissionToCheck;
-    }
-
-    hasPermissions(permission: number, permissionsToCheck: Permission[]): boolean {
-        return permissionsToCheck.every((p) => this.hasPermission(permission, p));
-    } */
+        private readonly prismaService: PrismaService
+    ) { }
 
     hasPermission(permission: number[], permissionToCheck: PermissionType): boolean {
         return permission.includes(permissionToCheck);

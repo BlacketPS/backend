@@ -3,7 +3,7 @@ model Message {
     authorId     String    @db.VarChar(255)
     roomId       Int
     content      String
-    mentions     String[]  @default([])
+    mentions     User[]    @relation("mentionedUser")
     replyingToId Int?
     edited       Boolean   @default(false)
     deleted      Boolean   @default(false)

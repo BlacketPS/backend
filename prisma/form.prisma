@@ -1,7 +1,7 @@
 enum FormStatus {
-    PENDING  @map("1")
-    ACCEPTED @map("2")
-    DENIED   @map("3")
+    PENDING
+    ACCEPTED
+    DENIED
 }
 
 model Form {

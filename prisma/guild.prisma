@@ -8,7 +8,7 @@ model Guild {
     acceptingRequests Boolean            @default(true)
     createdAt         DateTime           @default(now())
     updatedAt         DateTime           @default(now())
-    resource          Resource?          @relation(fields: [imageId], references: [id], onDelete: NoAction)
+    image             Resource?          @relation(fields: [imageId], references: [id], onDelete: NoAction)
     members           UserGuild[]
     joinRequests      UserGuildRequest[]
 }

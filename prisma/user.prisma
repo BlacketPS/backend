@@ -1,38 +1,38 @@
 enum BlookObtainMethod {
-    UNKNOWN   @map("1")
-    PACK_OPEN @map("2")
-    STAFF     @map("3")
+    UNKNOWN
+    PACK_OPEN
+    STAFF
 }
 
 enum ItemObtainMethod {
-    UNKNOWN   @map("1")
-    ITEM_SHOP @map("2")
-    PURCHASE  @map("3")
-    STAFF     @map("4")
+    UNKNOWN
+    ITEM_SHOP
+    PURCHASE
+    STAFF
 }
 
 enum GuildRole {
-    MEMBER        @map("1")
-    MODERATOR     @map("2")
-    ADMINISTRATOR @map("3")
-    OWNER         @map("4")
+    MEMBER
+    MODERATOR
+    ADMINISTRATOR
+    OWNER
 }
 
 enum OAuthType {
-    DISCORD @map("1")
+    DISCORD
 }
 
 enum PunishmentType {
-    WARN      @map("1")
-    MUTE      @map("2")
-    BAN       @map("3")
-    BLACKLIST @map("4")
+    WARN
+    MUTE
+    BAN
+    BLACKLIST
 }
 
 enum SettingFriendRequest {
-    ON     @map("1")
-    OFF    @map("2")
-    MUTUAL @map("3")
+    ON
+    OFF
+    MUTUAL
 }
 
 model User {
@@ -52,7 +52,7 @@ model User {
     ipAddress                String?
     createdAt                DateTime            @default(now())
     updatedAt                DateTime            @default(now()) @updatedAt
-    permissions              Int[]               @default([])
+    permissions              PermissionType[]    @default([])
     auction                  Auction[]
     auctionBid               AuctionBid[]
     form                     Form[]
@@ -82,6 +82,7 @@ model User {
     settings                 UserSetting?
     statistics               UserStatistic?
     titles                   UserTitle[]
+    mentions                 Message[]           @relation("mentionedUser")
 }
 
 model UserBanner {

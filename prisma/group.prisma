@@ -1,14 +1,14 @@
 model Group {
-    id          Int         @id @default(autoincrement())
-    name        String      @unique
+    id          Int              @id @default(autoincrement())
+    name        String           @unique
     description String?
     imageId     Int?
-    priority    Int         @default(0)
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @default(now())
+    priority    Int              @default(0)
+    createdAt   DateTime         @default(now())
+    updatedAt   DateTime         @default(now())
     deletedAt   DateTime?
-    permissions Int[]       @default([])
-    resource    Resource?   @relation(fields: [imageId], references: [id], onDelete: NoAction)
+    permissions PermissionType[]
+    resource    Resource?        @relation(fields: [imageId], references: [id], onDelete: NoAction)
     products    Product[]
     users       UserGroup[]
 }

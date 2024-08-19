@@ -3,8 +3,7 @@ import { Redis } from "ioredis";
 import { CoreService } from "src/core/core.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
-import { sessions as Session, resource as Resource, blook as Blook, banner as Banner, item_shop as ItemShop, rarity as Rarity } from "@prisma/client";
-
+import { Session, Resource, Group, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop } from "@prisma/client";
 @Injectable()
 export class RedisService extends Redis {
     private prefix: string;
@@ -27,7 +26,7 @@ export class RedisService extends Redis {
         //     this.set(`${this.prefix}:blacklist:${blacklist.ipAddress.ipAddress.replaceAll(":", "|")}`, JSON.stringify(blacklist));
         // }
 
-        for (const session of await this.prismaService.sessions.findMany()) this.set(`${this.prefix}:session:${session.userId}`, JSON.stringify(session));
+        for (const session of await this.prismaService.session.findMany()) this.set(`${this.prefix}:session:${session.userId}`, JSON.stringify(session));
         for (const resource of await this.prismaService.resource.findMany()) this.set(`${this.prefix}:resource:${resource.id}`, JSON.stringify(resource));
         for (const group of await this.prismaService.group.findMany()) this.set(`${this.prefix}:group:${group.id}`, JSON.stringify(group));
         for (const room of await this.prismaService.room.findMany()) {

@@ -2,8 +2,7 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 
-import { RarityAnimationType } from "blacket-types";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, RarityAnimationType } from "@prisma/client";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -61,7 +60,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
             this.title.create({ data: { name: "Common" } }),
 
-            this.blook.create({ data: { name: "Default", chance: 0, price: 0, rarity: { connect: { id: 1 } }, resource_blook_imageIdToresource: { connect: { id: 1 } }, resource_blook_backgroundIdToresource: { connect: { id: 2 } }, priority: 0 } }),
+            this.blook.create({ data: { name: "Default", chance: 0, price: 0, rarity: { connect: { id: 1 } }, priority: 0, background: { connect: { id: 2 } }, image: { connect: { id: 1 } } } }),
 
             this.font.create({ data: { name: "Nunito Bold", resource: { connect: { id: 4 } } } }),
             this.font.create({ data: { name: "Titan One", resource: { connect: { id: 5 } } } })

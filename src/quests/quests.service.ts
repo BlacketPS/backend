@@ -20,10 +20,9 @@ export class QuestsService {
     private dailyTokensDistributionTotalChance = this.dailyTokensDistribution.reduce((acc, curr) => acc + curr.chance, 0);
 
     constructor(
-        private sequelizeService: PrismaService,
+        private prismaService: PrismaService,
         private usersService: UsersService
     ) {
-        this.userRepo = this.sequelizeService.getRepository(User);
     }
 
     private getRandomDailyTokens(): number {
@@ -51,10 +50,15 @@ export class QuestsService {
 
         const tokensToAdd = this.getRandomDailyTokens();
 
-        this.userRepo.update({
-            tokens: this.sequelizeService.literal(`tokens + ${tokensToAdd}`),
-            lastClaimed: lastDailyTokenClaim
-        }, { where: { id: user.id } });
+        this.prismaService.user.update({
+            where: { id: userId },
+            data: {
+                tokens: {
+                    increment: tokensToAdd
+                },
+                lastClaimed: lastDailyTokenClaim
+            }
+        });
 
         return tokensToAdd;
     }

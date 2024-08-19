@@ -1,8 +1,8 @@
 enum ItemType {
-    NONE         @map("1")
-    BOOSTER      @map("2")
-    TROPHY       @map("3")
-    PAINT_BUCKET @map("4")
+    NONE
+    BOOSTER
+    TROPHY
+    PAINT_BUCKET
 }
 
 model Item {
