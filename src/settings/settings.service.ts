@@ -5,9 +5,8 @@ import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
 import { hash, compare } from "bcrypt";
 import * as speakEasy from "speakeasy";
-import { keys } from "ts-transformer-keys";
 import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, BadRequest, NotFound, AuthAuthEntity, SettingsEnableOtpDto, SettingsDisableOtpDto } from "blacket-types";
-import { User, UserSetting } from "@prisma/client";
+import { User } from "@prisma/client";
 
 @Injectable()
 export class SettingsService {
