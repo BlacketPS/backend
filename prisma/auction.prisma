@@ -1,27 +1,32 @@
-model auction {
-  id          Int           @id @default(autoincrement())
-  type        Int
-  itemId      Int?
-  blookId     Int?
-  price       Int
-  sellerId    String        @db.VarChar(255)
-  buyItNow    Boolean       @default(false)
-  expiresAt   DateTime      @db.Timestamptz(6)
-  createdAt   DateTime      @db.Timestamptz(6)
-  updatedAt   DateTime      @db.Timestamptz(6)
-  blook       blook?        @relation(fields: [blookId], references: [id])
-  item        item?         @relation(fields: [itemId], references: [id])
-  user        user          @relation(fields: [sellerId], references: [id], onDelete: NoAction)
-  auction_bid auction_bid[]
+enum AuctionType {
+    ITEM  @map("1")
+    BLOOK @map("2")
 }
 
-model auction_bid {
-  id        Int      @id @default(autoincrement())
-  userId    String   @db.VarChar(255)
-  auctionId Int
-  amount    Int
-  createdAt DateTime @db.Timestamptz(6) @default(now())
-  updatedAt DateTime @db.Timestamptz(6) @default(now())
-  auction   auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
-  user      user     @relation(fields: [userId], references: [id], onDelete: NoAction)
+model Auction {
+    id        Int          @id @default(autoincrement())
+    type      AuctionType
+    price     Int
+    buyItNow  Boolean      @default(false)
+    expiresAt DateTime
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @default(now()) @updatedAt
+    blookId   Int?
+    blook     Blook?       @relation(fields: [blookId], references: [id])
+    itemId    Int?
+    item      Item?        @relation(fields: [itemId], references: [id])
+    sellerId  String       @db.VarChar(255)
+    seller    User         @relation(fields: [sellerId], references: [id], onDelete: NoAction)
+    bids      AuctionBid[]
+}
+
+model AuctionBid {
+    id        Int      @id @default(autoincrement())
+    userId    String
+    auctionId Int
+    amount    Int
+    createdAt DateTime @default(now())
+    updatedAt DateTime @default(now()) @updatedAt
+    auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+    user      User     @relation(fields: [userId], references: [id], onDelete: NoAction)
 }

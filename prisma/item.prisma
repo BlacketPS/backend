@@ -1,22 +1,29 @@
-model item {
-  id              Int         @id @default(autoincrement())
-  name            String      @unique @db.VarChar(255)
-  description     String      @db.VarChar(255)
-  rarityId        Int
-  imageId         Int
-  type            Int         @default(1)
-  canUse          Boolean     @default(false)
-  canAuction      Boolean     @default(false)
-  canTrade        Boolean     @default(false)
-  maxUses         Int         @default(1)
-  boosterDuration Int?        @default(0)
-  priority        Int         @default(0)
-  createdAt       DateTime    @db.Timestamptz(6)
-  updatedAt       DateTime    @db.Timestamptz(6)
-  auction         auction[]
-  resource        resource    @relation(fields: [imageId], references: [id], onDelete: NoAction)
-  rarity          rarity      @relation(fields: [rarityId], references: [id], onDelete: NoAction)
-  item_shop       item_shop[]
-  product         product[]
-  user_item       user_item[]
+enum ItemType {
+    NONE         @map("1")
+    BOOSTER      @map("2")
+    TROPHY       @map("3")
+    PAINT_BUCKET @map("4")
+}
+
+model Item {
+    id              Int        @id @default(autoincrement())
+    name            String     @unique
+    description     String
+    rarityId        Int
+    imageId         Int
+    type            ItemType   @default(NONE)
+    canUse          Boolean    @default(false)
+    canAuction      Boolean    @default(false)
+    canTrade        Boolean    @default(false)
+    maxUses         Int        @default(1)
+    boosterDuration Int?       @default(0)
+    priority        Int        @default(0)
+    createdAt       DateTime   @default(now())
+    updatedAt       DateTime   @default(now())
+    auctions        Auction[]
+    resource        Resource   @relation(fields: [imageId], references: [id], onDelete: NoAction)
+    rarity          Rarity     @relation(fields: [rarityId], references: [id], onDelete: NoAction)
+    itemShop        ItemShop[]
+    products        Product[]
+    users           UserItem[]
 }

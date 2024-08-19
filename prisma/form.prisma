@@ -1,13 +1,19 @@
-model form {
-  id           String   @id @db.VarChar(255)
-  username     String   @db.VarChar(255)
-  password     String   @db.VarChar(255)
-  ipAddress    String   @db.VarChar(255)
-  reasonToPlay String   @db.VarChar(255)
-  status       Int      @default(1)
-  deniedReason String?  @db.VarChar(255)
-  accepterId   String?  @db.VarChar(255)
-  createdAt    DateTime @db.Timestamptz(6) @default(now())
-  updatedAt    DateTime @db.Timestamptz(6) @default(now())
-  user         user?    @relation(fields: [accepterId], references: [id])
+enum FormStatus {
+    PENDING  @map("1")
+    ACCEPTED @map("2")
+    DENIED   @map("3")
+}
+
+model Form {
+    id           String     @id
+    username     String
+    password     String
+    ipAddress    String
+    reasonToPlay String
+    status       FormStatus @default(PENDING)
+    deniedReason String?
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @default(now()) @updatedAt
+    accepterId   String?
+    accepter     User?      @relation(fields: [accepterId], references: [id])
 }

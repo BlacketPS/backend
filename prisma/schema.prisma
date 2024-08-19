@@ -1,9 +1,52 @@
 generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["prismaSchemaFolder"]
+    provider        = "prisma-client-js"
+    previewFeatures = ["prismaSchemaFolder"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum PermissionType {
+    CREATE_REPORTS             @map("1")
+    CHANGE_USERNAME            @map("2")
+    CHANGE_NAME_COLOR_TIER_1   @map("3")
+    CHANGE_NAME_COLOR_TIER_2   @map("4")
+    EARLY_ACCESS_TIER_1        @map("5")
+    EARLY_ACCESS_TIER_2        @map("6")
+    USE_CHAT_COLORS            @map("7")
+    UPLOAD_FILES_SMALL         @map("8")
+    UPLOAD_FILES_MEDIUM        @map("9")
+    UPLOAD_FILES_LARGE         @map("10")
+    CUSTOM_AVATAR              @map("11")
+    CUSTOM_BANNER              @map("12")
+    CHANGE_FONT                @map("13")
+    MORE_AUCTIONS_TIER_1       @map("14")
+    MORE_AUCTIONS_TIER_2       @map("15")
+    MORE_AUCTIONS_TIER_3       @map("16")
+    MORE_AUCTIONS_TIER_4       @map("17")
+    LESS_AUCTION_TAX           @map("18")
+    CREATE_GUILDS              @map("19")
+    CHANGE_GUILD_COLOR         @map("20")
+    CUSTOM_TRADING_TABLE_COLOR @map("21")
+    MORE_CHAT_BADGE_TIER_1     @map("22")
+    MORE_CHAT_BADGE_TIER_2     @map("23")
+    MUTE_USERS                 @map("24")
+    BAN_USERS                  @map("25")
+    MANAGE_MESSAGES            @map("26")
+    VIEW_AUDIT                 @map("27")
+    MANAGE_REPORTS             @map("28")
+    BLACKLIST_USERS            @map("29")
+    MANAGE_USER_PERMISSIONS    @map("30")
+    MANAGE_USER_BLOOKS         @map("31")
+    MANAGE_USER_ITEMS          @map("32")
+    MANAGE_USER_TITLES         @map("33")
+    MANAGE_USER_BANNERS        @map("34")
+    MANAGE_USER_GROUPS         @map("35")
+    MANAGE_NEWS_POSTS          @map("36")
+    MANAGE_CHAT_ROOMS          @map("37")
+    MANAGE_GAME_DATA           @map("38")
+    DELETE_USERS               @map("39")
+    MANAGE_GROUPS              @map("40")
 }

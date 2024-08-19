@@ -1,24 +1,32 @@
-model product {
-  id             Int      @id @default(autoincrement())
-  name           String   @unique @db.VarChar(255)
-  description    String?
-  imageId        Int
-  type           Int
-  itemId         Int?
-  blookId        Int?
-  titleId        Int?
-  fontId         Int?
-  isSubscription Boolean  @default(false)
-  monthlyPrice   Float?
-  lifetimePrice  Float?
-  groupId        Int?
-  priority       Int      @default(0)
-  createdAt      DateTime @db.Timestamptz(6) @default(now())
-  updatedAt      DateTime @db.Timestamptz(6) @default(now())
-  blook          blook?   @relation(fields: [blookId], references: [id])
-  font           font?    @relation(fields: [fontId], references: [id])
-  group          group?   @relation(fields: [groupId], references: [id])
-  resource       resource @relation(fields: [imageId], references: [id], onDelete: NoAction)
-  item           item?    @relation(fields: [itemId], references: [id])
-  title          title?   @relation(fields: [titleId], references: [id])
+enum ProductType {
+    ITEM  @map("1")
+    BLOOK @map("2")
+    TITLE @map("3")
+    FONT  @map("4")
+    OTHER @map("5")
+}
+
+model Product {
+    id             Int         @id @default(autoincrement())
+    name           String      @unique
+    description    String?
+    imageId        Int
+    type           ProductType
+    itemId         Int?
+    blookId        Int?
+    titleId        Int?
+    fontId         Int?
+    isSubscription Boolean     @default(false)
+    monthlyPrice   Float?
+    lifetimePrice  Float?
+    groupId        Int?
+    priority       Int         @default(0)
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @default(now())
+    blook          Blook?      @relation(fields: [blookId], references: [id])
+    font           Font?       @relation(fields: [fontId], references: [id])
+    group          Group?      @relation(fields: [groupId], references: [id])
+    resource       Resource    @relation(fields: [imageId], references: [id], onDelete: NoAction)
+    item           Item?       @relation(fields: [itemId], references: [id])
+    title          Title?      @relation(fields: [titleId], references: [id])
 }

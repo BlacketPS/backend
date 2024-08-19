@@ -1,8 +1,0 @@
-model ip_address {
-  id              Int               @id @default(autoincrement())
-  ipAddress       String            @unique @db.VarChar(255)
-  createdAt       DateTime          @db.Timestamptz(6)
-  updatedAt       DateTime          @db.Timestamptz(6)
-  audit           audit[]
-  user_ip_address user_ip_address[]
-}

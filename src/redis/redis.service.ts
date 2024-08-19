@@ -1,108 +1,70 @@
 import { Injectable } from "@nestjs/common";
 import { Redis } from "ioredis";
-import { Repository } from "sequelize-typescript";
 import { CoreService } from "src/core/core.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
-import { Resource, Session, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Group, Blacklist, IpAddress, UserPunishment } from "blacket-types";
+import { sessions as Session, resource as Resource, blook as Blook, banner as Banner, item_shop as ItemShop, rarity as Rarity } from "@prisma/client";
 
 @Injectable()
 export class RedisService extends Redis {
     private prefix: string;
-
-    private blacklistRepo: Repository<Blacklist>;
-    private sessionRepo: Repository<Session>;
-    private resourceRepo: Repository<Resource>;
-    private groupRepo: Repository<Group>;
-    private ipAddressRepo: Repository<IpAddress>;
-    private roomRepo: Repository<Room>;
-    private blookRepo: Repository<Blook>;
-    private rarityRepo: Repository<Rarity>;
-    private packRepo: Repository<Pack>;
-    private itemRepo: Repository<Item>;
-    private titleRepo: Repository<Title>;
-    private bannerRepo: Repository<Banner>;
-    private fontRepo: Repository<Font>;
-    private emojiRepo: Repository<Emoji>;
-    private userPunishmentRepo: Repository<UserPunishment>;
-
     constructor(
         private coreService: CoreService,
-        private sequelizeService: PrismaService,
+        private prismaService: PrismaService,
         private configService: ConfigService
     ) {
         super({});
 
         this.prefix = this.configService.get<string>("SERVER_DATABASE_NAME");
-
-        this.blacklistRepo = this.sequelizeService.getRepository(Blacklist);
-        this.sessionRepo = this.sequelizeService.getRepository(Session);
-        this.resourceRepo = this.sequelizeService.getRepository(Resource);
-        this.groupRepo = this.sequelizeService.getRepository(Group);
-        this.ipAddressRepo = this.sequelizeService.getRepository(IpAddress);
-        this.roomRepo = this.sequelizeService.getRepository(Room);
-        this.blookRepo = this.sequelizeService.getRepository(Blook);
-        this.rarityRepo = this.sequelizeService.getRepository(Rarity);
-        this.packRepo = this.sequelizeService.getRepository(Pack);
-        this.itemRepo = this.sequelizeService.getRepository(Item);
-        this.titleRepo = this.sequelizeService.getRepository(Title);
-        this.bannerRepo = this.sequelizeService.getRepository(Banner);
-        this.fontRepo = this.sequelizeService.getRepository(Font);
-        this.emojiRepo = this.sequelizeService.getRepository(Emoji);
-        this.userPunishmentRepo = this.sequelizeService.getRepository(UserPunishment);
     }
 
     async onModuleInit() {
         await this.flushall();
 
         // some of these also set the name, this is so we can get all data just from the name without having to fetch every blook, item, etc
-        for (const blacklist of await this.blacklistRepo.findAll({
-            include: [
-                { model: this.ipAddressRepo, as: "ipAddress" },
-                { model: this.userPunishmentRepo, as: "punishment" }
-            ]
-        })) {
-            this.set(`${this.prefix}:blacklist:${blacklist.ipAddress.ipAddress.replaceAll(":", "|")}`, JSON.stringify(blacklist.dataValues));
-        }
+        // blacklists table does not exist atm while im converting to prisma - zastix
+        // for (const blacklist of await this.prismaService. {
+        //     this.set(`${this.prefix}:blacklist:${blacklist.ipAddress.ipAddress.replaceAll(":", "|")}`, JSON.stringify(blacklist));
+        // }
 
-        for (const session of await this.sessionRepo.findAll()) this.set(`${this.prefix}:session:${session.userId}`, JSON.stringify(session.dataValues));
-        for (const resource of await this.resourceRepo.findAll()) this.set(`${this.prefix}:resource:${resource.id}`, JSON.stringify(resource.dataValues));
-        for (const group of await this.groupRepo.findAll()) this.set(`${this.prefix}:group:${group.id}`, JSON.stringify(group.dataValues));
-        for (const room of await this.roomRepo.findAll()) {
-            this.set(`${this.prefix}:room:${room.id}`, JSON.stringify(room.dataValues));
-            this.set(`${this.prefix}:room:${room.name.toLowerCase()}`, JSON.stringify(room.dataValues));
+        for (const session of await this.prismaService.sessions.findMany()) this.set(`${this.prefix}:session:${session.userId}`, JSON.stringify(session));
+        for (const resource of await this.prismaService.resource.findMany()) this.set(`${this.prefix}:resource:${resource.id}`, JSON.stringify(resource));
+        for (const group of await this.prismaService.group.findMany()) this.set(`${this.prefix}:group:${group.id}`, JSON.stringify(group));
+        for (const room of await this.prismaService.room.findMany()) {
+            this.set(`${this.prefix}:room:${room.id}`, JSON.stringify(room));
+            this.set(`${this.prefix}:room:${room.name.toLowerCase()}`, JSON.stringify(room));
         }
-        for (const blook of await this.blookRepo.findAll()) {
-            this.set(`${this.prefix}:blook:${blook.id}`, JSON.stringify(blook.dataValues));
-            this.set(`${this.prefix}:blook:${blook.name.toLowerCase()}`, JSON.stringify(blook.dataValues));
+        for (const blook of await this.prismaService.blook.findMany()) {
+            this.set(`${this.prefix}:blook:${blook.id}`, JSON.stringify(blook));
+            this.set(`${this.prefix}:blook:${blook.name.toLowerCase()}`, JSON.stringify(blook));
         }
-        for (const rarity of await this.rarityRepo.findAll()) {
-            this.set(`${this.prefix}:rarity:${rarity.id}`, JSON.stringify(rarity.dataValues));
-            this.set(`${this.prefix}:rarity:${rarity.name.toLowerCase()}`, JSON.stringify(rarity.dataValues));
+        for (const rarity of await this.prismaService.rarity.findMany()) {
+            this.set(`${this.prefix}:rarity:${rarity.id}`, JSON.stringify(rarity));
+            this.set(`${this.prefix}:rarity:${rarity.name.toLowerCase()}`, JSON.stringify(rarity));
         }
-        for (const pack of await this.packRepo.findAll()) {
-            this.set(`${this.prefix}:pack:${pack.id}`, JSON.stringify(pack.dataValues));
-            this.set(`${this.prefix}:pack:${pack.name.toLowerCase()}`, JSON.stringify(pack.dataValues));
+        for (const pack of await this.prismaService.pack.findMany()) {
+            this.set(`${this.prefix}:pack:${pack.id}`, JSON.stringify(pack));
+            this.set(`${this.prefix}:pack:${pack.name.toLowerCase()}`, JSON.stringify(pack));
         }
-        for (const item of await this.itemRepo.findAll()) {
-            this.set(`${this.prefix}:item:${item.id}`, JSON.stringify(item.dataValues));
-            this.set(`${this.prefix}:item:${item.name.toLowerCase()}`, JSON.stringify(item.dataValues));
+        for (const item of await this.prismaService.item.findMany()) {
+            this.set(`${this.prefix}:item:${item.id}`, JSON.stringify(item));
+            this.set(`${this.prefix}:item:${item.name.toLowerCase()}`, JSON.stringify(item));
         }
-        for (const title of await this.titleRepo.findAll()) {
-            this.set(`${this.prefix}:title:${title.id}`, JSON.stringify(title.dataValues));
-            this.set(`${this.prefix}:title:${title.name.toLowerCase()}`, JSON.stringify(title.dataValues));
+        for (const title of await this.prismaService.title.findMany()) {
+            this.set(`${this.prefix}:title:${title.id}`, JSON.stringify(title));
+            this.set(`${this.prefix}:title:${title.name.toLowerCase()}`, JSON.stringify(title));
         }
-        for (const banner of await this.bannerRepo.findAll()) {
-            this.set(`${this.prefix}:banner:${banner.id}`, JSON.stringify(banner.dataValues));
-            this.set(`${this.prefix}:banner:${banner.name.toLowerCase()}`, JSON.stringify(banner.dataValues));
+        for (const banner of await this.prismaService.banner.findMany()) {
+            this.set(`${this.prefix}:banner:${banner.id}`, JSON.stringify(banner));
+            this.set(`${this.prefix}:banner:${banner.name.toLowerCase()}`, JSON.stringify(banner));
         }
-        for (const font of await this.fontRepo.findAll()) {
-            this.set(`${this.prefix}:font:${font.id}`, JSON.stringify(font.dataValues));
-            this.set(`${this.prefix}:font:${font.name.toLowerCase()}`, JSON.stringify(font.dataValues));
+        for (const font of await this.prismaService.font.findMany()) {
+            this.set(`${this.prefix}:font:${font.id}`, JSON.stringify(font));
+            this.set(`${this.prefix}:font:${font.name.toLowerCase()}`, JSON.stringify(font));
         }
-        for (const emoji of await this.emojiRepo.findAll()) {
-            this.set(`${this.prefix}:emoji:${emoji.id}`, JSON.stringify(emoji.dataValues));
-            this.set(`${this.prefix}:emoji:${emoji.name.toLowerCase()}`, JSON.stringify(emoji.dataValues));
+        for (const emoji of await this.prismaService.emoji.findMany()) {
+            this.set(`${this.prefix}:emoji:${emoji.id}`, JSON.stringify(emoji));
+            this.set(`${this.prefix}:emoji:${emoji.name.toLowerCase()}`, JSON.stringify(emoji));
         }
     }
 
@@ -124,11 +86,11 @@ export class RedisService extends Redis {
         const oldData = await this.getKey(key, value);
 
         if (!ttl) {
-            await this.set(`${this.prefix}:${key}:${value}`, JSON.stringify({ ...oldData, ...data.dataValues ? data.toJSON() : data }));
-            if (data?.name || oldData?.name) await this.set(`${this.prefix}:${key}:${data.name.toLowerCase()}`, JSON.stringify({ ...oldData, ...data.dataValues ? data.toJSON() : data }));
+            await this.set(`${this.prefix}:${key}:${value}`, JSON.stringify({ ...oldData, ...data ? data.toJSON() : data }));
+            if (data?.name || oldData?.name) await this.set(`${this.prefix}:${key}:${data.name.toLowerCase()}`, JSON.stringify({ ...oldData, ...data ? data.toJSON() : data }));
         } else {
-            await this.setex(`${this.prefix}:${key}:${value}`, ttl, JSON.stringify({ ...oldData, ...data.dataValues ? data.toJSON() : data }));
-            if (data?.name || oldData?.name) await this.setex(`${this.prefix}:${key}:${data.name.toLowerCase()}`, ttl, JSON.stringify({ ...oldData, ...data.dataValues ? data.toJSON() : data }));
+            await this.setex(`${this.prefix}:${key}:${value}`, ttl, JSON.stringify({ ...oldData, ...data ? data.toJSON() : data }));
+            if (data?.name || oldData?.name) await this.setex(`${this.prefix}:${key}:${data.name.toLowerCase()}`, ttl, JSON.stringify({ ...oldData, ...data ? data.toJSON() : data }));
         }
     }
 
@@ -142,9 +104,11 @@ export class RedisService extends Redis {
 
     // start of "getters", "setters", and "deleters"
     // lambda format for smaller code size
-    getBlacklist = async (ipAddress: string): Promise<Blacklist> => await this.getKey("blacklist", ipAddress.replaceAll(":", "|"));
-    setBlacklist = async (ipAddress: string, blacklist: Partial<Blacklist>): Promise<void> => await this.setKey("blacklist", ipAddress.replaceAll(":", "|"), blacklist);
-    deleteBlacklist = async (ipAddress: string): Promise<void> => await this.deleteKey("blacklist", ipAddress.replaceAll(":", "|"));
+
+    // see line 24 - zastix
+    // getBlacklist = async (ipAddress: string): Promise<Blacklist> => await this.getKey("blacklist", ipAddress.replaceAll(":", "|"));
+    // setBlacklist = async (ipAddress: string, blacklist: Partial<Blacklist>): Promise<void> => await this.setKey("blacklist", ipAddress.replaceAll(":", "|"), blacklist);
+    // deleteBlacklist = async (ipAddress: string): Promise<void> => await this.deleteKey("blacklist", ipAddress.replaceAll(":", "|"));
 
     getSession = async (userId: string): Promise<Session> => await this.getKey("session", userId);
     setSession = async (userId: string, session: Partial<Session>): Promise<void> => await this.setKey("session", userId, session);

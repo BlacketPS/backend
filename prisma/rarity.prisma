@@ -1,11 +1,20 @@
-model rarity {
-  id            Int      @id @default(autoincrement())
-  name          String   @unique @db.VarChar(255)
-  color         String   @db.VarChar(255)
-  animationType Int
-  experience    Int
-  createdAt     DateTime @db.Timestamptz(6) @default(now())
-  updatedAt     DateTime @db.Timestamptz(6) @default(now())
-  blook         blook[]
-  item          item[]
+enum RarityAnimationType {
+    UNCOMMON   @map("1")
+    RARE       @map("2")
+    EPIC       @map("3")
+    LEGENDARY  @map("4")
+    CHROMA     @map("5")
+    IRIDESCENT @map("6")
+}
+
+model Rarity {
+    id            Int                 @id @default(autoincrement())
+    name          String              @unique
+    color         String
+    animationType RarityAnimationType
+    experience    Int
+    createdAt     DateTime            @default(now())
+    updatedAt     DateTime            @default(now())
+    blook         Blook[]
+    item          Item[]
 }

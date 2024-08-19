@@ -1,22 +1,32 @@
-model blook {
-  id                                    Int          @id @default(autoincrement())
-  name                                  String       @unique @db.VarChar(255)
-  chance                                Float        @default(0)
-  price                                 Int          @default(0)
-  rarityId                              Int
-  imageId                               Int
-  backgroundId                          Int
-  packId                                Int?
-  onlyOnDay                             Int?
-  priority                              Int          @default(0)
-  createdAt                             DateTime     @db.Timestamptz(6) @default(now())
-  updatedAt                             DateTime     @db.Timestamptz(6) @updatedAt
-  auction                               auction[]
-  resource_blook_backgroundIdToresource resource     @relation("blook_backgroundIdToresource", fields: [backgroundId], references: [id], onDelete: NoAction)
-  resource_blook_imageIdToresource      resource     @relation("blook_imageIdToresource", fields: [imageId], references: [id], onDelete: NoAction)
-  pack                                  pack?        @relation(fields: [packId], references: [id])
-  rarity                                rarity       @relation(fields: [rarityId], references: [id], onDelete: NoAction)
-  item_shop                             item_shop[]
-  product                               product[]
-  user_blook                            user_blook[]
+enum DayType {
+    MONDAY    @map("1")
+    TUESDAY   @map("2")
+    WEDNESDAY @map("3")
+    THURSDAY  @map("4")
+    FRIDAY    @map("5")
+    SATURDAY  @map("6")
+    SUNDAY    @map("7")
+}
+
+model Blook {
+    id           Int         @id @default(autoincrement())
+    name         String      @unique
+    chance       Float       @default(0)
+    price        Int         @default(0)
+    rarityId     Int
+    imageId      Int
+    backgroundId Int
+    packId       Int?
+    onlyOnDay    DayType?
+    priority     Int         @default(0)
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @default(now()) @updatedAt
+    auction      Auction[]
+    background   Resource    @relation("blookBackground", fields: [backgroundId], references: [id], onDelete: NoAction)
+    image        Resource    @relation("blook", fields: [imageId], references: [id], onDelete: NoAction)
+    pack         Pack?       @relation(fields: [packId], references: [id])
+    rarity       Rarity      @relation(fields: [rarityId], references: [id], onDelete: NoAction)
+    itemShop     ItemShop[]
+    product      Product[]
+    userBlook    UserBlook[]
 }

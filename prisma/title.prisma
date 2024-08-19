@@ -1,11 +1,11 @@
-model title {
-  id         Int          @id @default(autoincrement())
-  name       String       @unique @db.VarChar(255)
-  priority   Int          @default(0)
-  createdAt  DateTime     @db.Timestamptz(6) @default(now())
-  updatedAt  DateTime     @db.Timestamptz(6) @default(now())
-  item_shop  item_shop[]
-  product    product[]
-  user       user[]
-  user_title user_title[]
+model Title {
+    id         Int         @id @default(autoincrement())
+    name       String      @unique @db.VarChar(255)
+    priority   Int         @default(0)
+    createdAt  DateTime    @default(now())
+    updatedAt  DateTime    @default(now()) @updatedAt
+    itemShop   ItemShop[]
+    products   Product[]
+    usersUsing User[]
+    usersOwned UserTitle[]
 }

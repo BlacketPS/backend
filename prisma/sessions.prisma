@@ -1,6 +1,0 @@
-model sessions {
-  id        String   @id @db.VarChar(255)
-  userId    String   @db.VarChar(255)
-  createdAt DateTime @db.Timestamptz(6) @default(now())
-  user      user     @relation(fields: [userId], references: [id], onDelete: NoAction)
-}
