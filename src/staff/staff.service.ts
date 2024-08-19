@@ -161,10 +161,7 @@ export class StaffService {
         const rarity = await this.prismaService.rarity.create({
             data: {
                 // FIXME
-                // animationType: dto.animationType,
-                color: dto.color,
-                name: dto.name,
-                experience: dto.experience
+                ...dto
             }
         });
 

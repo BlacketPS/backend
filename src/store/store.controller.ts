@@ -15,7 +15,7 @@ export class StoreController {
     @Throttle({ default: { limit: 20, ttl: hours(1) } })
     @Post("payment-methods/create")
     async createPaymentMethod(@GetCurrentUser() userId: string, @Body() dto: StoreCreatePaymentMethodDto) {
-        const paymentMethod = (await this.storeService.createPaymentMethod(userId, dto)).toJSON();
+        const paymentMethod = (await this.storeService.createPaymentMethod(userId, dto));
 
         return new StoreCreatePaymentMethodEntity(paymentMethod);
     }
@@ -23,14 +23,14 @@ export class StoreController {
     @Throttle({ default: { limit: 10, ttl: seconds(60) } })
     @Put("payment-methods/:paymentMethodId")
     @HttpCode(HttpStatus.NO_CONTENT)
-    selectPaymentMethod(@GetCurrentUser() userId: string, @Param("paymentMethodId") paymentMethodId: string) {
+    selectPaymentMethod(@GetCurrentUser() userId: string, @Param("paymentMethodId") paymentMethodId: number) {
         return this.storeService.selectPaymentMethod(userId, paymentMethodId);
     }
 
     @Throttle({ default: { limit: 20, ttl: hours(1) } })
     @Delete("payment-methods/:paymentMethodId")
     @HttpCode(HttpStatus.NO_CONTENT)
-    removePaymentMethod(@GetCurrentUser() userId: string, @Param("paymentMethodId") paymentMethodId: string) {
+    removePaymentMethod(@GetCurrentUser() userId: string, @Param("paymentMethodId") paymentMethodId: number) {
         return this.storeService.removePaymentMethod(userId, paymentMethodId);
     }
 }

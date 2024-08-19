@@ -28,6 +28,7 @@
     "@supercharge/request-ip": "^1.2.0",
     "@types/bcrypt": "^5.0.2",
     "@types/speakeasy": "^2.0.10",
+    "@zastix/prisma-generator-typescript-interfaces": "1.4.2",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
@@ -41,7 +42,8 @@
     "rxjs": "^7.8.1",
     "socket.io": "^4.7.5",
     "speakeasy": "^2.0.0",
-    "square": "^37.1.1"
+    "square": "^37.1.1",
+    "ts-transformer-keys": "^0.4.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

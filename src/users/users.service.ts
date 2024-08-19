@@ -94,7 +94,6 @@ export class UsersService implements OnApplicationBootstrap {
             },
             include: {
                 groups: true,
-                settings: true,
                 ...include
             }
         });

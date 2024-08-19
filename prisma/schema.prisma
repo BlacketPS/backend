@@ -3,6 +3,12 @@ generator client {
     previewFeatures = ["prismaSchemaFolder"]
 }
 
+generator typescriptInterfaces {
+    provider = "prisma-generator-typescript-interfaces"
+    output   = "../../types/src/interfaces.ts"
+    enumType = "both"
+}
+
 datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
