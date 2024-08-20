@@ -68,7 +68,8 @@ model User {
     banners                 UserBanner[]
     initiallyObtainedBlooks UserBlook[]         @relation("initialObtainer")
     blooks                  UserBlook[]         @relation("blooks")
-    discord                 UserDiscord[]
+    discordId               String?             @unique
+    discord                 UserDiscord?        @relation(fields: [discordId], references: [discordId])
     groups                  UserGroup[]
     guild                   UserGuild[]
     guildRequests           UserGuildRequest[]
@@ -110,13 +111,13 @@ model UserBlook {
 }
 
 model UserDiscord {
-    discordId String   @id
-    userId    String
+    discordId String   @id @unique
     username  String
     avatar    String?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId    String?
+    user      User?
 }
 
 model UserGroup {
