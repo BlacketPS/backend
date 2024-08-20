@@ -29,8 +29,9 @@ export class AuthGuard implements CanActivate {
         ]);
 
         if (isPublic) {
-            const blacklist = await this.redisService.getBlacklist(getClientIp(request));
-            if (blacklist) throw new ForbiddenException(blacklist.punishment.reason);
+            // TODO: implement this when blacklists table is done
+            // const blacklist = await this.redisService.getBlacklist(getClientIp(request));
+            // if (blacklist) throw new ForbiddenException(blacklist.punishment.reason);
 
             return true;
         }

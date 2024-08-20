@@ -1,0 +1,32 @@
+enum DayType {
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+    SUNDAY
+}
+
+model Blook {
+    id           Int         @id @default(autoincrement())
+    name         String      @unique
+    chance       Float       @default(0)
+    price        Int         @default(0)
+    rarityId     Int
+    imageId      Int
+    backgroundId Int
+    packId       Int?
+    onlyOnDay    DayType?
+    priority     Int         @default(0)
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @updatedAt
+    auction      Auction[]
+    background   Resource    @relation("blookBackground", fields: [backgroundId], references: [id], onDelete: NoAction)
+    image        Resource    @relation("blook", fields: [imageId], references: [id], onDelete: NoAction)
+    pack         Pack?       @relation(fields: [packId], references: [id])
+    rarity       Rarity      @relation(fields: [rarityId], references: [id], onDelete: NoAction)
+    itemShop     ItemShop[]
+    product      Product[]
+    userBlook    UserBlook[]
+}

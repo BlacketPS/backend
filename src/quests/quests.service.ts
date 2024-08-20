@@ -1,12 +1,10 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
-import { Repository } from "sequelize-typescript";
-import { TokenDistribution, User, Forbidden } from "blacket-types";
+import { PrismaService } from "src/prisma/prisma.service";
+import { TokenDistribution, Forbidden } from "blacket-types";
 import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class QuestsService {
-    private userRepo: Repository<User>;
     private dailyTokensDistribution: TokenDistribution[] = [
         { chance: 30, amount: 500 },
         { chance: 23, amount: 550 },
@@ -20,11 +18,9 @@ export class QuestsService {
     private dailyTokensDistributionTotalChance = this.dailyTokensDistribution.reduce((acc, curr) => acc + curr.chance, 0);
 
     constructor(
-        private sequelizeService: SequelizeService,
+        private prismaService: PrismaService,
         private usersService: UsersService
-    ) {
-        this.userRepo = this.sequelizeService.getRepository(User);
-    }
+    ) { }
 
     private getRandomDailyTokens(): number {
         // math.random is inclusive 0 and exclusive 1
@@ -51,10 +47,15 @@ export class QuestsService {
 
         const tokensToAdd = this.getRandomDailyTokens();
 
-        this.userRepo.update({
-            tokens: this.sequelizeService.literal(`tokens + ${tokensToAdd}`),
-            lastClaimed: lastDailyTokenClaim
-        }, { where: { id: user.id } });
+        this.prismaService.user.update({
+            where: { id: userId },
+            data: {
+                tokens: {
+                    increment: tokensToAdd
+                },
+                lastClaimed: lastDailyTokenClaim
+            }
+        });
 
         return tokensToAdd;
     }

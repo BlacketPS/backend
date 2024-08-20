@@ -3,7 +3,7 @@ import { SettingsService } from "./settings.service";
 import { GetCurrentUser, Permissions } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
 
-import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, SettingsEnableOtpDto, SettingsDisableOtpDto, PermissionType, Forbidden } from "blacket-types";
+import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, SettingsEnableOtpDto, SettingsDisableOtpDto, Forbidden, PermissionTypeEnum } from "blacket-types";
 
 @ApiTags("settings")
 @Controller("settings")
@@ -20,7 +20,7 @@ export class SettingsController {
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
-    @Permissions({ permissions: [PermissionType.CHANGE_USERNAME], message: Forbidden.SETTINGS_REVOKED_CHANGE_USERNAME })
+    @Permissions({ permissions: [PermissionTypeEnum.CHANGE_USERNAME], message: Forbidden.SETTINGS_REVOKED_CHANGE_USERNAME })
     @Patch("username")
     @HttpCode(HttpStatus.NO_CONTENT)
     changeUsername(@GetCurrentUser() userId: string, @Body() dto: SettingsChangeUsernameDto) {

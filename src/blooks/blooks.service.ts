@@ -1,22 +1,18 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
-import { Repository } from "sequelize-typescript";
 
-import { Blook, User, UserBlook, BlooksSellBlookDto, NotFound, Forbidden } from "blacket-types";
+import { BlooksSellBlookDto, NotFound, Forbidden } from "blacket-types";
+import { Blook, User } from "@prisma/client";
 
 @Injectable()
 export class BlooksService {
-    private userBlookRepo: Repository<UserBlook>;
-
     constructor(
-        private sequelizeService: SequelizeService,
+        private prismaService: PrismaService,
         private redisService: RedisService,
         private usersService: UsersService
-    ) {
-        this.userBlookRepo = this.sequelizeService.getRepository(UserBlook);
-    }
+    ) { }
 
     async getBlookById(blookId: Blook["id"]): Promise<Blook> {
         const blook = this.redisService.getBlook(blookId);
@@ -35,41 +31,34 @@ export class BlooksService {
     async sellBlooks(userId: User["id"], dto: BlooksSellBlookDto): Promise<void> {
         const blook = await this.getBlookById(dto.blookId);
 
-        const transaction = await this.sequelizeService.transaction();
-
-        const userBlookCount = await this.userBlookRepo.count({
+        const userBlookCount = await this.prismaService.userBlook.count({
             where: {
                 userId,
                 blookId: dto.blookId,
                 sold: false
-            },
-            transaction
+            }
         });
 
         if (userBlookCount < dto.quantity) throw new ForbiddenException(Forbidden.BLOOKS_NOT_ENOUGH_BLOOKS);
 
-        const userBlooks = await this.userBlookRepo.findAll({
+        const userBlooks = await this.prismaService.userBlook.findMany({
             where: {
                 userId,
                 blookId: dto.blookId,
                 sold: false
             },
-            limit: dto.quantity,
-            order: [["createdAt", "DESC"]],
-            attributes: ["id"],
-            transaction
+            take: dto.quantity,
+            orderBy: { createdAt: "desc" },
+            select: { id: true }
         });
 
-        const [affectedRows] = await this.userBlookRepo.update({ sold: true }, {
+        await this.prismaService.userBlook.updateMany({
             where: {
                 userId,
-                id: userBlooks.map((blook) => blook.id)
+                OR: userBlooks.map((blook) => ({ id: blook.id }))
             },
-            transaction
+            data: { sold: true }
         });
-
-        await this.usersService.addTokens(userId, blook.price * affectedRows, transaction);
-
-        await transaction.commit();
+        await this.usersService.addTokens(userId, blook.price * dto.quantity);
     }
 }

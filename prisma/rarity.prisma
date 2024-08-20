@@ -1,0 +1,20 @@
+enum RarityAnimationType {
+    UNCOMMON
+    RARE
+    EPIC
+    LEGENDARY
+    CHROMA
+    IRIDESCENT
+}
+
+model Rarity {
+    id            Int                 @id @default(autoincrement())
+    name          String              @unique
+    color         String
+    animationType RarityAnimationType
+    experience    Int
+    createdAt     DateTime            @default(now())
+    updatedAt     DateTime            @updatedAt
+    blook         Blook[]
+    item          Item[]
+}

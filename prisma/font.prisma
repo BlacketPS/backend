@@ -1,0 +1,10 @@
+model Font {
+    id         Int       @id @default(autoincrement())
+    name       String    @unique
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+    product    Product[]
+    user       User[]
+    resourceId Int
+    resource   Resource  @relation(fields: [resourceId], references: [id], onDelete: NoAction)
+}

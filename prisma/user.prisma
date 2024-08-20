@@ -1,0 +1,256 @@
+enum BlookObtainMethod {
+    UNKNOWN
+    PACK_OPEN
+    STAFF
+}
+
+enum ItemObtainMethod {
+    UNKNOWN
+    ITEM_SHOP
+    PURCHASE
+    STAFF
+}
+
+enum GuildRole {
+    MEMBER
+    MODERATOR
+    ADMINISTRATOR
+    OWNER
+}
+
+enum OAuthType {
+    DISCORD
+}
+
+enum PunishmentType {
+    WARN
+    MUTE
+    BAN
+    BLACKLIST
+}
+
+enum SettingFriendRequest {
+    ON
+    OFF
+    MUTUAL
+}
+
+model User {
+    id                      String              @id
+    username                String              @unique
+    password                String?
+    avatarId                Int
+    customAvatarId          Int?
+    bannerId                Int
+    customBannerId          Int?
+    titleId                 Int
+    fontId                  Int
+    color                   String              @default("#ffffff")
+    tokens                  Int                 @default(0)
+    experience              Int                 @default(0)
+    lastClaimed             DateTime?           @default(dbgenerated("timestamp '1970-01-01 00:00:00'")) // epoch 0
+    ipAddress               String?
+    createdAt               DateTime            @default(now())
+    updatedAt               DateTime            @updatedAt
+    permissions             PermissionType[]    @default([])
+    auction                 Auction[]
+    auctionBid              AuctionBid[]
+    form                    Form[]
+    message                 Message[]
+    roomUser                RoomUser[]
+    sessions                Session[]
+    avatar                  Resource            @relation("avatar", fields: [avatarId], references: [id], onDelete: Cascade)
+    banner                  Resource            @relation("banner", fields: [bannerId], references: [id], onDelete: Cascade)
+    customAvatar            Resource?           @relation("customAvatar", fields: [customAvatarId], references: [id])
+    customBanner            Resource?           @relation("customBanner", fields: [customBannerId], references: [id])
+    font                    Font                @relation(fields: [fontId], references: [id], onDelete: NoAction)
+    title                   Title               @relation(fields: [titleId], references: [id], onDelete: NoAction)
+    banners                 UserBanner[]
+    initiallyObtainedBlooks UserBlook[]         @relation("initialObtainer")
+    blooks                  UserBlook[]         @relation("blooks")
+    discord                 UserDiscord[]
+    groups                  UserGroup[]
+    guild                   UserGuild[]
+    guildRequests           UserGuildRequest[]
+    ipAddresses             UserIpAddress[]
+    initiallyObtainedItems  UserItem[]          @relation("initiallyObtainedItems")
+    items                   UserItem[]          @relation("items")
+    userOauth               UserOAuth[]
+    paymentMethods          UserPaymentMethod[]
+    givenPunishments        UserPunishment[]    @relation("givenPunishments")
+    punishments             UserPunishment[]    @relation("punishments")
+    settings                UserSetting?
+    statistics              UserStatistic?
+    titles                  UserTitle[]
+    mentions                Message[]           @relation("mentionedUser")
+}
+
+model UserBanner {
+    id        Int      @id @default(autoincrement())
+    userId    String
+    bannerId  Int
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    banner    Banner   @relation(fields: [bannerId], references: [id], onDelete: NoAction)
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserBlook {
+    id               Int               @id @default(autoincrement())
+    userId           String
+    blookId          Int
+    sold             Boolean           @default(false)
+    initalObtainerId String
+    obtainedBy       BlookObtainMethod @default(PACK_OPEN)
+    createdAt        DateTime          @default(now())
+    updatedAt        DateTime          @updatedAt
+    blook            Blook             @relation(fields: [blookId], references: [id], onDelete: Cascade)
+    initialObtainer  User              @relation("initialObtainer", fields: [initalObtainerId], references: [id], onDelete: Cascade)
+    user             User              @relation("blooks", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserDiscord {
+    discordId String   @id
+    userId    String
+    username  String
+    avatar    String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserGroup {
+    id        Int      @id @default(autoincrement())
+    groupId   Int
+    userId    String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserGuild {
+    id        Int       @id @default(autoincrement())
+    guildId   Int
+    userId    String
+    userRole  GuildRole @default(MEMBER)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    guild     Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserGuildRequest {
+    id        Int      @id @default(autoincrement())
+    guildId   Int
+    userId    String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserIpAddress {
+    id          Int       @id @default(autoincrement())
+    userId      String
+    uses        Int       @default(0)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    ipAddressId Int
+    ipAddress   IpAddress @relation(fields: [ipAddressId], references: [id], onDelete: Cascade)
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, ipAddressId])
+}
+
+model UserItem {
+    id               Int              @id @default(autoincrement())
+    userId           String
+    itemId           Int
+    usesLeft         Int              @default(1)
+    initalObtainerId String
+    obtainedBy       ItemObtainMethod @default(UNKNOWN)
+    createdAt        DateTime         @default(now())
+    updatedAt        DateTime         @updatedAt
+    initalObtainer   User             @relation("initiallyObtainedItems", fields: [initalObtainerId], references: [id], onDelete: NoAction)
+    item             Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
+    user             User             @relation("items", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserOAuth {
+    id           Int       @id @default(autoincrement())
+    userId       String
+    type         OAuthType
+    tokenType    String
+    accessToken  String
+    refreshToken String
+    scope        String
+    expiresAt    DateTime
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserPaymentMethod {
+    id                    Int      @id @default(autoincrement())
+    userId                String
+    squareCustomerId      String
+    squarePaymentMethodId String
+    lastFour              String
+    createdAt             DateTime @default(now())
+    updatedAt             DateTime @updatedAt
+    cardBrand             String
+    primary               Boolean  @default(false)
+    user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserPunishment {
+    id        Int            @id @default(autoincrement())
+    userId    String
+    type      PunishmentType
+    reason    String
+    expiresAt DateTime
+    staffId   String
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @updatedAt
+    staff     User           @relation("givenPunishments", fields: [staffId], references: [id], onDelete: Cascade)
+    user      User           @relation("punishments", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// model UserRelationship {
+//     id             Int      @id @default(autoincrement())
+//     userId         String   @db.VarChar(255)
+//     targetId       String   @db.VarChar(255)
+//     friendNickname String?  @db.VarChar(255)
+//     type           Int
+//     createdAt      DateTime @default(now()) @db.Timestamptz(6)
+//     updatedAt      DateTime @default(now()) @db.Timestamptz(6)
+//     target         User     @relation("target", fields: [targetId], references: [id], onDelete: Cascade)
+//     user           User     @relation("user", fields: [userId], references: [id], onDelete: Cascade)
+// }
+
+model UserSetting {
+    id                 String               @id
+    openPacksInstantly Boolean              @default(false)
+    friendRequests     SettingFriendRequest @default(ON)
+    categoriesClosed   Int[]                @default([])
+    otpSecret          String?
+    user               User                 @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model UserStatistic {
+    id           String @id
+    packsOpened  Int    @default(0)
+    messagesSent Int    @default(0)
+    user         User   @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model UserTitle {
+    id        Int      @id @default(autoincrement())
+    userId    String
+    titleId   Int
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    title     Title    @relation(fields: [titleId], references: [id], onDelete: NoAction)
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

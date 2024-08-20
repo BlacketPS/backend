@@ -1,0 +1,19 @@
+model Room {
+    id        Int        @id @default(autoincrement())
+    name      String
+    public    Boolean    @default(true)
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    message   Message[]
+    roomUser  RoomUser[]
+}
+
+model RoomUser {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    roomId    Int
+    room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: NoAction)
+}

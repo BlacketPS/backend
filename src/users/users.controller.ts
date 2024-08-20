@@ -3,7 +3,7 @@ import { UsersService } from "./users.service";
 import { GetCurrentUser } from "src/core/decorator/getCurrentUser.decorator";
 
 import { ApiTags } from "@nestjs/swagger";
-import { User, NotFound, PrivateUser, PublicUser } from "blacket-types";
+import { type User, NotFound, PrivateUser, PublicUser } from "blacket-types";
 
 @ApiTags("users")
 @Controller("users")
@@ -28,7 +28,7 @@ export class UsersController {
         });
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
-        else return new PrivateUser((typeof userData.toJSON === "function" ? userData.toJSON() : userData) as any);
+        else return new PrivateUser(userData);
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
@@ -45,6 +45,6 @@ export class UsersController {
         });
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
-        else return new PublicUser((typeof userData.toJSON === "function" ? userData.toJSON() : userData) as any);
+        else return new PublicUser(userData);
     }
 }

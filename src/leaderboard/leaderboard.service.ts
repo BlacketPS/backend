@@ -1,38 +1,30 @@
 import { Injectable } from "@nestjs/common";
-import { Repository } from "sequelize-typescript";
-import { SequelizeService } from "src/sequelize/sequelize.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
-import { Resource, User } from "blacket-types";
 
 @Injectable()
 export class LeaderboardService {
-    private userRepo: Repository<User>;
-    private resourceRepo: Repository<Resource>;
-
     constructor(
-        private sequelizeService: SequelizeService,
+        private prismaService: PrismaService,
         private redisService: RedisService
-    ) {
-        this.userRepo = this.sequelizeService.getRepository(User);
-        this.resourceRepo = this.sequelizeService.getRepository(Resource);
-    }
+    ) { }
 
     async getLeaderboard() {
         const leaderboard = await this.redisService.getKey("leaderboard", "*");
 
         if (leaderboard) return leaderboard;
         else {
-            const tokens = (await this.userRepo.findAll({
-                order: [["tokens", "DESC"]],
-                attributes: ["id", "username", "titleId", "fontId", "avatarId", "color", "tokens"],
-                limit: 10
-            })).map((user) => user.toJSON());
+            const tokens = (await this.prismaService.user.findMany({
+                orderBy: [{ tokens: "desc" }],
+                select: { id: true, username: true, titleId: true, fontId: true, avatarId: true, color: true, tokens: true },
+                take: 10
+            }));
 
-            const experience = (await this.userRepo.findAll({
-                order: [["experience", "DESC"]],
-                attributes: ["id", "username", "titleId", "fontId", "avatarId", "color", "experience"],
-                limit: 10
-            })).map((user) => user.toJSON());
+            const experience = (await this.prismaService.user.findMany({
+                orderBy: [{ experience: "desc" }],
+                select: { id: true, username: true, titleId: true, fontId: true, avatarId: true, color: true, tokens: true },
+                take: 10
+            }));
 
             await this.redisService.setKey("leaderboard", "*", { tokens, experience }, 300);
 

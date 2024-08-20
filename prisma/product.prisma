@@ -1,0 +1,32 @@
+enum ProductType {
+    ITEM
+    BLOOK
+    TITLE
+    FONT
+    OTHER
+}
+
+model Product {
+    id             Int         @id @default(autoincrement())
+    name           String      @unique
+    description    String?
+    imageId        Int
+    type           ProductType
+    itemId         Int?
+    blookId        Int?
+    titleId        Int?
+    fontId         Int?
+    isSubscription Boolean     @default(false)
+    monthlyPrice   Float?
+    lifetimePrice  Float?
+    groupId        Int?
+    priority       Int         @default(0)
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
+    blook          Blook?      @relation(fields: [blookId], references: [id])
+    font           Font?       @relation(fields: [fontId], references: [id])
+    group          Group?      @relation(fields: [groupId], references: [id])
+    resource       Resource    @relation(fields: [imageId], references: [id], onDelete: NoAction)
+    item           Item?       @relation(fields: [itemId], references: [id])
+    title          Title?      @relation(fields: [titleId], references: [id])
+}
