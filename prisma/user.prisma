@@ -36,53 +36,53 @@ enum SettingFriendRequest {
 }
 
 model User {
-    id                       String              @id
-    username                 String              @unique
-    password                 String?
-    avatarId                 Int
-    customAvatarId           Int?
-    bannerId                 Int
-    customBannerId           Int?
-    titleId                  Int
-    fontId                   Int
-    color                    String              @default("#ffffff")
-    tokens                   Int                 @default(0)
-    experience               Int                 @default(0)
-    lastClaimed              DateTime?
-    ipAddress                String?
-    createdAt                DateTime            @default(now())
-    updatedAt                DateTime            @updatedAt
-    permissions              PermissionType[]    @default([])
-    auction                  Auction[]
-    auctionBid               AuctionBid[]
-    form                     Form[]
-    message                  Message[]
-    roomUser                 RoomUser[]
-    sessions                 Session[]
-    avatar                   Resource            @relation("avatar", fields: [avatarId], references: [id], onDelete: Cascade)
-    banner                   Resource            @relation("banner", fields: [bannerId], references: [id], onDelete: Cascade)
-    customAvatar             Resource?           @relation("customAvatar", fields: [customAvatarId], references: [id])
-    customBanner             Resource?           @relation("customBanner", fields: [customBannerId], references: [id])
-    font                     Font                @relation(fields: [fontId], references: [id], onDelete: NoAction)
-    title                    Title               @relation(fields: [titleId], references: [id], onDelete: NoAction)
-    banners                  UserBanner[]
-    ininitallyObtainedBlooks UserBlook[]         @relation("initialObtainer")
-    blooks                   UserBlook[]         @relation("blooks")
-    discord                  UserDiscord[]
-    groups                   UserGroup[]
-    guild                    UserGuild[]
-    guildRequests            UserGuildRequest[]
-    ipAddresses              UserIpAddress[]
-    ininitallyObtainedItems  UserItem[]          @relation("ininitallyObtainedItems")
-    items                    UserItem[]          @relation("items")
-    userOauth                UserOAuth[]
-    paymentMethods           UserPaymentMethod[]
-    givenPunishments         UserPunishment[]    @relation("givenPunishments")
-    punishments              UserPunishment[]    @relation("punishments")
-    settings                 UserSetting?
-    statistics               UserStatistic?
-    titles                   UserTitle[]
-    mentions                 Message[]           @relation("mentionedUser")
+    id                      String              @id
+    username                String              @unique
+    password                String?
+    avatarId                Int
+    customAvatarId          Int?
+    bannerId                Int
+    customBannerId          Int?
+    titleId                 Int
+    fontId                  Int
+    color                   String              @default("#ffffff")
+    tokens                  Int                 @default(0)
+    experience              Int                 @default(0)
+    lastClaimed             DateTime?           @default()
+    ipAddress               String?
+    createdAt               DateTime            @default(now())
+    updatedAt               DateTime            @updatedAt
+    permissions             PermissionType[]    @default([])
+    auction                 Auction[]
+    auctionBid              AuctionBid[]
+    form                    Form[]
+    message                 Message[]
+    roomUser                RoomUser[]
+    sessions                Session[]
+    avatar                  Resource            @relation("avatar", fields: [avatarId], references: [id], onDelete: Cascade)
+    banner                  Resource            @relation("banner", fields: [bannerId], references: [id], onDelete: Cascade)
+    customAvatar            Resource?           @relation("customAvatar", fields: [customAvatarId], references: [id])
+    customBanner            Resource?           @relation("customBanner", fields: [customBannerId], references: [id])
+    font                    Font                @relation(fields: [fontId], references: [id], onDelete: NoAction)
+    title                   Title               @relation(fields: [titleId], references: [id], onDelete: NoAction)
+    banners                 UserBanner[]
+    initiallyObtainedBlooks UserBlook[]         @relation("initialObtainer")
+    blooks                  UserBlook[]         @relation("blooks")
+    discord                 UserDiscord[]
+    groups                  UserGroup[]
+    guild                   UserGuild[]
+    guildRequests           UserGuildRequest[]
+    ipAddresses             UserIpAddress[]
+    initiallyObtainedItems  UserItem[]          @relation("initiallyObtainedItems")
+    items                   UserItem[]          @relation("items")
+    userOauth               UserOAuth[]
+    paymentMethods          UserPaymentMethod[]
+    givenPunishments        UserPunishment[]    @relation("givenPunishments")
+    punishments             UserPunishment[]    @relation("punishments")
+    settings                UserSetting?
+    statistics              UserStatistic?
+    titles                  UserTitle[]
+    mentions                Message[]           @relation("mentionedUser")
 }
 
 model UserBanner {
@@ -172,7 +172,7 @@ model UserItem {
     obtainedBy       ItemObtainMethod @default(UNKNOWN)
     createdAt        DateTime         @default(now())
     updatedAt        DateTime         @updatedAt
-    initalObtainer   User             @relation("ininitallyObtainedItems", fields: [initalObtainerId], references: [id], onDelete: NoAction)
+    initalObtainer   User             @relation("initiallyObtainedItems", fields: [initalObtainerId], references: [id], onDelete: NoAction)
     item             Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
     user             User             @relation("items", fields: [userId], references: [id], onDelete: Cascade)
 }
