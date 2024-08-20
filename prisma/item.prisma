@@ -19,7 +19,7 @@ model Item {
     boosterDuration Int?       @default(0)
     priority        Int        @default(0)
     createdAt       DateTime   @default(now())
-    updatedAt       DateTime   @default(now())
+    updatedAt       DateTime   @updatedAt
     auctions        Auction[]
     resource        Resource   @relation(fields: [imageId], references: [id], onDelete: NoAction)
     rarity          Rarity     @relation(fields: [rarityId], references: [id], onDelete: NoAction)

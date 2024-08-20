@@ -2,7 +2,7 @@ model Resource {
     id               Int       @id @default(autoincrement())
     path             String
     createdAt        DateTime  @default(now())
-    updatedAt        DateTime  @default(now())
+    updatedAt        DateTime  @updatedAt
     banner           Banner[]
     blookBackgrounds Blook[]   @relation("blookBackground")
     blooks           Blook[]   @relation("blook")

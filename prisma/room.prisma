@@ -3,7 +3,7 @@ model Room {
     name      String
     public    Boolean    @default(true)
     createdAt DateTime   @default(now())
-    updatedAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
     message   Message[]
     roomUser  RoomUser[]
 }

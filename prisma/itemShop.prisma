@@ -15,7 +15,7 @@ model ItemShop {
     weekly    Boolean          @default(false)
     priority  Int              @default(0)
     createdAt DateTime         @default(now())
-    updatedAt DateTime         @default(now())
+    updatedAt DateTime         @updatedAt
     type      ItemShopItemType
     titleId   Int?
     blook     Blook?           @relation(fields: [blookId], references: [id])

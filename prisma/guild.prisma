@@ -7,7 +7,7 @@ model Guild {
     imageId           Int?
     acceptingRequests Boolean            @default(true)
     createdAt         DateTime           @default(now())
-    updatedAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt
     image             Resource?          @relation(fields: [imageId], references: [id], onDelete: NoAction)
     members           UserGuild[]
     joinRequests      UserGuildRequest[]
