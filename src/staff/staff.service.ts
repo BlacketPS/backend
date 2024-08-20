@@ -157,12 +157,7 @@ export class StaffService {
     }
 
     async createRarity(userId: string, dto: StaffAdminCreateRarityDto) {
-        const rarity = await this.prismaService.rarity.create({
-            data: {
-                // FIXME
-                ...dto
-            }
-        });
+        const rarity = await this.prismaService.rarity.create({ data: { ...dto } });
 
         await this.redisService.setRarity(rarity.id, rarity);
 
@@ -274,17 +269,7 @@ export class StaffService {
         await this.prismaService.resource.findUnique({ where: { id: dto.backgroundId } });
         await this.redisService.setBlook(blookId, dto);
 
-        return await this.prismaService.blook.update({
-            data: {
-                name: dto.name,
-                // TODO: make some sort of helper function to reduce boilerplate here
-                rarity: dto.rarityId ? { connect: { id: dto.rarityId } } : null,
-                pack: dto.packId ? { connect: { id: dto.packId } } : null,
-                background: dto.backgroundId ? { connect: { id: dto.backgroundId } } : null,
-                image: dto.imageId ? { connect: { id: dto.imageId } } : null,
-                onlyOnDay: dto.onlyOnDay
-            }, where: { id: blookId }
-        });
+        return await this.prismaService.blook.update({ data: { ...dto }, where: { id: blookId } });
     }
 
     async updateBlookPriorities(userId: string, dto: StaffAdminUpdateBlookPrioritiesDto) {
@@ -346,22 +331,9 @@ export class StaffService {
         await this.prismaService.rarity.findUnique({ where: { id: dto.rarityId } });
         await this.prismaService.resource.findUnique({ where: { id: dto.imageId } });
 
-        // FIXME
         await this.redisService.setItem(itemId, dto);
 
-        return this.prismaService.item.update({
-            data: {
-                boosterDuration: dto.boosterDuration,
-                canAuction: dto.canAuction,
-                canUse: dto.canUse,
-                canTrade: dto.canTrade,
-                maxUses: dto.maxUses,
-                description: dto.description,
-                resource: { connect: { id: dto.imageId } },
-                name: dto.name,
-                rarity: { connect: { id: dto.rarityId } }
-            }, where: { id: itemId }
-        });
+        return this.prismaService.item.update({ data: { ...dto }, where: { id: itemId } });
     }
 
     async updateItemPriorities(userId: string, dto: StaffAdminUpdateItemPrioritiesDto) {
@@ -404,14 +376,7 @@ export class StaffService {
 
         const itemShopItem = await this.prismaService.itemShop.create({
             data: {
-                item: { connect: { id: dto.itemId } },
-                blook: { connect: { id: dto.blookId } },
-                title: { connect: { id: dto.titleId } },
-                enabled: dto.enabled,
-                weekly: dto.weekly,
-                price: dto.price,
-                // FIXME
-                type: dto.type,
+                ...dto,
                 priority: lastItemShopItem ? lastItemShopItem.priority + 1 : 1
             }
         });
@@ -422,21 +387,9 @@ export class StaffService {
     }
 
     async updateItemShopItem(userId: string, itemShopItemId: number, dto: StaffAdminUpdateItemShopItemDto) {
-        // FIXME
         await this.redisService.setItemShopItem(itemShopItemId, dto);
 
-        return this.prismaService.itemShop.update({
-            data: {
-                item: { connect: { id: dto.itemId } },
-                blook: { connect: { id: dto.blookId } },
-                title: { connect: { id: dto.titleId } },
-                enabled: dto.enabled,
-                weekly: dto.weekly,
-                price: dto.price,
-                // FIXME
-                type: dto.type
-            }, where: { id: itemShopItemId }
-        });
+        return this.prismaService.itemShop.update({ data: { ...dto }, where: { id: itemShopItemId } });
     }
 
     async updateItemShopItemPriorities(userId: string, dto: StaffAdminUpdateItemShopItemPriorities) {

@@ -64,10 +64,10 @@ export class StoreService {
         await this.client.customersApi.deleteCustomerCard(paymentMethod.squareCustomerId, paymentMethod.squarePaymentMethodId);
 
         this.prismaService.$transaction(async (prisma) => {
-            prisma.userPaymentMethod.delete({ where: { userId, id: paymentMethodId } });
+            await prisma.userPaymentMethod.delete({ where: { userId, id: paymentMethodId } });
 
-            const { id } = await prisma.userPaymentMethod.findFirst({ select: { id: true }, orderBy: { createdAt: "desc" }, where: { userId } });
-            if (id) await prisma.userPaymentMethod.update({ where: { id: id }, data: { primary: true } });
+            const firstPaymentMethod = await prisma.userPaymentMethod.findFirst({ select: { id: true }, orderBy: { createdAt: "desc" }, where: { userId } });
+            if (firstPaymentMethod) await prisma.userPaymentMethod.update({ where: { id: firstPaymentMethod.id }, data: { primary: true } });
         });
     }
 }

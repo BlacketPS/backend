@@ -13,6 +13,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "dependencies": {
+    "@levminer/speakeasy": "^1.4.2",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.0",
@@ -27,7 +28,6 @@
     "@stylistic/eslint-plugin": "^1.7.0",
     "@supercharge/request-ip": "^1.2.0",
     "@types/bcrypt": "^5.0.2",
-    "@types/speakeasy": "^2.0.10",
     "@zastix/prisma-generator-typescript-interfaces": "1.4.2",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
@@ -41,7 +41,6 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "socket.io": "^4.7.5",
-    "speakeasy": "^2.0.0",
     "square": "^37.1.1"
   },
   "devDependencies": {

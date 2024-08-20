@@ -4,39 +4,42 @@ import { RedisService } from "src/redis/redis.service";
 import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
 import { hash, compare } from "bcrypt";
-import * as speakEasy from "speakeasy";
+import * as speakEasy from "@levminer/speakeasy";
 import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, BadRequest, NotFound, AuthAuthEntity, SettingsEnableOtpDto, SettingsDisableOtpDto } from "blacket-types";
-import { User } from "@prisma/client";
+import { SettingFriendRequest, User } from "@prisma/client";
 
 @Injectable()
 export class SettingsService {
-    private validSettings: string[];
-    private invalidSettings: string[] = ["id", "otpSecret"];
+    // TODO: get these settings and their types from the database dynamically
+    private validSettings: { [key: string]: any } = {
+        "openPacksInstantly": Boolean,
+        "friendRequests": SettingFriendRequest,
+        "categoriesClosed": Array
+    };
 
     constructor(
         private prismaService: PrismaService,
         private redisService: RedisService,
         private authService: AuthService,
         private usersService: UsersService
-    ) {
-
-        // TODO: fix this
-        // this.validSettings = keys<UserSetting>().filter((setting: string) => !this.invalidSettings.includes(setting));
-        // this.validSettings = {
-        //     openPacksInstantly: "boolean",
-        //     friendRequests
-        // }
-    }
+    ) { }
 
     async changeSetting(userId: User["id"], dto: SettingsChangeSettingDto): Promise<void> {
-        // if (!this.validSettings.includes(dto.key)) throw new NotFoundException(NotFound.UNKNOWN_SETTING);
-        // TODO: fix this too
-        // if (typeof keys<UserSetting>()[dto.key] !== typeof dto.value) throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
+        if (!Object.keys(this.validSettings).includes(dto.key)) throw new NotFoundException(NotFound.UNKNOWN_SETTING);
 
-        const userSetting = await this.prismaService.user.findUnique({ where: { id: userId } });
-        if (!userSetting) throw new NotFoundException(NotFound.UNKNOWN_USER);
+        switch (typeof this.validSettings[dto.key]) {
+            case "function":
+                if (typeof dto.value !== typeof this.validSettings[dto.key]()) throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
+                break;
+            case "object":
+                if (!Object.keys(this.validSettings[dto.key]).includes(dto.value)) throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
+                break;
+            default:
+                if (typeof dto.value !== typeof this.validSettings[dto.key]) throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
+                break;
+        }
 
-        this.prismaService.user.update({ where: { id: userId }, data: { [dto.key]: dto.value } });
+        await this.prismaService.userSetting.update({ where: { id: userId }, data: { [dto.key]: dto.value } });
     }
 
     async changeUsername(userId: User["id"], dto: SettingsChangeUsernameDto): Promise<void> {
@@ -70,8 +73,10 @@ export class SettingsService {
         const tempOtp = await this.redisService.getKey("tempOtp", userId);
         if (!tempOtp) throw new NotFoundException(NotFound.UNKNOWN_OTP);
 
+        const otpCode = dto.otpCode.toUpperCase();
+
         // FIXME: no idea why this throws "str.toUpperCase is not a function"
-        const verified = speakEasy.totp.verify({ secret: tempOtp, token: dto.otpCode, encoding: "base32" });
+        const verified = speakEasy.totp.verify({ secret: tempOtp, token: otpCode, encoding: "base32" });
         if (!verified) throw new BadRequestException(BadRequest.AUTH_INCORRECT_OTP);
 
         const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { settings: true } });

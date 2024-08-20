@@ -3,22 +3,22 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { hash } from "bcrypt";
-import { DiscordAccessToken, DiscordDiscordUser } from "blacket-types";
-import { Font, PermissionType, Prisma, Resource, Title, User, OAuthType, PrismaClient } from "@prisma/client";
+import { DiscordAccessToken, DiscordDiscordUser, User } from "blacket-types";
+import { Font, PermissionType, Prisma, Resource, Title, OAuthType, PrismaClient } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
+    includeBanners?: boolean;
     includeBlooksCurrent?: boolean;
     includeBlooksAll?: boolean;
+    includeDiscord?: boolean;
     includeItemsCurrent?: boolean;
     includeItemsAll?: boolean;
-    includeTitles?: boolean;
-    includeBanners?: boolean;
-    includeStatistics?: boolean;
-    includeDiscord?: boolean;
-    includeSettings?: boolean;
     includePaymentMethods?: boolean;
+    includeStatistics?: boolean;
+    includeSettings?: boolean;
+    includeTitles?: boolean;
 }
 
 @Injectable()
@@ -81,7 +81,7 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeItemsCurrent) include.items = { select: { id: true, itemId: true, usesLeft: true }, where: { usesLeft: { gt: 0 } } };
         if (settings.includeItemsAll) include.items = { select: { id: true, itemId: true, usesLeft: true } };
         if (settings.includeStatistics) include.statistics = true;
-        if (settings.includeDiscord) include.discord = true;
+        // if (settings.includeDiscord) include.discord = true;
         if (settings.includeTitles) include.titles = true;
         if (settings.includeSettings) include.settings = true;
         if (settings.includePaymentMethods) include.paymentMethods = true;
@@ -95,12 +95,13 @@ export class UsersService implements OnApplicationBootstrap {
             },
             include: {
                 groups: true,
+                discord: true,
                 ...include
             }
         });
         if (!userData) return null;
 
-        if (userData.discord.length === 0) userData.discord = null;
+        delete userData.discordId;
 
         if (settings.cacheUser) {
             await this.redisService.setKey("cachedUser", userData.id, userData, 10);
@@ -147,18 +148,18 @@ export class UsersService implements OnApplicationBootstrap {
         const prisma = transaction || this.prismaService;
 
         const ipAddress = await prisma.ipAddress.upsert({ where: { ipAddress: ip }, update: {}, create: { ipAddress: ip } });
-        // https://github.com/prisma/prisma/issues/5436
-        // const userIpAddress = await this.prismaService.userIpAddress.upsert({ where: { userId: user.id, ipAddressId: ipAddress.id }, update: {}, create: { userId: user.id, ipAddressId: ipAddress.id } });
-        const userIpAddress = await prisma.userIpAddress.findFirst({ where: { userId: user.id, ipAddressId: ipAddress.id } }) ?? await prisma.userIpAddress.create({ data: { userId: user.id, ipAddressId: ipAddress.id } });
+        const userIpAddress = await prisma.userIpAddress.findFirst({ where: { userId: user.id, ipAddressId: ipAddress.id } })
+            ?? await prisma.userIpAddress.create({ data: { userId: user.id, ipAddressId: ipAddress.id } });
+
         await prisma.userIpAddress.update({ data: { uses: { increment: 1 } }, where: { id: userIpAddress.id } });
         await prisma.user.update({ where: { id: user.id }, data: { ipAddress: ip } });
     }
 
     async linkDiscordOAuth(userId: string, accessTokenResponse: DiscordAccessToken, discordUser: DiscordDiscordUser): Promise<void> {
-        await this.prismaService.$transaction([
-            this.prismaService.userOAuth.create({
+        await this.prismaService.$transaction(async (prisma) => {
+            await prisma.userOAuth.create({
                 data: {
-                    userId,
+                    user: { connect: { id: userId } },
                     accessToken: accessTokenResponse.access_token,
                     refreshToken: accessTokenResponse.refresh_token,
                     tokenType: accessTokenResponse.token_type,
@@ -166,16 +167,17 @@ export class UsersService implements OnApplicationBootstrap {
                     expiresAt: new Date(Date.now() + accessTokenResponse.expires_in * 1000),
                     type: OAuthType.DISCORD
                 }
-            }),
-            this.prismaService.userDiscord.create({
+            });
+
+            await prisma.userDiscord.create({
                 data: {
-                    userId,
+                    user: { connect: { id: userId } },
                     discordId: discordUser.id,
                     username: discordUser.username,
                     avatar: discordUser.avatar
                 }
-            })
-        ]);
+            });
+        });
     }
 
     async addTokens(userId: User["id"], amount: number): Promise<void> {

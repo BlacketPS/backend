@@ -19,12 +19,11 @@ export class UsersController {
             cacheUser: false,
             includeBanners: true,
             includeBlooksCurrent: true,
+            includeDiscord: true,
             includeItemsCurrent: true,
             includeSettings: true,
             includePaymentMethods: true,
-            includeStatistics: true,
-            includeTitles: true,
-            includeDiscord: true
+            includeStatistics: true
         });
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
@@ -38,10 +37,10 @@ export class UsersController {
             cacheUser: true,
             includeBanners: true,
             includeBlooksCurrent: true,
+            includeDiscord: true,
             includeItemsCurrent: true,
             includeStatistics: true,
-            includeTitles: true,
-            includeDiscord: true
+            includeTitles: true
         });
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);

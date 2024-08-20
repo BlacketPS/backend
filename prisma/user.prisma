@@ -234,7 +234,7 @@ model UserSetting {
     id                 String               @id
     openPacksInstantly Boolean              @default(false)
     friendRequests     SettingFriendRequest @default(ON)
-    categoriesClosed   Int[]                @default([])
+    categoriesClosed   String[]             @default([])
     otpSecret          String?
     user               User                 @relation(fields: [id], references: [id], onDelete: Cascade)
 }

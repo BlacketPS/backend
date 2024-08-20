@@ -4,7 +4,7 @@ import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { compare } from "bcrypt";
-import * as speakEasy from "speakeasy";
+import * as speakEasy from "@levminer/speakeasy";
 
 import { AuthAuthEntity, BadRequest, Forbidden, NotFound, Unauthorized } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
@@ -60,8 +60,7 @@ export class AuthService {
 
         await this.usersService.updateUserIp(user, ip);
 
-        const session = await this.findOrCreateSession(user.id);
-        return { token: await this.sessionToToken(session) } as AuthAuthEntity;
+        return { token: await this.sessionToToken(await this.findOrCreateSession(user.id)) } as AuthAuthEntity;
     }
 
     async logout(userId: User["id"]): Promise<void> {
@@ -71,9 +70,7 @@ export class AuthService {
     async generateOtpSecret(userId: User["id"]): Promise<string> {
         if (await this.redisService.getKey("tempOtp", userId)) return await this.redisService.getKey("tempOtp", userId);
 
-        // const user = await this.usersService.getUser(userId, { includeSettings: true });
-        // xotic cant code im not doing types for userservice.getuser lol
-        const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { settings: true } });
+        const user = await this.usersService.getUser(userId, { includeSettings: true });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
         if (user.settings.otpSecret) throw new BadRequestException(BadRequest.AUTH_OTP_ALREADY_ENABLED);
