@@ -8,7 +8,8 @@ import * as speakEasy from "speakeasy";
 
 import { AuthAuthEntity, BadRequest, Forbidden, NotFound, Unauthorized } from "blacket-types";
 import { RegisterDto, LoginDto } from "./dto";
-import { PunishmentType, Session, User } from "@prisma/client";
+import { Prisma, PrismaClient, PunishmentType, Session, User } from "@prisma/client";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 
 @Injectable()
 export class AuthService {
@@ -18,19 +19,20 @@ export class AuthService {
         private usersService: UsersService,
         private configService: ConfigService,
     ) { }
-
+    // @ts-ignore
     async register(dto: RegisterDto, ip: string): Promise<AuthAuthEntity> {
         if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") === "true") throw new BadRequestException(BadRequest.AUTH_FORMS_ENABLED);
 
         if (await this.usersService.userExists(dto.username)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
+        return await this.prismaService.$transaction(async (prisma) => {
+            const user = await this.usersService.createUser(dto.username, dto.password, prisma);
 
-        const user = await this.usersService.createUser(dto.username, dto.password);
+            await this.usersService.updateUserIp(user, ip, prisma);
 
-        await this.usersService.updateUserIp(user, ip);
+            const session = await this.findOrCreateSession(user.id, prisma);
 
-        const session = await this.findOrCreateSession(user.id);
-
-        return { token: await this.sessionToToken(session) } as AuthAuthEntity;
+            return { token: await this.sessionToToken(session) } as AuthAuthEntity;
+        });
     }
 
     async login(dto: LoginDto, ip: string): Promise<AuthAuthEntity> {
@@ -83,8 +85,10 @@ export class AuthService {
         return secret.base32;
     }
 
-    async findOrCreateSession(userId: User["id"]): Promise<Session> {
-        const session = await this.prismaService.session.upsert({
+    async findOrCreateSession(userId: User["id"], transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<Session> {
+        const prisma = transaction || this.prismaService;
+
+        const session = await prisma.session.upsert({
             where: { userId },
             create: { user: { connect: { id: userId } } },
             update: {}

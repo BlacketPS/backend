@@ -4,7 +4,8 @@ import { RedisService } from "src/redis/redis.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { hash } from "bcrypt";
 import { DiscordAccessToken, DiscordDiscordUser } from "blacket-types";
-import { Font, PermissionType, Prisma, Resource, Title, User, OAuthType } from "@prisma/client";
+import { Font, PermissionType, Prisma, Resource, Title, User, OAuthType, PrismaClient } from "@prisma/client";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -122,8 +123,9 @@ export class UsersService implements OnApplicationBootstrap {
         return count > 0;
     }
 
-    async createUser(username: string, password: string): Promise<User> {
-        const user = await this.prismaService.user.create({
+    async createUser(username: string, password: string, transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<User> {
+        const prisma = transaction || this.prismaService;
+        const user = await prisma.user.create({
             data: {
                 id: (Math.floor(Date.now() / 1000)).toString() + Math.floor(1000000 + Math.random() * 9000000).toString(),
                 username,
@@ -135,19 +137,21 @@ export class UsersService implements OnApplicationBootstrap {
                 permissions: this.defaultPermissions
             }
         });
-        await this.prismaService.userStatistic.create({ data: { id: user.id } });
-        await this.prismaService.userSetting.create({ data: { id: user.id } });
+        await prisma.userStatistic.create({ data: { id: user.id } });
+        await prisma.userSetting.create({ data: { id: user.id } });
 
         return user;
     }
 
-    async updateUserIp(user: User, ip: string): Promise<void> {
-        const ipAddress = await this.prismaService.ipAddress.upsert({ where: { ipAddress: ip }, update: {}, create: { ipAddress: ip } });
+    async updateUserIp(user: User, ip: string, transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<void> {
+        const prisma = transaction || this.prismaService;
+
+        const ipAddress = await prisma.ipAddress.upsert({ where: { ipAddress: ip }, update: {}, create: { ipAddress: ip } });
         // https://github.com/prisma/prisma/issues/5436
         // const userIpAddress = await this.prismaService.userIpAddress.upsert({ where: { userId: user.id, ipAddressId: ipAddress.id }, update: {}, create: { userId: user.id, ipAddressId: ipAddress.id } });
-        const userIpAddress = await this.prismaService.userIpAddress.findFirst({ where: { userId: user.id, ipAddressId: ipAddress.id } }) ?? await this.prismaService.userIpAddress.create({ data: { userId: user.id, ipAddressId: ipAddress.id } });
-        await this.prismaService.userIpAddress.update({ data: { uses: { increment: 1 } }, where: { id: userIpAddress.id } });
-        await this.prismaService.user.update({ where: { id: user.id }, data: { ipAddress: ip } });
+        const userIpAddress = await prisma.userIpAddress.findFirst({ where: { userId: user.id, ipAddressId: ipAddress.id } }) ?? await prisma.userIpAddress.create({ data: { userId: user.id, ipAddressId: ipAddress.id } });
+        await prisma.userIpAddress.update({ data: { uses: { increment: 1 } }, where: { id: userIpAddress.id } });
+        await prisma.user.update({ where: { id: user.id }, data: { ipAddress: ip } });
     }
 
     async linkDiscordOAuth(userId: string, accessTokenResponse: DiscordAccessToken, discordUser: DiscordDiscordUser): Promise<void> {
