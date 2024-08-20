@@ -256,15 +256,8 @@ export class StaffService {
 
         const blook = await this.prismaService.blook.create({
             data: {
-                name: dto.name,
-                rarity: { connect: { id: dto.rarityId } },
-                pack: { connect: { id: dto.packId } },
-                background: { connect: { id: dto.backgroundId } },
-
-
-                image: { connect: { id: dto.imageId } },
-                priority: lastBlook ? lastBlook.priority + 1 : 1,
-                onlyOnDay: dto.onlyOnDay
+                ...dto,
+                priority: lastBlook ? lastBlook.priority + 1 : 1
             }
         });
 
