@@ -2,6 +2,6 @@ model IpAddress {
     id              Int             @id @default(autoincrement())
     ipAddress       String          @unique
     createdAt       DateTime        @default(now())
-    updatedAt       DateTime        @default(now()) @updatedAt
+    updatedAt       DateTime        @updatedAt
     userIpAddresses UserIpAddress[]
 }

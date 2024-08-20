@@ -51,7 +51,7 @@ model User {
     lastClaimed              DateTime?
     ipAddress                String?
     createdAt                DateTime            @default(now())
-    updatedAt                DateTime            @default(now()) @updatedAt
+    updatedAt                DateTime            @updatedAt
     permissions              PermissionType[]    @default([])
     auction                  Auction[]
     auctionBid               AuctionBid[]
@@ -90,7 +90,7 @@ model UserBanner {
     userId    String
     bannerId  Int
     createdAt DateTime @default(now())
-    updatedAt DateTime @default(now()) @updatedAt
+    updatedAt DateTime @updatedAt
     banner    Banner   @relation(fields: [bannerId], references: [id], onDelete: NoAction)
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -103,7 +103,7 @@ model UserBlook {
     initalObtainerId String
     obtainedBy       BlookObtainMethod @default(PACK_OPEN)
     createdAt        DateTime          @default(now())
-    updatedAt        DateTime          @default(now()) @updatedAt
+    updatedAt        DateTime          @updatedAt
     blook            Blook             @relation(fields: [blookId], references: [id], onDelete: Cascade)
     initialObtainer  User              @relation("initialObtainer", fields: [initalObtainerId], references: [id], onDelete: Cascade)
     user             User              @relation("blooks", fields: [userId], references: [id], onDelete: Cascade)
@@ -115,7 +115,7 @@ model UserDiscord {
     username  String
     avatar    String?
     createdAt DateTime @default(now())
-    updatedAt DateTime @default(now()) @updatedAt
+    updatedAt DateTime @updatedAt
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -124,7 +124,7 @@ model UserGroup {
     groupId   Int
     userId    String
     createdAt DateTime @default(now())
-    updatedAt DateTime @default(now()) @updatedAt
+    updatedAt DateTime @updatedAt
     group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -135,7 +135,7 @@ model UserGuild {
     userId    String
     userRole  GuildRole @default(MEMBER)
     createdAt DateTime  @default(now())
-    updatedAt DateTime  @default(now()) @updatedAt
+    updatedAt DateTime  @updatedAt
     guild     Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
     user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -145,7 +145,7 @@ model UserGuildRequest {
     guildId   Int
     userId    String
     createdAt DateTime @default(now())
-    updatedAt DateTime @default(now()) @updatedAt
+    updatedAt DateTime @updatedAt
     guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -155,7 +155,7 @@ model UserIpAddress {
     userId      String
     uses        Int       @default(0)
     createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @default(now()) @updatedAt
+    updatedAt   DateTime  @updatedAt
     ipAddressId Int
     ipAddress   IpAddress @relation(fields: [ipAddressId], references: [id], onDelete: Cascade)
     user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -171,7 +171,7 @@ model UserItem {
     initalObtainerId String
     obtainedBy       ItemObtainMethod @default(UNKNOWN)
     createdAt        DateTime         @default(now())
-    updatedAt        DateTime         @default(now()) @updatedAt
+    updatedAt        DateTime         @updatedAt
     initalObtainer   User             @relation("ininitallyObtainedItems", fields: [initalObtainerId], references: [id], onDelete: NoAction)
     item             Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
     user             User             @relation("items", fields: [userId], references: [id], onDelete: Cascade)
@@ -187,7 +187,7 @@ model UserOAuth {
     scope        String
     expiresAt    DateTime
     createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @default(now()) @updatedAt
+    updatedAt    DateTime  @updatedAt
     user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -198,7 +198,7 @@ model UserPaymentMethod {
     squarePaymentMethodId String
     lastFour              String
     createdAt             DateTime @default(now())
-    updatedAt             DateTime @default(now()) @updatedAt
+    updatedAt             DateTime @updatedAt
     cardBrand             String
     primary               Boolean  @default(false)
     user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -212,7 +212,7 @@ model UserPunishment {
     expiresAt DateTime
     staffId   String
     createdAt DateTime       @default(now())
-    updatedAt DateTime       @default(now()) @updatedAt
+    updatedAt DateTime       @updatedAt
     staff     User           @relation("givenPunishments", fields: [staffId], references: [id], onDelete: Cascade)
     user      User           @relation("punishments", fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -250,7 +250,7 @@ model UserTitle {
     userId    String
     titleId   Int
     createdAt DateTime @default(now())
-    updatedAt DateTime @default(now()) @updatedAt
+    updatedAt DateTime @updatedAt
     title     Title    @relation(fields: [titleId], references: [id], onDelete: NoAction)
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

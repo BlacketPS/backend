@@ -11,7 +11,7 @@ model Room {
 model RoomUser {
     id        Int      @id @default(autoincrement())
     createdAt DateTime @default(now())
-    updatedAt DateTime @default(now()) @updatedAt
+    updatedAt DateTime @updatedAt
     roomId    Int
     room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
     userId    String

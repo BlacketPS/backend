@@ -7,7 +7,7 @@ model Message {
     edited       Boolean   @default(false)
     deleted      Boolean   @default(false)
     createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @default(now()) @updatedAt
+    updatedAt    DateTime  @updatedAt
     authorId     String    @db.VarChar(255)
     author       User      @relation(fields: [authorId], references: [id], onDelete: NoAction)
     replyingTo   Message?  @relation("reply", fields: [replyingToId], references: [id])

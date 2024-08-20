@@ -10,7 +10,7 @@ model Auction {
     buyItNow  Boolean      @default(false)
     expiresAt DateTime
     createdAt DateTime     @default(now())
-    updatedAt DateTime     @default(now()) @updatedAt
+    updatedAt DateTime     @updatedAt
     blookId   Int?
     blook     Blook?       @relation(fields: [blookId], references: [id])
     itemId    Int?
@@ -26,7 +26,7 @@ model AuctionBid {
     auctionId Int
     amount    Int
     createdAt DateTime @default(now())
-    updatedAt DateTime @default(now()) @updatedAt
+    updatedAt DateTime @updatedAt
     auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
     user      User     @relation(fields: [userId], references: [id], onDelete: NoAction)
 }
