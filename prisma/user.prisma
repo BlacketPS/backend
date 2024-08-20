@@ -48,7 +48,7 @@ model User {
     color                   String              @default("#ffffff")
     tokens                  Int                 @default(0)
     experience              Int                 @default(0)
-    lastClaimed             DateTime?           @default(dbgenerated("1970-01-01T00:00:00.000Z"))
+    lastClaimed             DateTime?           @default(dbgenerated("1970-01-01T00:00:00.000Z")) // epoch 0
     ipAddress               String?
     createdAt               DateTime            @default(now())
     updatedAt               DateTime            @updatedAt
