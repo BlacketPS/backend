@@ -46,7 +46,7 @@ model User {
     titleId                  Int
     fontId                   Int
     color                    String              @default("#ffffff")
-    tokens                   Float               @default(0)
+    tokens                   Int                 @default(0)
     experience               Int                 @default(0)
     lastClaimed              DateTime?
     ipAddress                String?

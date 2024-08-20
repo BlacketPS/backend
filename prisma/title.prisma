@@ -1,6 +1,6 @@
 model Title {
     id         Int         @id @default(autoincrement())
-    name       String      @unique @db.VarChar(255)
+    name       String      @unique
     priority   Int         @default(0)
     createdAt  DateTime    @default(now())
     updatedAt  DateTime    @updatedAt
