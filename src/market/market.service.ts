@@ -37,9 +37,9 @@ export class MarketService {
 
         // increment user's pack opened amount, and experience. insert blook to table. decrement user tokens
         await this.prismaService.$transaction([
-            this.prismaService.user.update({ where: { id: userId }, data: { tokens: { decrement: pack.price } } }),
-            this.prismaService.userStatistic.update({ where: { id: userId }, data: { packsOpened: { increment: 1 } } }),
-            this.prismaService.userBlook.create({ data: { userId, initalObtainerId: userId, blookId, obtainedBy: BlookObtainMethod.PACK_OPEN } })
+            this.prismaService.user.update({ select: null, where: { id: userId }, data: { tokens: { decrement: pack.price } } }),
+            this.prismaService.userStatistic.update({ select: null, where: { id: userId }, data: { packsOpened: { increment: 1 } } }),
+            this.prismaService.userBlook.create({ select: null, data: { userId, initalObtainerId: userId, blookId, obtainedBy: BlookObtainMethod.PACK_OPEN } })
         ]);
 
         // await this.userRepo.update({ tokens: this.sequelizeService.literal(`tokens - ${pack.price}`) }, { returning: false, where: { id: userId }, transaction },);
