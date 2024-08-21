@@ -108,6 +108,7 @@ model UserBlook {
     blook            Blook             @relation(fields: [blookId], references: [id], onDelete: Cascade)
     initialObtainer  User              @relation("initialObtainer", fields: [initalObtainerId], references: [id], onDelete: Cascade)
     user             User              @relation("blooks", fields: [userId], references: [id], onDelete: Cascade)
+    auctions         Auction[]
 }
 
 model UserDiscord {
@@ -176,6 +177,7 @@ model UserItem {
     initalObtainer   User             @relation("initiallyObtainedItems", fields: [initalObtainerId], references: [id], onDelete: NoAction)
     item             Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
     user             User             @relation("items", fields: [userId], references: [id], onDelete: Cascade)
+    auctions         Auction[]
 }
 
 model UserOAuth {

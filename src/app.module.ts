@@ -24,6 +24,7 @@ import { SettingsModule } from "./settings/settings.module";
 import { CosmeticsModule } from "./cosmetics/cosmetics.module";
 import { GuildsModule } from "./guilds/guilds.module";
 import { DiscordModule } from "./discord/discord.module";
+import { AuctionsModule } from "./auctions/auctions.module";
 import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
@@ -61,8 +62,10 @@ import { IsAccessCode } from "./core/validate/";
         SettingsModule,
         CosmeticsModule,
         DiscordModule,
+        AuctionsModule,
         LeaderboardModule,
-        GuildsModule
+        GuildsModule,
+        AuctionsModule
     ],
     controllers: [],
     providers: [
