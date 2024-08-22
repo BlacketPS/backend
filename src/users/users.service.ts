@@ -37,6 +37,7 @@ export class UsersService implements OnApplicationBootstrap {
 
     async onApplicationBootstrap() {
         this.defaultPermissions = [PermissionType.CREATE_REPORTS, PermissionType.CHANGE_USERNAME];
+
         this.defaultAvatar = await this.prismaService.resource.findUnique({ where: { id: 1 } });
         this.defaultBanner = await this.prismaService.resource.findUnique({ where: { id: 3 } });
         this.defaultTitle = await this.prismaService.title.findUnique({ where: { id: 1 } });
@@ -78,7 +79,7 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeBanners) include.banners = true;
         if (settings.includeBlooksCurrent) include.blooks = { select: { blookId: true }, where: { sold: false, auctions: { none: { expiresAt: { gt: new Date() } } } } };
         if (settings.includeBlooksAll) include.blooks = true;
-        if (settings.includeItemsCurrent) include.items = { select: { id: true, itemId: true, usesLeft: true }, where: { usesLeft: { gt: 0 } } };
+        if (settings.includeItemsCurrent) include.items = { select: { id: true, itemId: true, usesLeft: true }, where: { usesLeft: { gt: 0 }, auctions: { none: { expiresAt: { gt: new Date() } } } } };
         if (settings.includeItemsAll) include.items = { select: { id: true, itemId: true, usesLeft: true } };
         if (settings.includeStatistics) include.statistics = true;
         if (settings.includeDiscord) include.discord = true;
@@ -94,13 +95,17 @@ export class UsersService implements OnApplicationBootstrap {
                 ]
             },
             include: {
-                groups: true,
+                customAvatar: true,
+                customBanner: true,
+                groups: {
+                    include: {
+                        group: true
+                    }
+                },
                 ...include
             }
         });
         if (!userData) return null;
-
-        delete userData.discordId;
 
         if (settings.cacheUser) {
             await this.redisService.setKey("cachedUser", userData.id, userData, 10);
@@ -167,6 +172,8 @@ export class UsersService implements OnApplicationBootstrap {
                     type: OAuthType.DISCORD
                 }
             });
+
+            console.log(userId, discordUser);
 
             await prisma.userDiscord.create({
                 data: {

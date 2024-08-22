@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { LeaderboardService } from "./leaderboard.service";
 import { ApiTags } from "@nestjs/swagger";
-import { LeaderboardLeaderboardEntity } from "blacket-types";
+import { PublicUser } from "blacket-types";
 
 @ApiTags("leaderboard")
 @Controller("leaderboard")
@@ -12,6 +12,9 @@ export class LeaderboardController {
     async getLeaderboard() {
         const leaderboard = await this.leaderboardService.getLeaderboard();
 
-        return new LeaderboardLeaderboardEntity(leaderboard);
+        return {
+            tokens: leaderboard.tokens.map((user) => new PublicUser(user)),
+            experience: leaderboard.experience.map((user) => new PublicUser(user))
+        };
     }
 }

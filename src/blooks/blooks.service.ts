@@ -35,7 +35,8 @@ export class BlooksService {
             where: {
                 userId,
                 blookId: dto.blookId,
-                sold: false
+                sold: false,
+                auctions: { none: { expiresAt: { gt: new Date() } } }
             }
         });
 

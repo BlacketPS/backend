@@ -2,5 +2,5 @@ model Session {
     id        String   @id @default(uuid())
     userId    String   @unique
     createdAt DateTime @default(now())
-    user      User     @relation(fields: [userId], references: [id], onDelete: NoAction)
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

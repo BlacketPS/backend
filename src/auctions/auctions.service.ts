@@ -3,6 +3,7 @@ import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
 import { AuctionsCreateAuctionDto, AuctionTypeEnum, BadRequest, Forbidden, NotFound } from "blacket-types";
+import { Auction } from "@prisma/client";
 
 @Injectable()
 export class AuctionsService {
@@ -12,41 +13,41 @@ export class AuctionsService {
         private usersService: UsersService
     ) { }
 
-    async getAuctions() {
+    async getAuctions(): Promise<Auction[]> {
         return this.prismaService.auction.findMany({
             include: {
+                blook: {
+                    select: { blookId: true }
+                },
+                item: {
+                    select: { itemId: true, usesLeft: true }
+                },
                 seller: {
-                    select: {
-                        id: true,
-                        username: true,
-                        color: true,
-                        fontId: true
+                    include: { customAvatar: true, customBanner: true },
+                    omit: {
+                        password: true,
+                        ipAddress: true
                     }
                 },
                 bids: {
                     include: {
                         user: {
-                            select: {
-                                id: true,
-                                username: true,
-                                color: true,
-                                fontId: true
+                            include: { customAvatar: true, customBanner: true },
+                            omit: {
+                                password: true,
+                                ipAddress: true
                             }
                         }
                     }
                 }
             },
-            omit: {
-                sellerId: true
-            }
+            where: { expiresAt: { gt: new Date() } }
         });
     }
 
     async createAuction(userId: string, dto: AuctionsCreateAuctionDto) {
         if (!dto.blookId && !dto.itemId) throw new BadRequestException(BadRequest.DEFAULT);
         if (dto.blookId && dto.itemId) throw new BadRequestException(BadRequest.DEFAULT);
-
-        if (dto.duration > 10080) throw new BadRequestException(BadRequest.AUCTIONS_INVALID_DURATION);
 
         switch (dto.type) {
             case AuctionTypeEnum.BLOOK:
@@ -65,12 +66,29 @@ export class AuctionsService {
                         blook: { connect: { id: blook.id } },
                         price: dto.price,
                         expiresAt: new Date(Date.now() + dto.duration * 60000),
-                        seller: { connect: { id: userId } }
+                        seller: { connect: { id: userId } },
+                        buyItNow: dto.buyItNow
                     }
                 });
             case AuctionTypeEnum.ITEM:
                 if (!dto.itemId) throw new BadRequestException(BadRequest.DEFAULT);
-                break;
+
+                const item = await this.prismaService.userItem.findUnique({
+                    where: { id: dto.itemId, userId, usesLeft: { gt: 0 }, auctions: { none: { expiresAt: { gt: new Date() } } } }
+                });
+                if (!item) throw new ForbiddenException(Forbidden.ITEMS_NOT_ENOUGH_ITEMS);
+
+                return await this.prismaService.auction.create({
+                    data: {
+                        type: dto.type,
+                        item: { connect: { id: item.id } },
+                        price: dto.price,
+                        expiresAt: new Date(Date.now() + dto.duration * 60000),
+                        seller: { connect: { id: userId } },
+                        buyItNow: dto.buyItNow
+                    }
+                });
+            default: throw new BadRequestException(BadRequest.DEFAULT);
         }
     }
 }
