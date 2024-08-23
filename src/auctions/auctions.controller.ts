@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { AuctionsService } from "./auctions.service";
 import { GetCurrentUser } from "src/core/decorator";
-import { AuctionsAuctionEntity, AuctionsCreateAuctionDto } from "blacket-types";
+import { AuctionsAuctionEntity, AuctionsCreateAuctionDto } from "@blacket/types";
 
 @ApiTags("auctions")
 @Controller("auctions")

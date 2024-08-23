@@ -3,8 +3,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
 
-import { BlooksSellBlookDto, NotFound, Forbidden } from "blacket-types";
-import { Blook, User } from "@prisma/client";
+import { BlooksSellBlookDto, NotFound, Forbidden } from "@blacket/types";
+import { Blook, User } from "@blacket/core";
 
 @Injectable()
 export class BlooksService {

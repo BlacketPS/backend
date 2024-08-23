@@ -3,7 +3,7 @@ import { SettingsService } from "./settings.service";
 import { GetCurrentUser, Permissions } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
 
-import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, SettingsEnableOtpDto, SettingsDisableOtpDto, Forbidden, PermissionTypeEnum } from "blacket-types";
+import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, SettingsEnableOtpDto, SettingsDisableOtpDto, Forbidden, PermissionTypeEnum } from "@blacket/types";
 
 @ApiTags("settings")
 @Controller("settings")

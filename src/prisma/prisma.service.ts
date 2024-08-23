@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 
-import { PrismaClient, RarityAnimationType } from "@prisma/client";
+import { PrismaClient, RarityAnimationType } from "@blacket/core";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -13,7 +13,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         super({
             datasources: {
                 db: {
-                    url: configService.get("SERVER_DATABASE_URL")
+                    url: `postgresql://${configService.get("SERVER_DATABASE_USER")}:${configService.get("SERVER_DATABASE_PASSWORD")}@${configService.get("SERVER_DATABASE_HOST")}:${configService.get("SERVER_DATABASE_PORT")??5432}/${configService.get("SERVER_DATABASE_NAME")}?schema=public`
                 }
             },
             omit: {

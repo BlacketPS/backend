@@ -3,8 +3,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { SocketGateway } from "src/socket/socket.gateway";
 
-import { ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "blacket-types";
-import { Message, User } from "@prisma/client";
+import { ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "@blacket/types";
+import { Message, User } from "@blacket/core";
 
 @Injectable()
 export class ChatService {

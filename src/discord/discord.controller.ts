@@ -2,7 +2,7 @@ import { Body, ClassSerializerInterceptor, Controller, Post, UseInterceptors } f
 import { ApiTags } from "@nestjs/swagger";
 import { DiscordService } from "./discord.service";
 import { GetCurrentUser } from "src/core/decorator";
-import { DiscordLinkDto, DiscordAccessToken, DiscordDiscordUser, User } from "blacket-types";
+import { DiscordLinkDto, DiscordAccessToken, DiscordDiscordUser, User } from "@blacket/types";
 
 @ApiTags("discord")
 @Controller("discord")

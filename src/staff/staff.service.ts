@@ -22,7 +22,7 @@ import {
     StaffAdminCreateGroupDto,
     StaffAdminUpdateGroupDto,
     StaffAdminUpdateGroupPrioritiesDto
-} from "blacket-types";
+} from "@blacket/types";
 
 @Injectable()
 export class StaffService {

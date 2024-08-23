@@ -3,7 +3,7 @@ import { Redis } from "ioredis";
 import { CoreService } from "src/core/core.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
-import { Session, Resource, Group, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop } from "@prisma/client";
+import { Session, Resource, Group, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop } from "@blacket/core";
 @Injectable()
 export class RedisService extends Redis {
     private prefix: string;

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
-import { FormsCreateDto } from "blacket-types";
+import { FormsCreateDto } from "@blacket/types";
 import { hash } from "bcrypt";
 
 @Injectable()

@@ -2,7 +2,7 @@ import { Body, Controller, Delete, HttpCode, HttpStatus, Param, Post, Put } from
 import { ApiTags } from "@nestjs/swagger";
 import { StoreService } from "./store.service";
 import { GetCurrentUser } from "src/core/decorator";
-import { StoreCreatePaymentMethodEntity, StoreCreatePaymentMethodDto } from "blacket-types";
+import { StoreCreatePaymentMethodEntity, StoreCreatePaymentMethodDto } from "@blacket/types";
 import { Throttle, hours, seconds } from "@nestjs/throttler";
 
 @ApiTags("leaderboard")

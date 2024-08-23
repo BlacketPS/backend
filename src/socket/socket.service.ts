@@ -3,7 +3,7 @@ import { CoreService } from "src/core/core.service";
 import { RedisService } from "src/redis/redis.service";
 import { Server, Socket } from "socket.io";
 import { Session } from "src/core/guard";
-import { SocketMessageType } from "blacket-types";
+import { SocketMessageType } from "@blacket/types";
 
 @Injectable()
 export class SocketService {

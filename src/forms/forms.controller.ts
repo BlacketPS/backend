@@ -6,7 +6,7 @@ import { Public, RealIp } from "src/core/decorator";
 import { FormAlreadyExistsException, FormNotFoundException } from "./exception";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 
-import { BadRequest, Conflict, FormsCreateDto, FormsCreateFormEntity, FormsGetFormEntity, NotFound } from "blacket-types";
+import { BadRequest, Conflict, FormsCreateDto, FormsCreateFormEntity, FormsGetFormEntity, NotFound } from "@blacket/types";
 
 @ApiTags("forms")
 @Controller("forms")

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { PermissionType, User } from "@prisma/client";
+import { PermissionType, User } from "@blacket/core";
 
 @Injectable()
 export class PermissionsService {

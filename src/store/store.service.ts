@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { Client } from "square";
-import { Conflict, NotFound, StoreCreatePaymentMethodDto, UserPaymentMethod } from "blacket-types";
+import { Conflict, NotFound, StoreCreatePaymentMethodDto, UserPaymentMethod } from "@blacket/types";
 import { CoreService } from "src/core/core.service";
 import { PrismaService } from "src/prisma/prisma.service";
 

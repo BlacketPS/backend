@@ -2,7 +2,7 @@ import { Body, Controller, Post } from "@nestjs/common";
 import { MarketService } from "./market.service";
 import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
-import { MarketOpenPackEntity, MarketOpenPackDto } from "blacket-types";
+import { MarketOpenPackEntity, MarketOpenPackDto } from "@blacket/types";
 import { seconds, Throttle } from "@nestjs/throttler";
 
 @ApiTags("market")

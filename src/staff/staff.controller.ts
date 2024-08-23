@@ -22,7 +22,7 @@ import {
     StaffAdminCreateGroupDto,
     StaffAdminUpdateGroupDto,
     StaffAdminUpdateGroupPrioritiesDto
-} from "blacket-types";
+} from "@blacket/types";
 
 @ApiTags("staff")
 @Controller("staff")

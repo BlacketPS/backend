@@ -1,9 +1,9 @@
 import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { MarketOpenPackDto, NotFound, Forbidden, openPack, InternalServerError } from "blacket-types";
+import { MarketOpenPackDto, NotFound, Forbidden, openPack, InternalServerError } from "@blacket/types";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { DataService } from "src/data/data.service";
-import { BlookObtainMethod, ItemObtainMethod } from "@prisma/client";
+import { BlookObtainMethod, ItemObtainMethod } from "@blacket/core";
 
 @Injectable()
 export class MarketService {

@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { LeaderboardService } from "./leaderboard.service";
 import { ApiTags } from "@nestjs/swagger";
-import { PublicUser } from "blacket-types";
+import { PublicUser } from "@blacket/types";
 
 @ApiTags("leaderboard")
 @Controller("leaderboard")

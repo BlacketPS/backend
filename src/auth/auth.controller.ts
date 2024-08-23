@@ -2,7 +2,7 @@ import { Body, Controller, Delete, HttpCode, HttpStatus, Post } from "@nestjs/co
 import { AuthService } from "./auth.service";
 import { GetCurrentUser, Public, RealIp } from "src/core/decorator";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import { AuthAuthEntity, AuthOtpEntity, BadRequest, InternalServerError, NotFound } from "blacket-types";
+import { AuthAuthEntity, AuthOtpEntity, BadRequest, InternalServerError, NotFound } from "@blacket/types";
 import { RegisterDto, LoginDto } from "./dto";
 
 @Controller("auth")

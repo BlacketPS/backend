@@ -5,8 +5,8 @@ import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
 import { hash, compare } from "bcrypt";
 import * as speakEasy from "@levminer/speakeasy";
-import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, BadRequest, NotFound, AuthAuthEntity, SettingsEnableOtpDto, SettingsDisableOtpDto } from "blacket-types";
-import { SettingFriendRequest, User } from "@prisma/client";
+import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, BadRequest, NotFound, AuthAuthEntity, SettingsEnableOtpDto, SettingsDisableOtpDto } from "@blacket/types";
+import { SettingFriendRequest, User } from "@blacket/core";
 
 @Injectable()
 export class SettingsService {

@@ -3,7 +3,7 @@ import { CosmeticsService } from "./cosmetics.service";
 import { ApiTags } from "@nestjs/swagger";
 import { Throttle, seconds } from "@nestjs/throttler";
 import { GetCurrentUser, Permissions } from "src/core/decorator";
-import { CosmeticsChangeAvatarDto, CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, PermissionTypeEnum } from "blacket-types";
+import { CosmeticsChangeAvatarDto, CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, PermissionTypeEnum } from "@blacket/types";
 
 @ApiTags("cosmetics")
 @Controller("cosmetics")

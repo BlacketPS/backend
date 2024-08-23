@@ -6,9 +6,9 @@ import { ConfigService } from "@nestjs/config";
 import { compare } from "bcrypt";
 import * as speakEasy from "@levminer/speakeasy";
 
-import { AuthAuthEntity, BadRequest, Forbidden, NotFound, Unauthorized } from "blacket-types";
+import { AuthAuthEntity, BadRequest, Forbidden, NotFound, Unauthorized } from "@blacket/types";
 import { RegisterDto, LoginDto } from "./dto";
-import { Prisma, PrismaClient, PunishmentType, Session, User } from "@prisma/client";
+import { Prisma, PrismaClient, PunishmentType, Session, User } from "@blacket/core";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 
 @Injectable()

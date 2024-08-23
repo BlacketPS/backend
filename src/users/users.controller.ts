@@ -3,7 +3,7 @@ import { UsersService } from "./users.service";
 import { GetCurrentUser } from "src/core/decorator/getCurrentUser.decorator";
 
 import { ApiTags } from "@nestjs/swagger";
-import { type User, NotFound, PrivateUser, PublicUser } from "blacket-types";
+import { type User, NotFound, PrivateUser, PublicUser } from "@blacket/types";
 
 @ApiTags("users")
 @Controller("users")

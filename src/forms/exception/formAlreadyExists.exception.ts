@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { Conflict } from "blacket-types";
+import { Conflict } from "@blacket/types";
 
 export class FormAlreadyExistsException extends HttpException {
     constructor() {

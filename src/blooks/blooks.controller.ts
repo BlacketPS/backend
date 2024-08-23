@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Put } from "@nestjs/common";
 import { BlooksService } from "./blooks.service";
 import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
-import { BlooksSellBlookDto } from "blacket-types";
+import { BlooksSellBlookDto } from "@blacket/types";
 
 @ApiTags("blooks")
 @Controller("blooks")

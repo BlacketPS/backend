@@ -2,8 +2,8 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
-import { AuctionsCreateAuctionDto, AuctionTypeEnum, BadRequest, Forbidden, NotFound } from "blacket-types";
-import { Auction } from "@prisma/client";
+import { AuctionsCreateAuctionDto, AuctionTypeEnum, BadRequest, Forbidden, NotFound } from "@blacket/types";
+import { Auction } from "@blacket/core";
 
 @Injectable()
 export class AuctionsService {

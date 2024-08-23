@@ -1,5 +1,5 @@
 import { Reflector } from "@nestjs/core";
-import { PermissionType } from "@prisma/client";
+import { PermissionType } from "@blacket/core";
 
 interface PermissionsObject {
     permissions: PermissionType[];

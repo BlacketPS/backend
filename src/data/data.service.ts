@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "src/redis/redis.service";
-import { Blook } from "blacket-types";
+import { Blook } from "@blacket/types";
 
 export enum DataKey {
     BLOOK = "blook",

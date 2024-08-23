@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from "@nestj
 import { ChatService } from "./chat.service";
 import { ApiTags } from "@nestjs/swagger";
 import { GetCurrentUser } from "src/core/decorator";
-import { ChatCreateMessageDto } from "blacket-types";
+import { ChatCreateMessageDto } from "@blacket/types";
 import { seconds, Throttle } from "@nestjs/throttler";
 
 @ApiTags("chat")

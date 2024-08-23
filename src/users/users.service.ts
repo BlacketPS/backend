@@ -3,8 +3,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { hash } from "bcrypt";
-import { DiscordAccessToken, DiscordDiscordUser, User } from "blacket-types";
-import { Font, PermissionType, Prisma, Resource, Title, OAuthType, PrismaClient } from "@prisma/client";
+import { DiscordAccessToken, DiscordDiscordUser, User } from "@blacket/types";
+import { Font, PermissionType, Prisma, Resource, Title, OAuthType, PrismaClient } from "@blacket/core";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export interface GetUserSettings {
