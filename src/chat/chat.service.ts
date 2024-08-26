@@ -4,7 +4,7 @@ import { RedisService } from "src/redis/redis.service";
 import { SocketGateway } from "src/socket/socket.gateway";
 
 import { ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "@blacket/types";
-import { Message, User } from "@blacket/core";
+import { Message, PunishmentType, User } from "@blacket/core";
 
 @Injectable()
 export class ChatService {
@@ -19,27 +19,49 @@ export class ChatService {
             orderBy: {
                 createdAt: "desc"
             },
-            take: limit,
             include: {
-                room: true,
-                replyingTo: true,
-                mentions: true
+                replyingTo: {
+                    select: {
+                        id: true,
+                        content: true,
+                        authorId: true
+                    }
+                }
             },
             omit: {
-                replyingToId: true,
-                roomId: true
+                replyingToId: true
             },
+            take: limit,
             where: {
                 roomId: room
             }
         });
     }
 
-    async createMessage(userId: User["id"], roomId: Message["roomId"], dto: ChatCreateMessageDto): Promise<Message> {
+    async createMessage(userId: string, roomId: number, dto: ChatCreateMessageDto): Promise<Message> {
         const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
-        if (!room.public) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+        if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+        else if (room.public) {
+            const mute = await this.prismaService.userPunishment.findFirst({
+                where: {
+                    userId: userId,
+                    type: PunishmentType.MUTE,
+                    expiresAt: { gt: new Date() }
+                },
+                take: 1,
+                orderBy: { createdAt: "desc" }
+            });
+
+            if (mute) throw new ForbiddenException(Forbidden.CHAT_MUTED
+                .replace("%s", mute.reason)
+                .replace("%s", `${mute.expiresAt.getTime() - Date.now() > 1000 * 60 * 60 * 24 * 365
+                    ? "never"
+                    : `on ${mute.expiresAt.toLocaleDateString()} at ${mute.expiresAt.toLocaleTimeString()} UTC`
+                    }`)
+            );
+        }
 
         const mentions = Array.from(new Set(dto.content.match(/<@(\d+)>/g))).map((mention) => mention.replace(/<|@|>/g, ""));
 
@@ -49,12 +71,7 @@ export class ChatService {
                 room: { connect: { id: roomId } },
                 content: dto.content,
                 replyingTo: dto.replyingTo ? { connect: { id: dto.replyingTo } } : undefined,
-                mentions: {
-                    connect: mentions.map((mention) => ({ id: mention }))
-                }
-            },
-            include: {
-                mentions: true
+                mentions
             }
         });
 
@@ -67,7 +84,7 @@ export class ChatService {
         const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
-        if (!room.public) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+        if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
 
         this.socketGateway.server.emit(SocketMessageType.CHAT_TYPING_STARTED, { userId, roomId });
     }

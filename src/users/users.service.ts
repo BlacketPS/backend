@@ -91,7 +91,7 @@ export class UsersService implements OnApplicationBootstrap {
             where: {
                 OR: [
                     { id: user },
-                    { username: user }
+                    { username: { equals: user, mode: "insensitive" } }
                 ]
             },
             include: {

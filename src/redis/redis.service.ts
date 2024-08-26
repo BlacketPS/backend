@@ -3,7 +3,9 @@ import { Redis } from "ioredis";
 import { CoreService } from "src/core/core.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
-import { Session, Resource, Group, Room, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop } from "@blacket/core";
+import { Session, Resource, Group, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Prisma } from "@blacket/core";
+type Room = Prisma.RoomGetPayload<{ include: { users: { select: { userId: true } } } }>;
+
 @Injectable()
 export class RedisService extends Redis {
     private prefix: string;
@@ -28,11 +30,14 @@ export class RedisService extends Redis {
 
         for (const session of await this.prismaService.session.findMany()) this.set(`${this.prefix}:session:${session.userId}`, JSON.stringify(session));
         for (const resource of await this.prismaService.resource.findMany()) this.set(`${this.prefix}:resource:${resource.id}`, JSON.stringify(resource));
+
         for (const group of await this.prismaService.group.findMany()) this.set(`${this.prefix}:group:${group.id}`, JSON.stringify(group));
-        for (const room of await this.prismaService.room.findMany()) {
+
+        for (const room of await this.prismaService.room.findMany({ include: { users: { select: { userId: true } } } })) {
             this.set(`${this.prefix}:room:${room.id}`, JSON.stringify(room));
             this.set(`${this.prefix}:room:${room.name.toLowerCase()}`, JSON.stringify(room));
         }
+
         for (const blook of await this.prismaService.blook.findMany()) {
             this.set(`${this.prefix}:blook:${blook.id}`, JSON.stringify(blook));
             this.set(`${this.prefix}:blook:${blook.name.toLowerCase()}`, JSON.stringify(blook));
@@ -117,7 +122,7 @@ export class RedisService extends Redis {
     setResource = async (id: number, resource: Partial<Resource>): Promise<void> => await this.setKey("resource", id, resource);
     deleteResource = async (id: number): Promise<void> => await this.deleteKey("resource", id);
 
-    getGroup = async (id: number): Promise<Group> => await this.getKey("group", id);
+    getGroup = async (id: number): Promise<Room> => await this.getKey("group", id);
     setGroup = async (id: number, group: Partial<Group>): Promise<void> => await this.setKey("group", id, group);
     deleteGroup = async (id: number): Promise<void> => await this.deleteKey("group", id);
 

@@ -1,8 +1,7 @@
 import { HttpService } from "@nestjs/axios";
 import { Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { AxiosError } from "axios";
-import { UserDiscord, DiscordAccessToken, DiscordLinkDto, DiscordDiscordUser, Unauthorized, InternalServerError } from "@blacket/types";
+import { DiscordAccessToken, DiscordLinkDto, DiscordDiscordUser, Unauthorized, InternalServerError } from "@blacket/types";
 import { UsersService } from "src/users/users.service";
 
 @Injectable()
@@ -11,7 +10,7 @@ export class DiscordService {
         private readonly configService: ConfigService,
         private usersService: UsersService,
         private readonly httpService: HttpService
-    ) {}
+    ) { }
 
     async getOAuthAccessTokenResponse(dto: DiscordLinkDto): Promise<DiscordAccessToken> {
         if (!dto.code) throw new UnauthorizedException(Unauthorized.DEFAULT);
@@ -31,7 +30,7 @@ export class DiscordService {
             });
 
             return data.data as DiscordAccessToken;
-        } catch(err) {
+        } catch (err) {
             throw new InternalServerErrorException(err.message ?? InternalServerError.DEFAULT);
         }
     }

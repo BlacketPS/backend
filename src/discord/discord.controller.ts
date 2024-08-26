@@ -7,7 +7,7 @@ import { DiscordLinkDto, DiscordAccessToken, DiscordDiscordUser, User } from "@b
 @ApiTags("discord")
 @Controller("discord")
 export class DiscordController {
-    constructor(private discordService: DiscordService) {}
+    constructor(private discordService: DiscordService) { }
 
     @UseInterceptors(ClassSerializerInterceptor)
     @Post("link")
