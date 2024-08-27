@@ -19,7 +19,7 @@ export class AuthService {
         private usersService: UsersService,
         private configService: ConfigService,
     ) { }
-    // @ts-ignore
+
     async register(dto: RegisterDto, ip: string): Promise<AuthAuthEntity> {
         if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") === "true") throw new BadRequestException(BadRequest.AUTH_FORMS_ENABLED);
 
