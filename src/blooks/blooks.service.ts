@@ -22,7 +22,7 @@ export class BlooksService {
                     userId,
                     blookId: dto.blookId,
                     sold: false,
-                    auctions: { none: { expiresAt: { gt: new Date() } } }
+                    auctions: { none: { expiresAt: { gt: new Date() }, buyerId: null } }
                 },
                 take: dto.quantity,
                 orderBy: { createdAt: "desc" },

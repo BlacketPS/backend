@@ -77,9 +77,9 @@ export class UsersService implements OnApplicationBootstrap {
         const include: Prisma.UserInclude = {};
 
         if (settings.includeBanners) include.banners = true;
-        if (settings.includeBlooksCurrent) include.blooks = { select: { blookId: true }, where: { sold: false, auctions: { none: { expiresAt: { gt: new Date() } } } } };
+        if (settings.includeBlooksCurrent) include.blooks = { select: { blookId: true }, where: { sold: false, auctions: { none: { expiresAt: { gt: new Date() }, buyerId: null } } } };
         if (settings.includeBlooksAll) include.blooks = true;
-        if (settings.includeItemsCurrent) include.items = { select: { id: true, itemId: true, usesLeft: true }, where: { usesLeft: { gt: 0 }, auctions: { none: { expiresAt: { gt: new Date() } } } } };
+        if (settings.includeItemsCurrent) include.items = { select: { id: true, itemId: true, usesLeft: true }, where: { usesLeft: { gt: 0 }, auctions: { none: { expiresAt: { gt: new Date() }, buyerId: null } } } };
         if (settings.includeItemsAll) include.items = { select: { id: true, itemId: true, usesLeft: true } };
         if (settings.includeStatistics) include.statistics = true;
         if (settings.includeDiscord) include.discord = true;
