@@ -95,7 +95,7 @@ export class AuctionsService {
                 } : undefined,
                 expiresAt: { gt: new Date() }
             },
-            orderBy: dto.endingSoon ? { expiresAt: "asc" } : undefined
+            orderBy: dto.endingSoon ? { expiresAt: "asc" } : { createdAt: "desc" }
         });
 
         for (const auction of auctions) auction.bids = auction.bids
