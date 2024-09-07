@@ -53,33 +53,22 @@ export class UsersService implements OnApplicationBootstrap {
             if (cachedUser) return cachedUser;
         }
 
-        /* const include = [];
-
-        if (settings.includeBanners) include.push({ model: this.userBannerRepo, as: "banners", attributes: { exclude: [this.userBannerRepo.primaryKeyAttribute] } });
-        if (settings.includeBlooksCurrent) include.push({ model: this.userBlookRepo, as: "blooks", attributes: ["blookId"], where: { sold: false }, required: false });
-        if (settings.includeBlooksAll) include.push({ model: this.userBlookRepo, as: "blooks", attributes: ["blookId"], required: false });
-        if (settings.includeItemsCurrent) include.push({ model: this.userItemRepo, as: "items", attributes: ["id", "itemId", "usesLeft"], where: { usesLeft: { [Op.gt]: 0 } }, required: false });
-        if (settings.includeItemsAll) include.push({ model: this.userItemRepo, as: "items", attributes: ["id", "itemId", "usesLeft"], required: false });
-        if (settings.includeStatistics) include.push({ model: this.userStatisticRepo, as: "statistics", attributes: { exclude: [this.userStatisticRepo.primaryKeyAttribute] } });
-        if (settings.includeDiscord) include.push({ model: this.userDiscordRepo, as: "discord", attributes: { exclude: ["userId"] }, required: false });
-        if (settings.includeTitles) include.push({ model: this.userTitleRepo, as: "titles", attributes: { exclude: [this.userTitleRepo.primaryKeyAttribute] } });
-        if (settings.includeSettings) include.push({ model: this.userSettingRepo, as: "settings", attributes: { exclude: [this.userSettingRepo.primaryKeyAttribute] } });
-        if (settings.includePaymentMethods) include.push({ model: this.userPaymentMethodRepo, as: "paymentMethods", attributes: { exclude: ["userId", "squareCustomerId", "squarePaymentMethodId"] }, required: false });
-
-        const userData = await this.userRepo.findOne({
-            where: this.sequelizeService.or({ id: user }, { username: { [Op.iLike]: user } }),
-            include: [
-                { model: this.userGroupRepo, as: "groups", include: [this.groupRepo], required: false },
-                ...include
-            ]
-        }); */
-
         const include: Prisma.UserInclude = {};
 
         if (settings.includeBanners) include.banners = true;
-        if (settings.includeBlooksCurrent) include.blooks = { select: { blookId: true }, where: { sold: false, auctions: { none: { expiresAt: { gt: new Date() }, buyerId: null } } } };
+        if (settings.includeBlooksCurrent) include.blooks = {
+            select: { blookId: true }, where: {
+                sold: false,
+                auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } }
+            }
+        };
         if (settings.includeBlooksAll) include.blooks = true;
-        if (settings.includeItemsCurrent) include.items = { select: { id: true, itemId: true, usesLeft: true }, where: { usesLeft: { gt: 0 }, auctions: { none: { expiresAt: { gt: new Date() }, buyerId: null } } } };
+        if (settings.includeItemsCurrent) include.items = {
+            select: { id: true, itemId: true, usesLeft: true }, where: {
+                usesLeft: { gt: 0 },
+                auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } }
+            }
+        };
         if (settings.includeItemsAll) include.items = { select: { id: true, itemId: true, usesLeft: true } };
         if (settings.includeStatistics) include.statistics = true;
         if (settings.includeDiscord) include.discord = true;
@@ -120,7 +109,12 @@ export class UsersService implements OnApplicationBootstrap {
             where: {
                 OR: [
                     { id: user },
-                    { username: user }
+                    {
+                        username: {
+                            equals: user,
+                            mode: "insensitive"
+                        }
+                    }
                 ]
             }
         });
@@ -173,8 +167,6 @@ export class UsersService implements OnApplicationBootstrap {
                 }
             });
 
-            console.log(userId, discordUser);
-
             await prisma.userDiscord.create({
                 data: {
                     user: { connect: { id: userId } },
@@ -184,9 +176,5 @@ export class UsersService implements OnApplicationBootstrap {
                 }
             });
         });
-    }
-
-    async addTokens(userId: User["id"], amount: number): Promise<void> {
-        await this.prismaService.user.update({ where: { id: userId }, data: { tokens: { increment: amount } } });
     }
 }

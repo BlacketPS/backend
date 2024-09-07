@@ -1,6 +1,7 @@
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { BlacketLoggerService } from "./logger.service";
 
+@Global()
 @Module({
     providers: [BlacketLoggerService],
     exports: [BlacketLoggerService]

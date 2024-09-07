@@ -1,9 +1,10 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { SocketGateway } from "src/socket/socket.gateway";
 import { UsersService } from "src/users/users.service";
 import { PermissionsService } from "src/permissions/permissions.service";
-import { AuctionsCreateAuctionDto, AuctionsSearchAuctionDto, BadRequest, Forbidden, NotFound, PrivateUser } from "@blacket/types";
+import { AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsSearchAuctionDto, BadRequest, Forbidden, NotFound, PrivateUser, SocketMessageType } from "@blacket/types";
 import { Auction, AuctionType, PermissionType } from "@blacket/core";
 
 @Injectable()
@@ -11,6 +12,7 @@ export class AuctionsService {
     constructor(
         private prismaService: PrismaService,
         private redisService: RedisService,
+        private socketGateway: SocketGateway,
         private usersService: UsersService,
         private permissionsService: PermissionsService
     ) { }
@@ -18,7 +20,7 @@ export class AuctionsService {
     async getAuctions(dto: AuctionsSearchAuctionDto = {}): Promise<Auction[]> {
         if (dto.blookId && dto.itemId) throw new BadRequestException(BadRequest.DEFAULT);
 
-        return this.prismaService.auction.findMany({
+        const auctions = await this.prismaService.auction.findMany({
             include: {
                 blook: {
                     select: {
@@ -83,12 +85,24 @@ export class AuctionsService {
                 ],
 
                 buyItNow: dto.buyItNow ?? undefined,
-                sellerId: dto.sellerId ?? undefined,
                 buyerId: null,
+                delistedAt: null,
+                seller: dto.seller ? {
+                    OR: [
+                        { id: { equals: dto.seller } },
+                        { username: { equals: dto.seller, mode: "insensitive" } }
+                    ]
+                } : undefined,
                 expiresAt: { gt: new Date() }
             },
             orderBy: dto.endingSoon ? { expiresAt: "asc" } : undefined
         });
+
+        for (const auction of auctions) auction.bids = auction.bids
+            .filter((bid) => bid && bid.user && bid.user.tokens >= bid.amount)
+            .sort((a, b) => b.amount - a.amount);
+
+        return auctions;
     }
 
     async createAuction(userId: string, dto: AuctionsCreateAuctionDto) {
@@ -104,7 +118,7 @@ export class AuctionsService {
                 if (!this.redisService.getBlook(dto.blookId)) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
 
                 blook = await this.prismaService.userBlook.findFirst({
-                    where: { userId, blookId: dto.blookId, sold: false, auctions: { none: { expiresAt: { gt: new Date() }, buyerId: null } } },
+                    where: { userId, blookId: dto.blookId, sold: false, auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } } },
                     orderBy: { createdAt: "asc" }
                 });
                 if (!blook) throw new ForbiddenException(Forbidden.BLOOKS_NOT_ENOUGH_BLOOKS);
@@ -114,7 +128,7 @@ export class AuctionsService {
                 if (!dto.itemId) throw new BadRequestException(BadRequest.DEFAULT);
 
                 item = await this.prismaService.userItem.findUnique({
-                    where: { id: dto.itemId, userId, usesLeft: { gt: 0 }, auctions: { none: { expiresAt: { gt: new Date() }, buyerId: null } } }
+                    where: { id: dto.itemId, userId, usesLeft: { gt: 0 }, auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } } }
                 });
                 if (!item) throw new ForbiddenException(Forbidden.ITEMS_NOT_ENOUGH_ITEMS);
 
@@ -151,14 +165,28 @@ export class AuctionsService {
         const auction = await this.prismaService.auction.findUnique({
             where: {
                 id,
-                buyerId: null,
                 buyItNow: true,
+                buyerId: null,
+                delistedAt: null,
                 expiresAt: { gt: new Date() }
-            }, include: { seller: true }
+            }, include: {
+                blook: {
+                    select: {
+                        blookId: true
+                    }
+                },
+                item: {
+                    select: {
+                        id: true,
+                        itemId: true,
+                        usesLeft: true
+                    }
+                }
+            }
         });
         if (!auction) throw new NotFoundException(NotFound.UNKNOWN_AUCTION);
 
-        if (auction.seller.id === userId) throw new ForbiddenException(Forbidden.AUCTIONS_BUY_IT_NOW_OWN_AUCTION);
+        if (auction.sellerId === userId) throw new ForbiddenException(Forbidden.AUCTIONS_BUY_IT_NOW_OWN_AUCTION);
 
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
@@ -169,11 +197,99 @@ export class AuctionsService {
             const user = await prisma.user.update({ where: { id: userId }, data: { tokens: { decrement: auction.price } } });
             if (user.tokens < 0) throw new ForbiddenException(Forbidden.AUCTIONS_BUY_IT_NOW_NOT_ENOUGH_TOKENS);
 
-            await prisma.auction.update({ where: { id }, data: { buyer: { connect: { id: userId } } } });
-            await prisma.user.update({ where: { id: auction.seller.id }, data: { tokens: { increment: auction.price } } });
+            await prisma.user.update({ where: { id: auction.sellerId }, data: { tokens: { increment: auction.price } } });
 
             if (auction.type === AuctionType.BLOOK) await prisma.userBlook.update({ where: { id: auction.blookId }, data: { user: { connect: { id: userId } } } });
             else await prisma.userItem.update({ where: { id: auction.itemId }, data: { user: { connect: { id: userId } } } });
+
+            await prisma.auction.update({ where: { id }, data: { buyer: { connect: { id: userId } }, delistedAt: new Date() } });
+
+            this.socketGateway.server.emit(SocketMessageType.AUCTIONS_EXPIRE, { id, type: auction.type, blookId: auction.blook.blookId, item: auction.item, sellerId: auction.sellerId, buyerId: userId });
         });
+    }
+
+    async bid(userId: string, id: number, dto: AuctionsBidAuctionDto) {
+        const auction = await this.prismaService.auction.findUnique({
+            where: {
+                id,
+                buyItNow: false,
+                buyerId: null,
+                delistedAt: null,
+                expiresAt: { gt: new Date() }
+            },
+            include: {
+                seller: true,
+                bids: {
+                    include: {
+                        user: {
+                            include: { customAvatar: true, customBanner: true },
+                            omit: {
+                                password: true,
+                                ipAddress: true
+                            }
+                        }
+                    },
+                    omit: {
+                        auctionId: true,
+                        userId: true
+                    }
+                }
+            }
+        });
+        if (!auction) throw new NotFoundException(NotFound.UNKNOWN_AUCTION);
+
+        if (auction.seller.id === userId) throw new ForbiddenException(Forbidden.AUCTIONS_BID_OWN_AUCTION);
+
+        auction.bids = auction.bids
+            .filter((bid) => bid && bid.user && bid.user.tokens >= bid.amount)
+            .sort((a, b) => b.amount - a.amount);
+
+        if (auction.price >= dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_TOO_LOW.replace("%s", (auction.price + 1).toLocaleString()));
+        if (auction.bids.length > 0 && auction.bids[0].amount >= dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_TOO_LOW.replace("%s", (auction.bids[0].amount + 1).toLocaleString()));
+
+        if (auction.bids.length > 0 && auction.bids[0].user.id === userId) throw new ForbiddenException(Forbidden.AUCTIONS_BID_OWN_BID);
+
+        const user = await this.usersService.getUser(userId);
+        if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+
+        if (user.tokens < dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
+
+        this.socketGateway.server.emit(SocketMessageType.AUCTIONS_BID, { id: auction.id, amount: dto.amount, userId });
+
+        return await this.prismaService.auctionBid.create({ data: { auction: { connect: { id } }, user: { connect: { id: userId } }, amount: dto.amount } });
+    }
+
+    async removeAuction(userId: string, id: number) {
+        const auction = await this.prismaService.auction.findUnique({
+            where: {
+                id,
+                sellerId: userId,
+                buyerId: null,
+                delistedAt: null,
+                expiresAt: { gt: new Date() }
+            },
+            include: {
+                bids: true,
+                blook: {
+                    select: {
+                        blookId: true
+                    }
+                },
+                item: {
+                    select: {
+                        id: true,
+                        itemId: true,
+                        usesLeft: true
+                    }
+                }
+            }
+        });
+        if (!auction) throw new NotFoundException(NotFound.UNKNOWN_AUCTION);
+
+        if (auction.bids.length > 0) throw new ForbiddenException(Forbidden.AUCTIONS_REMOVE_HAS_BIDS);
+
+        await this.prismaService.auction.update({ where: { id }, data: { delistedAt: new Date() } });
+
+        this.socketGateway.server.emit(SocketMessageType.AUCTIONS_EXPIRE, { id, type: auction.type, blookId: auction?.blook?.blookId, item: auction?.item, sellerId: auction.sellerId, buyerId: null });
     }
 }

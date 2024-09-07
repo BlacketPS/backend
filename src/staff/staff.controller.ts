@@ -61,27 +61,27 @@ export class StaffController {
         return await this.staffService.getGroups();
     }
 
-    @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GROUPS] })
+    @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_GROUPS] })
     @Post("admin/groups")
     async createGroup(@GetCurrentUser() userId: string, @Body() dto: StaffAdminCreateGroupDto) {
         return await this.staffService.createGroup(userId, dto);
     }
 
-    @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GROUPS] })
+    @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_GROUPS] })
     @Put("admin/groups/update-priorities")
     @HttpCode(HttpStatus.NO_CONTENT)
     async updateGroupPriorities(@GetCurrentUser() userId: string, @Body() dto: StaffAdminUpdateGroupPrioritiesDto) {
         return await this.staffService.updateGroupPriorities(userId, dto);
     }
 
-    @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GROUPS] })
+    @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_GROUPS] })
     @Put("admin/groups/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
     async updateGroup(@GetCurrentUser() userId: string, @Param("id") groupId: string, @Body() dto: StaffAdminUpdateGroupDto) {
         return await this.staffService.updateGroup(userId, parseInt(groupId), dto);
     }
 
-    @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GROUPS] })
+    @Permissions({ permissions: [PermissionTypeEnum.MANAGE_GAME_GROUPS] })
     @Delete("admin/groups/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteGroup(@GetCurrentUser() userId: string, @Param("id") groupId: string) {

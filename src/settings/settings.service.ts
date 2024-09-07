@@ -70,12 +70,11 @@ export class SettingsService {
     }
 
     async enableOtp(userId: User["id"], dto: SettingsEnableOtpDto): Promise<void> {
-        const tempOtp = await this.redisService.getKey("tempOtp", userId);
+        const tempOtp = (await this.redisService.getKey("tempOtp", userId) as { secret: string })?.secret;
         if (!tempOtp) throw new NotFoundException(NotFound.UNKNOWN_OTP);
 
         const otpCode = dto.otpCode.toUpperCase();
 
-        // FIXME: no idea why this throws "str.toUpperCase is not a function"
         const verified = speakEasy.totp.verify({ secret: tempOtp, token: otpCode, encoding: "base32" });
         if (!verified) throw new BadRequestException(BadRequest.AUTH_INCORRECT_OTP);
 

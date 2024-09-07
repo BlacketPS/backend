@@ -2,6 +2,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule, seconds } from "@nestjs/throttler";
+import { ScheduleModule } from "@nestjs/schedule";
 
 import { CoreModule } from "./core/core.module";
 import { LoggerModule } from "./core/logger/logger.module";
@@ -30,6 +31,8 @@ import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
 
 import { IsAccessCode } from "./core/validate/";
+import { CronService } from "./cron/cron.service";
+import { CronModule } from "./cron/cron.module";
 
 @Module({
     imports: [
@@ -41,6 +44,7 @@ import { IsAccessCode } from "./core/validate/";
                 { name: "global-long", ttl: seconds(300), limit: 800 }
             ]
         }),
+        ScheduleModule.forRoot(),
 
         CoreModule,
         LoggerModule,
@@ -65,7 +69,8 @@ import { IsAccessCode } from "./core/validate/";
         AuctionsModule,
         LeaderboardModule,
         GuildsModule,
-        AuctionsModule
+        AuctionsModule,
+        CronModule
     ],
     controllers: [],
     providers: [
@@ -73,7 +78,9 @@ import { IsAccessCode } from "./core/validate/";
         { provide: APP_GUARD, useClass: UserThrottlerGuard },
         { provide: APP_GUARD, useClass: PermissionGuard },
 
-        IsAccessCode
+        IsAccessCode,
+
+        CronService
     ]
 })
 export class AppModule { }

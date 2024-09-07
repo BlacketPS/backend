@@ -12,7 +12,7 @@ export class BlooksService {
         private redisService: RedisService,
     ) { }
 
-    async sellBlooks(userId: User["id"], dto: BlooksSellBlookDto): Promise<void> {
+    async sellBlooks(userId: string, dto: BlooksSellBlookDto): Promise<void> {
         const blook = await this.redisService.getBlook(dto.blookId);
         if (!blook) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
 
@@ -22,7 +22,7 @@ export class BlooksService {
                     userId,
                     blookId: dto.blookId,
                     sold: false,
-                    auctions: { none: { expiresAt: { gt: new Date() }, buyerId: null } }
+                    auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } }
                 },
                 take: dto.quantity,
                 orderBy: { createdAt: "desc" },

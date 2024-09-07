@@ -68,7 +68,7 @@ export class AuthService {
     }
 
     async generateOtpSecret(userId: User["id"]): Promise<string> {
-        if (await this.redisService.getKey("tempOtp", userId)) return await this.redisService.getKey("tempOtp", userId);
+        if (await this.redisService.getKey("tempOtp", userId)) return (await this.redisService.getKey("tempOtp", userId) as { secret: string }).secret;
 
         const user = await this.usersService.getUser(userId, { includeSettings: true });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
@@ -77,7 +77,7 @@ export class AuthService {
 
         const secret = speakEasy.generateSecret({ name: user.username, issuer: process.env.VITE_INFORMATION_NAME });
 
-        await this.redisService.setKey("tempOtp", userId, secret.base32, 300);
+        await this.redisService.setKey("tempOtp", userId, { secret: secret.base32 }, 300);
 
         return secret.base32;
     }
