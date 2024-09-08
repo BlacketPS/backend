@@ -17,6 +17,7 @@ export class UsersController {
     async getMe(@GetCurrentUser() userId: User["id"]) {
         const userData = await this.usersService.getUser(userId, {
             cacheUser: false,
+            includeTitles: true,
             includeBanners: true,
             includeBlooksCurrent: true,
             includeDiscord: true,
@@ -35,12 +36,10 @@ export class UsersController {
     async getUser(@Param("user") user: string) {
         const userData = await this.usersService.getUser(user, {
             cacheUser: true,
-            includeBanners: true,
             includeBlooksCurrent: true,
             includeDiscord: true,
             includeItemsCurrent: true,
-            includeStatistics: true,
-            includeTitles: true
+            includeStatistics: true
         });
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
