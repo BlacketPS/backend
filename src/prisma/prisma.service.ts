@@ -81,8 +81,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
             this.blook.create({ data: { name: "Default", chance: 0, price: 0, rarity: { connect: { id: 1 } }, priority: 0, background: { connect: { id: 2 } }, image: { connect: { id: 1 } } } }),
 
-            this.font.create({ data: { name: "Nunito Bold", resource: { connect: { id: 4 } }, default: true } }),
-            this.font.create({ data: { name: "Titan One", resource: { connect: { id: 5 } }, default: true } })
+            this.font.create({ data: { name: "Nunito Bold", resource: { connect: { id: 4 } }, default: true, priority: 1 } }),
+            this.font.create({ data: { name: "Titan One", resource: { connect: { id: 5 } }, default: true, priority: 2 } })
         ]);
 
         this.blacketLogger.info("Database has been seeded with initial data!", "Database", "Blacket");
