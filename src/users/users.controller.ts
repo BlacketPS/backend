@@ -18,6 +18,7 @@ export class UsersController {
         const userData = await this.usersService.getUser(userId, {
             cacheUser: false,
             includeTitles: true,
+            includeFonts: true,
             includeBanners: true,
             includeBlooksCurrent: true,
             includeDiscord: true,

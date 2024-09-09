@@ -19,6 +19,7 @@ export interface GetUserSettings {
     includeStatistics?: boolean;
     includeSettings?: boolean;
     includeTitles?: boolean;
+    includeFonts?: boolean;
 }
 
 @Injectable()
@@ -73,6 +74,7 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeStatistics) include.statistics = true;
         if (settings.includeDiscord) include.discord = true;
         if (settings.includeTitles) include.titles = true;
+        if (settings.includeFonts) include.fonts = true;
         if (settings.includeSettings) include.settings = true;
         if (settings.includePaymentMethods) include.paymentMethods = true;
 

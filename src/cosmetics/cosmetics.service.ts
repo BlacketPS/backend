@@ -58,6 +58,9 @@ export class CosmeticsService {
         const font = await this.redisService.getFont(dto.fontId);
         if (!font) throw new NotFoundException(NotFound.UNKNOWN_FONT);
 
+        const userFontCount = await this.prismaService.userFont.count({ where: { userId, fontId: dto.fontId } });
+        if (!font.default && userFontCount < 1) throw new ForbiddenException(Forbidden.COSMETICS_FONTS_NOT_OWNED);
+
         await this.prismaService.user.update({ data: { font: { connect: { id: font.id } } }, where: { id: userId } });
     }
 }
