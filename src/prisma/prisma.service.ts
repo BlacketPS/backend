@@ -13,7 +13,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         super({
             datasources: {
                 db: {
-                    url: `postgresql://${configService.get("SERVER_DATABASE_USER")}:${configService.get("SERVER_DATABASE_PASSWORD")}@${configService.get("SERVER_DATABASE_HOST")}:${configService.get("SERVER_DATABASE_PORT")??5432}/${configService.get("SERVER_DATABASE_NAME")}?schema=public`
+                    url: `postgresql://${configService.get("SERVER_DATABASE_USER")}:${configService.get("SERVER_DATABASE_PASSWORD")}@${configService.get("SERVER_DATABASE_HOST")}:${configService.get("SERVER_DATABASE_PORT") ?? 5432}/${configService.get("SERVER_DATABASE_NAME")}?schema=public`
                 }
             },
             omit: {
@@ -56,11 +56,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             this.font.deleteMany({}),
             this.user.deleteMany({}),
 
-            this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/blooks/Default.png" } }), // resource id 1
-            this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/blooks/backgrounds/Default.png" } }), // resource id 2
-            this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/banners/Default.png" } }), // resource id 3
-            this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/fonts/Nunito Bold.ttf" } }), // resource id 4
-            this.resource.create({ data: { path: this.configService.get<string>("VITE_CDN_URL") + "/content/fonts/Titan One.ttf" } }), // resource id 5
+            this.resource.create({ data: { path: "{cdn}/content/blooks/Default.png" } }), // resource id 1
+            this.resource.create({ data: { path: "{cdn}/content/blooks/backgrounds/Default.png" } }), // resource id 2
+            this.resource.create({ data: { path: "{cdn}/content/banners/Default.png" } }), // resource id 3
+            this.resource.create({ data: { path: "{cdn}/content/fonts/Nunito Bold.ttf" } }), // resource id 4
+            this.resource.create({ data: { path: "{cdn}/content/fonts/Titan One.ttf" } }), // resource id 5
 
             // @autoincrement likes to start at 1 for some reason
             this.room.create({ data: { name: "global", public: true, id: 0 } }),
