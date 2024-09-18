@@ -1,5 +1,5 @@
 import { AuctionType } from "@blacket/core";
-import { SocketMessageType } from "@blacket/types";
+import { SocketAuctionExpireEntity } from "@blacket/types";
 import { Injectable } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
@@ -44,7 +44,7 @@ export class CronService {
         }
 
         const startTime = Date.now();
-        this.loggerService.info(`Delisting ${expiredAuctions.length} expired auctions...`, "CronService");
+        this.loggerService.verbose(`Delisting ${expiredAuctions.length} expired auctions...`, "CronService");
 
         await this.prismaService.$transaction(async (tx) => {
             for (const auction of expiredAuctions) {
@@ -74,10 +74,27 @@ export class CronService {
 
                 await tx.auction.update({ where: { id: auction.id }, data: { buyerId: auction.bids[0].user.id, delistedAt: new Date() } });
 
-                this.socketGateway.server.emit(SocketMessageType.AUCTIONS_EXPIRE, { id: auction.id, type: auction.type, blookId: auction.blookId, item: auction.item, sellerId: auction.sellerId, buyerId: auction.bids[0].user.id });
+                this.socketGateway.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
+                    id: auction.id,
+                    type: auction.type,
+                    blookId: auction.blookId,
+                    item: auction.item,
+                    sellerId: auction.sellerId,
+                    buyerId: auction.bids[0].user.id,
+                    price: auction.bids[0].amount,
+                    buyItNow: auction.buyItNow
+                }));
             }
         });
 
-        this.loggerService.info(`Delisted ${expiredAuctions.length} expired auctions in ${Date.now() - startTime}ms.`, "CronService");
+        this.loggerService.verbose(`Delisted ${expiredAuctions.length} expired auctions in ${Date.now() - startTime}ms.`, "CronService");
+    }
+
+    @Cron("*/10 * * * * *", { name: "updateLastSeen", timeZone: "UTC" })
+    updateLastSeen() {
+        const users = this.socketGateway.getAllConnectedUsers();
+        if (users.length < 1) return;
+
+        this.prismaService.user.updateMany({ where: { id: { in: users } }, data: { lastSeen: new Date(Date.now()) } });
     }
 }

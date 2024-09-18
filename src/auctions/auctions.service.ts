@@ -4,7 +4,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SocketGateway } from "src/socket/socket.gateway";
 import { UsersService } from "src/users/users.service";
 import { PermissionsService } from "src/permissions/permissions.service";
-import { AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsSearchAuctionDto, BadRequest, Forbidden, NotFound, PrivateUser, SocketMessageType } from "@blacket/types";
+import { AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsSearchAuctionDto, BadRequest, Forbidden, NotFound, PrivateUser, SocketAuctionBidEntity, SocketAuctionExpireEntity } from "@blacket/types";
 import { Auction, AuctionType, PermissionType } from "@blacket/core";
 
 @Injectable()
@@ -53,48 +53,56 @@ export class AuctionsService {
                     }
                 }
             },
-            where: {
-                type: dto.type ?? undefined,
-                blook: { blookId: dto.blookId ?? undefined },
-                item: { itemId: dto.itemId ?? undefined },
+            where: dto.id
+                ? {
+                    id: dto.id,
+                    delistedAt: null,
+                    buyerId: null,
+                    expiresAt: { gt: new Date() }
+                }
+                : {
 
-                // i don't know why this has to be done but it does
-                OR: [
-                    {
-                        blook: {
+                    type: dto.type ?? undefined,
+                    blook: { blookId: dto.blookId ?? undefined },
+                    item: { itemId: dto.itemId ?? undefined },
+
+                    // i don't know why this has to be done but it does
+                    OR: [
+                        {
                             blook: {
-                                name: {
-                                    contains: dto.query ?? undefined,
-                                    mode: "insensitive"
-                                },
-                                rarityId: dto.rarityId ?? undefined
+                                blook: {
+                                    name: {
+                                        contains: dto.query ?? undefined,
+                                        mode: "insensitive"
+                                    },
+                                    rarityId: dto.rarityId ?? undefined
+                                }
                             }
-                        }
-                    },
-                    {
-                        item: {
+                        },
+                        {
                             item: {
-                                rarityId: dto.rarityId ?? undefined,
-                                name: {
-                                    contains: dto.query ?? undefined,
-                                    mode: "insensitive"
+                                item: {
+                                    rarityId: dto.rarityId ?? undefined,
+                                    name: {
+                                        contains: dto.query ?? undefined,
+                                        mode: "insensitive"
+                                    }
                                 }
                             }
                         }
-                    }
-                ],
+                    ],
 
-                buyItNow: dto.buyItNow ?? undefined,
-                buyerId: null,
-                delistedAt: null,
-                seller: dto.seller ? {
-                    OR: [
-                        { id: { equals: dto.seller } },
-                        { username: { equals: dto.seller, mode: "insensitive" } }
-                    ]
-                } : undefined,
-                expiresAt: { gt: new Date() }
-            },
+                    buyItNow: dto.buyItNow ?? undefined,
+                    buyerId: null,
+                    delistedAt: null,
+                    seller: dto.seller ? {
+                        OR: [
+                            { id: { equals: dto.seller } },
+                            { username: { equals: dto.seller, mode: "insensitive" } }
+                        ]
+                    } : undefined,
+                    expiresAt: { gt: new Date() }
+                },
             orderBy: dto.endingSoon ? { expiresAt: "asc" } : { createdAt: "desc" }
         });
 
@@ -204,7 +212,16 @@ export class AuctionsService {
 
             await prisma.auction.update({ where: { id }, data: { buyer: { connect: { id: userId } }, delistedAt: new Date() } });
 
-            this.socketGateway.server.emit(SocketMessageType.AUCTIONS_EXPIRE, { id, type: auction.type, blookId: auction.blook.blookId, item: auction.item, sellerId: auction.sellerId, buyerId: userId });
+            this.socketGateway.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
+                id: auction.id,
+                type: auction.type,
+                blookId: auction?.blook?.blookId,
+                item: auction?.item,
+                sellerId: auction.sellerId,
+                buyerId: userId,
+                price: auction.price,
+                buyItNow: true
+            }));
         });
     }
 
@@ -230,8 +247,19 @@ export class AuctionsService {
                         }
                     },
                     omit: {
-                        auctionId: true,
-                        userId: true
+                        auctionId: true
+                    }
+                },
+                blook: {
+                    select: {
+                        blookId: true
+                    }
+                },
+                item: {
+                    select: {
+                        id: true,
+                        itemId: true,
+                        usesLeft: true
                     }
                 }
             }
@@ -254,9 +282,19 @@ export class AuctionsService {
 
         if (user.tokens < dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
 
-        this.socketGateway.server.emit(SocketMessageType.AUCTIONS_BID, { id: auction.id, amount: dto.amount, userId });
+        const bid = await this.prismaService.auctionBid.create({ data: { auction: { connect: { id } }, user: { connect: { id: userId } }, amount: dto.amount } });
 
-        return await this.prismaService.auctionBid.create({ data: { auction: { connect: { id } }, user: { connect: { id: userId } }, amount: dto.amount } });
+        this.socketGateway.emitAuctionBidEvent(new SocketAuctionBidEntity({
+            id: bid.id,
+            auctionId: auction.id,
+            type: auction.type,
+            amount: bid.amount,
+            blookId: auction?.blook?.blookId,
+            item: auction?.item,
+            bidderId: userId,
+            sellerId: auction.seller.id,
+            bidders: [... new Set(auction.bids.map((bid) => bid.user.id))]
+        }));
     }
 
     async removeAuction(userId: string, id: number) {
@@ -290,6 +328,15 @@ export class AuctionsService {
 
         await this.prismaService.auction.update({ where: { id }, data: { delistedAt: new Date() } });
 
-        this.socketGateway.server.emit(SocketMessageType.AUCTIONS_EXPIRE, { id, type: auction.type, blookId: auction?.blook?.blookId, item: auction?.item, sellerId: auction.sellerId, buyerId: null });
+        this.socketGateway.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
+            id: auction.id,
+            type: auction.type,
+            blookId: auction?.blook?.blookId,
+            item: auction?.item,
+            sellerId: auction.sellerId,
+            buyerId: null,
+            price: auction.price,
+            buyItNow: auction.buyItNow
+        }));
     }
 }

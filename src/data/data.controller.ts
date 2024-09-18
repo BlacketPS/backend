@@ -78,4 +78,10 @@ export class DataController {
     getResources() {
         return this.redisService.getAllFromKey(DataKey.RESOURCE);
     }
+
+    @Public()
+    @Get("credits")
+    getCredits() {
+        return this.redisService.getAllFromKey(DataKey.CREDIT);
+    }
 }

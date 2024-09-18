@@ -16,7 +16,8 @@ export class MarketService {
     // as opening packs is one of the MOST intensive operations we do
     // i'll be probably optimising this a few times and doing performance measures
     async openPack(userId: string, dto: MarketOpenPackDto) {
-        const pack = await this.redisService.getPack(dto.packId);
+		const pack = await this.redisService.getPack(dto.packId);
+		console.log(pack);
         if (!pack) throw new NotFoundException(NotFound.UNKNOWN_PACK);
 
         if (!pack.enabled) throw new NotFoundException(NotFound.UNKNOWN_PACK);
@@ -29,9 +30,11 @@ export class MarketService {
 
         // TODO: include booster chance
         const blookId = await openPack(pack.id, packBlooks, 1)
-            .catch((err) => {
-                if (err.message === NotFound.UNKNOWN_PACK) throw new NotFoundException(NotFound.UNKNOWN_PACK);
-            });
+			.catch((err) => {
+				console.log(err);
+				if (err.message === NotFound.UNKNOWN_PACK) throw new NotFoundException(NotFound.UNKNOWN_PACK);
+			});
+		console.log(blookId);
         if (!blookId) throw new NotFoundException(NotFound.UNKNOWN_PACK);
         if (typeof blookId === "object") throw new InternalServerErrorException(InternalServerError.DEFAULT);
 

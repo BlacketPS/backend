@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { Client } from "square";
 import { Conflict, NotFound, StoreCreatePaymentMethodDto, UserPaymentMethod } from "@blacket/types";
 import { CoreService } from "src/core/core.service";
@@ -21,7 +21,11 @@ export class StoreService {
 
         const card = await this.client.customersApi.createCustomerCard(customer.result.customer.id, {
             cardNonce: dto.cardNonce
-        });
+        })
+            .catch((error) => {
+                console.log(error);
+                throw new BadRequestException(error.errors[0].detail);
+            });
 
         const alreadyExists = await this.prismaService.userPaymentMethod.count({ where: { userId, lastFour: card.result.card.last4 } });
         if (alreadyExists > 0) {

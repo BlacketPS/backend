@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { CoreService } from "src/core/core.service";
 import { RedisService } from "src/redis/redis.service";
 import { Server, Socket } from "socket.io";
-import { Session } from "src/core/guard";
 import { SocketMessageType } from "@blacket/types";
 
 @Injectable()
@@ -16,6 +15,7 @@ export class SocketService {
 
     emitMessageAndCloseSocket(socket: Socket, event: string, data: any) {
         socket.emit(event, data);
+
         socket.disconnect();
     }
 
@@ -33,6 +33,8 @@ export class SocketService {
         if (decodedToken.id !== session.id) return this.emitMessageAndCloseSocket(client, SocketMessageType.UNAUTHORIZED, { message: "token mismatch" });
 
         client.session = session;
+
+        client.join(`user-${session.userId}`);
 
         return client.send(SocketMessageType.AUTHORIZED, { userId: client.session.userId });
     }
