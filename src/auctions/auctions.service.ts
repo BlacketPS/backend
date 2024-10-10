@@ -293,7 +293,7 @@ export class AuctionsService {
             item: auction?.item,
             bidderId: userId,
             sellerId: auction.seller.id,
-            bidders: [... new Set(auction.bids.map((bid) => bid.user.id))]
+            bidders: [...new Set(auction.bids.map((bid) => bid.user.id))]
         }));
     }
 

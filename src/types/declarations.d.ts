@@ -11,6 +11,9 @@ declare global {
 declare module "socket.io" {
     interface Socket {
         session: Session | undefined;
+        ping: number;
+
+        inRoom: (room: string) => boolean;
     }
 }
 

@@ -21,7 +21,6 @@ export class SocketService {
 
     async verifyConnection(client: Socket) {
         const token = client.handshake.auth.token as string | null;
-
         if (!token) return this.emitMessageAndCloseSocket(client, SocketMessageType.UNAUTHORIZED, { message: "no token provided" });
 
         const decodedToken = this.coreService.safelyParseJSON(Buffer.from(token, "base64").toString());
@@ -33,6 +32,9 @@ export class SocketService {
         if (decodedToken.id !== session.id) return this.emitMessageAndCloseSocket(client, SocketMessageType.UNAUTHORIZED, { message: "token mismatch" });
 
         client.session = session;
+        client.ping = 0;
+
+        client.inRoom = (room: string) => client.rooms.has(room);
 
         client.join(`user-${session.userId}`);
 

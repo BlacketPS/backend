@@ -1,1 +1,1 @@
-export * from "./IsAccessCode.validate";
+export * from "./isAccessCode.validate";

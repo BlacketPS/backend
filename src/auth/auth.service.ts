@@ -2,12 +2,12 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException,
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { UsersService } from "src/users/users.service";
-import { ConfigService } from "@nestjs/config";
+import { FormsService } from "src/forms/forms.service";
 import { compare } from "bcrypt";
 import * as speakEasy from "@levminer/speakeasy";
 
 import { AuthAuthEntity, BadRequest, Forbidden, NotFound, Unauthorized } from "@blacket/types";
-import { RegisterDto, LoginDto } from "./dto";
+import { RegisterDto, LoginDto, RegisterFromFormDto } from "./dto";
 import { Prisma, PrismaClient, PunishmentType, Session, User } from "@blacket/core";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 
@@ -17,13 +17,12 @@ export class AuthService {
         private prismaService: PrismaService,
         private redisService: RedisService,
         private usersService: UsersService,
-        private configService: ConfigService,
+        private formsService: FormsService
     ) { }
 
     async register(dto: RegisterDto, ip: string): Promise<AuthAuthEntity> {
-        if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") === "true") throw new BadRequestException(BadRequest.AUTH_FORMS_ENABLED);
-
         if (await this.usersService.userExists(dto.username)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
+
         return await this.prismaService.$transaction(async (prisma) => {
             const user = await this.usersService.createUser(dto.username, dto.password, prisma);
 
@@ -32,6 +31,19 @@ export class AuthService {
             const session = await this.findOrCreateSession(user.id, prisma);
 
             return { token: await this.sessionToToken(session) } as AuthAuthEntity;
+        });
+    }
+
+    async registerFromForm(dto: RegisterFromFormDto, ip: string): Promise<AuthAuthEntity> {
+        return await this.prismaService.$transaction(async () => {
+            const form = await this.formsService.getFormById(dto.formId);
+            if (!form) throw new NotFoundException(NotFound.UNKNOWN_FORM);
+
+            const response = await this.register({ username: form.username, password: dto.password, acceptedTerms: true }, ip);
+
+            await this.formsService.dropFormById(form.id);
+
+            return response;
         });
     }
 

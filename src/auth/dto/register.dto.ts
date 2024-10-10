@@ -16,7 +16,7 @@ export class RegisterDto {
     @ApiProperty({ example: "momfater5", description: "A code that's required to register while the server is in a development mode" })
     @IsNotEmpty()
     @Validate(IsAccessCode)
-    readonly accessCode: string;
+    readonly accessCode?: string;
 
     @ApiProperty()
     @IsNotEmpty()
