@@ -1,7 +1,6 @@
 import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
-import { PermissionsService } from "src/permissions/permissions.service";
 import { hash } from "bcrypt";
 import { DiscordAccessToken, DiscordDiscordUser, User } from "@blacket/types";
 import { Font, PermissionType, Prisma, Resource, Title, OAuthType, PrismaClient } from "@blacket/core";
@@ -32,15 +31,14 @@ export class UsersService implements OnApplicationBootstrap {
 
     constructor(
         private prismaService: PrismaService,
-        private redisService: RedisService,
-        private permissionsService: PermissionsService
+        private redisService: RedisService
     ) { }
 
     async onApplicationBootstrap() {
         this.defaultPermissions = [PermissionType.CREATE_REPORTS, PermissionType.CHANGE_USERNAME];
 
-        this.defaultAvatar = await this.prismaService.resource.findUnique({ where: { id: 1 } });
-        this.defaultBanner = await this.prismaService.resource.findUnique({ where: { id: 3 } });
+        this.defaultAvatar = await this.prismaService.resource.findUnique({ where: { reference: "DEFAULT_BLOOK" } });
+        this.defaultBanner = await this.prismaService.resource.findUnique({ where: { reference: "DEFAULT_BANNER" } });
         this.defaultTitle = await this.prismaService.title.findUnique({ where: { id: 1 } });
         this.defaultFont = await this.prismaService.font.findUnique({ where: { id: 1 } });
     }
@@ -126,6 +124,7 @@ export class UsersService implements OnApplicationBootstrap {
 
     async createUser(username: string, password: string, transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<User> {
         const prisma = transaction || this.prismaService;
+
         const user = await prisma.user.create({
             data: {
                 id: (Math.floor(Date.now() / 1000)).toString() + Math.floor(1000000 + Math.random() * 9000000).toString(),
@@ -138,6 +137,7 @@ export class UsersService implements OnApplicationBootstrap {
                 permissions: this.defaultPermissions
             }
         });
+
         await prisma.userStatistic.create({ data: { id: user.id } });
         await prisma.userSetting.create({ data: { id: user.id } });
 
