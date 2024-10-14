@@ -18,11 +18,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             },
             omit: {
                 userSetting: { id: true },
-                userStatistic: { id: true },
-                userPaymentMethod: {
-                    squareCustomerId: true,
-                    squarePaymentMethodId: true
-                }
+                userStatistic: { id: true }
             }
         });
     }

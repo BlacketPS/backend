@@ -7,8 +7,12 @@ import { ValidationPipe } from "@nestjs/common";
 import { useContainer } from "class-validator";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
+import * as express from "express";
+
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { logger: new BlacketLoggerService() });
+    
+    app.use("/api/stripe/webhook", express.raw({ type: "*/*" }));
 
     const configService = app.get(ConfigService);
 

@@ -4,6 +4,8 @@ import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule, seconds } from "@nestjs/throttler";
 import { ScheduleModule } from "@nestjs/schedule";
 
+import { StripeModule } from "./stripe/stripe.module";
+
 import { CoreModule } from "./core/core.module";
 import { LoggerModule } from "./core/logger/logger.module";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -16,7 +18,6 @@ import { PermissionsModule } from "./permissions/permissions.module";
 import { UsersModule } from "./users/users.module";
 import { FormsModule } from "./forms/forms.module";
 import { StaffModule } from "./staff/staff.module";
-import { StoreModule } from "./store/store.module";
 import { ChatModule } from "./chat/chat.module";
 import { QuestsModule } from "./quests/quests.module";
 import { BlooksModule } from "./blooks/blooks.module";
@@ -27,12 +28,11 @@ import { GuildsModule } from "./guilds/guilds.module";
 import { DiscordModule } from "./discord/discord.module";
 import { AuctionsModule } from "./auctions/auctions.module";
 import { LeaderboardModule } from "./leaderboard/leaderboard.module";
+import { CronModule } from "./cron/cron.module";
 
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
 
-import { IsAccessCode } from "./core/validate/";
-import { CronService } from "./cron/cron.service";
-import { CronModule } from "./cron/cron.module";
+import { IsAccessCode } from "./core/validate";
 
 @Module({
     imports: [
@@ -46,6 +46,8 @@ import { CronModule } from "./cron/cron.module";
         }),
         ScheduleModule.forRoot(),
 
+        StripeModule.forRoot(),
+
         CoreModule,
         LoggerModule,
         PrismaModule,
@@ -58,7 +60,6 @@ import { CronModule } from "./cron/cron.module";
         UsersModule,
         FormsModule,
         StaffModule,
-        StoreModule,
         ChatModule,
         QuestsModule,
         BlooksModule,
@@ -78,9 +79,7 @@ import { CronModule } from "./cron/cron.module";
         { provide: APP_GUARD, useClass: UserThrottlerGuard },
         { provide: APP_GUARD, useClass: PermissionGuard },
 
-        IsAccessCode,
-
-        CronService
+        IsAccessCode
     ]
 })
 export class AppModule { }

@@ -1,9 +1,9 @@
 import { Reflector } from "@nestjs/core";
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { getClientIp } from "@supercharge/request-ip";
+import { Request } from "express";
 import { CoreService } from "src/core/core.service";
 import { RedisService } from "src/redis/redis.service";
-import { Request } from "express";
-import { getClientIp } from "@supercharge/request-ip";
 import { IS_PUBLIC_KEY } from "../decorator";
 
 export interface Session {
@@ -22,7 +22,7 @@ export class AuthGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext) {
         const request: Request = context.switchToHttp().getRequest();
-
+        
         const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
             context.getHandler(),
             context.getClass()
@@ -54,6 +54,6 @@ export class AuthGuard implements CanActivate {
     }
 
     private extractTokenFromHeader(request: Request): string | undefined {
-        return request.headers.authorization ?? undefined;
+        return request.headers?.authorization ?? undefined;
     }
 }
