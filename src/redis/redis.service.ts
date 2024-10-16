@@ -3,7 +3,8 @@ import { Redis } from "ioredis";
 import { CoreService } from "src/core/core.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
-import { Session, Resource, Group, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Prisma } from "@blacket/core";
+import { Session, Resource, Group, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Product, Prisma } from "@blacket/core";
+
 type Room = Prisma.RoomGetPayload<{ include: { users: { select: { userId: true } } } }>;
 
 @Injectable()
@@ -42,33 +43,49 @@ export class RedisService extends Redis {
             this.set(`${this.prefix}:blook:${blook.id}`, JSON.stringify(blook));
             this.set(`${this.prefix}:blook:${blook.name.toLowerCase()}`, JSON.stringify(blook));
         }
+
         for (const rarity of await this.prismaService.rarity.findMany()) {
             this.set(`${this.prefix}:rarity:${rarity.id}`, JSON.stringify(rarity));
             this.set(`${this.prefix}:rarity:${rarity.name.toLowerCase()}`, JSON.stringify(rarity));
         }
+
         for (const pack of await this.prismaService.pack.findMany()) {
             this.set(`${this.prefix}:pack:${pack.id}`, JSON.stringify(pack));
             this.set(`${this.prefix}:pack:${pack.name.toLowerCase()}`, JSON.stringify(pack));
         }
+
         for (const item of await this.prismaService.item.findMany()) {
             this.set(`${this.prefix}:item:${item.id}`, JSON.stringify(item));
             this.set(`${this.prefix}:item:${item.name.toLowerCase()}`, JSON.stringify(item));
         }
+
+        for (const itemShop of await this.prismaService.itemShop.findMany()) {
+            this.set(`${this.prefix}:itemShop:${itemShop.id}`, JSON.stringify(itemShop));
+        }
+
         for (const title of await this.prismaService.title.findMany()) {
             this.set(`${this.prefix}:title:${title.id}`, JSON.stringify(title));
             this.set(`${this.prefix}:title:${title.name.toLowerCase()}`, JSON.stringify(title));
         }
+
         for (const banner of await this.prismaService.banner.findMany()) {
             this.set(`${this.prefix}:banner:${banner.id}`, JSON.stringify(banner));
             this.set(`${this.prefix}:banner:${banner.name.toLowerCase()}`, JSON.stringify(banner));
         }
+
         for (const font of await this.prismaService.font.findMany()) {
             this.set(`${this.prefix}:font:${font.id}`, JSON.stringify(font));
             this.set(`${this.prefix}:font:${font.name.toLowerCase()}`, JSON.stringify(font));
         }
+
         for (const emoji of await this.prismaService.emoji.findMany()) {
             this.set(`${this.prefix}:emoji:${emoji.id}`, JSON.stringify(emoji));
             this.set(`${this.prefix}:emoji:${emoji.name.toLowerCase()}`, JSON.stringify(emoji));
+        }
+
+        for (const product of await this.prismaService.product.findMany()) {
+            this.set(`${this.prefix}:product:${product.id}`, JSON.stringify(product));
+            this.set(`${this.prefix}:product:${product.name.toLowerCase()}`, JSON.stringify(product));
         }
     }
 
@@ -165,4 +182,8 @@ export class RedisService extends Redis {
     getEmoji = async (id: number): Promise<Emoji> => await this.getKey("emoji", id);
     setEmoji = async (id: number, emoji: Partial<Emoji>): Promise<void> => await this.setKey("emoji", id, emoji);
     deleteEmoji = async (id: number): Promise<void> => await this.deleteKey("emoji", id);
+
+    getProduct = async (id: number): Promise<Product> => await this.getKey("product", id);
+    setProduct = async (id: number, product: Partial<Product>): Promise<void> => await this.setKey("product", id, product);
+    deleteProduct = async (id: number): Promise<void> => await this.deleteKey("product", id);
 }

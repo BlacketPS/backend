@@ -7,7 +7,7 @@ import { StripeController } from "./stripe.controller";
     controllers: [StripeController],
     providers: [StripeService],
     exports: [StripeService],
-    imports: [ConfigModule],
+    imports: [ConfigModule]
 })
 
 export class StripeModule {
@@ -19,7 +19,9 @@ export class StripeModule {
                     provide: "STRIPE_OPTIONS",
                     useFactory: () => ({
                         apiKey: process.env.SERVER_STRIPE_SECRET_KEY,
-                        options: {}
+                        options: {
+                            apiVersion: "2024-09-30.acacia"
+                        }
                     })
                 }
             ],

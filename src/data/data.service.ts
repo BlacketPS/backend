@@ -14,6 +14,7 @@ export enum DataKey {
     FONT = "font",
     EMOJI = "emoji",
     RESOURCE = "resource",
+    PRODUCT = "product",
     CREDIT = "credit"
 }
 

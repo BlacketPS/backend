@@ -80,6 +80,12 @@ export class DataController {
     }
 
     @Public()
+    @Get("products")
+    getProducts() {
+        return this.redisService.getAllFromKey(DataKey.PRODUCT);
+    }
+
+    @Public()
     @Get("credits")
     getCredits() {
         return this.redisService.getAllFromKey(DataKey.CREDIT);
