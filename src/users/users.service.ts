@@ -74,7 +74,7 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeTitles) include.titles = true;
         if (settings.includeFonts) include.fonts = true;
         if (settings.includeSettings) include.settings = true;
-        if (settings.includePaymentMethods) include.paymentMethods = { omit: { paymentMethodId: true } }
+        if (settings.includePaymentMethods) include.paymentMethods = { omit: { paymentMethodId: true } };
 
         const userData = await this.prismaService.user.findFirst({
             where: {

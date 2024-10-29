@@ -3,7 +3,7 @@ import { ApiTags } from "@nestjs/swagger";
 import { CoreService } from "src/core/core.service";
 import { AuctionsService } from "./auctions.service";
 import { GetCurrentUser } from "src/core/decorator";
-import { AuctionsAuctionEntity, AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsSearchAuctionDto } from "@blacket/types";
+import { AuctionsAuctionEntity, AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsRecentAveragePriceDto, AuctionsRecentAveragePriceEntity, AuctionsSearchAuctionDto } from "@blacket/types";
 
 @ApiTags("auctions")
 @Controller("auctions")
@@ -40,5 +40,12 @@ export class AuctionsController {
     @HttpCode(HttpStatus.NO_CONTENT)
     removeAuction(@GetCurrentUser() userId: string, @Param("id") id: number) {
         return this.auctionsService.removeAuction(userId, parseInt(id as unknown as string));
+    }
+
+    @Get("recent-average-price/:filters")
+    async getRecentAveragePrice(@Param("filters") dto: AuctionsRecentAveragePriceDto | string) {
+        const recentAveragePrice = await this.auctionsService.getRecentAveragePrice(this.coreService.safelyParseJSON(dto as string));
+
+        return new AuctionsRecentAveragePriceEntity(recentAveragePrice);
     }
 }

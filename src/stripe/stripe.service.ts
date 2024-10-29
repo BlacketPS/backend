@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import Stripe from "stripe";
+
 import { Conflict, NotFound, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto } from "@blacket/types";
 import { BlookObtainMethod } from "@blacket/core";
 
@@ -26,9 +27,7 @@ export class StripeService {
     async handleWebhook(event: Stripe.Event): Promise<void> {
         switch (event.type) {
             case "payment_intent.succeeded":
-                this.handlePaymentIntent(event.data.object as Stripe.PaymentIntent);
-
-                break;
+                return await this.handlePaymentIntent(event.data.object as Stripe.PaymentIntent);
         }
     }
 

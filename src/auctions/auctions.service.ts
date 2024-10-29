@@ -6,6 +6,7 @@ import { UsersService } from "src/users/users.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsSearchAuctionDto, BadRequest, Forbidden, NotFound, PrivateUser, SocketAuctionBidEntity, SocketAuctionExpireEntity } from "@blacket/types";
 import { Auction, AuctionType, PermissionType } from "@blacket/core";
+import { filterOutliers } from "@blacket/common";
 
 @Injectable()
 export class AuctionsService {
@@ -338,5 +339,54 @@ export class AuctionsService {
             price: auction.price,
             buyItNow: auction.buyItNow
         }));
+    }
+
+    async getRecentAveragePrice(dto: AuctionsSearchAuctionDto) {
+        if (!dto.blookId && !dto.itemId) throw new BadRequestException(BadRequest.DEFAULT);
+        if (dto.blookId && dto.itemId) throw new BadRequestException(BadRequest.DEFAULT);
+
+        const cache = await this.redisService.getKey("recentAveragePrice", dto);
+        if (cache) return cache;
+
+        const auctions = await this.prismaService.auction.findMany({
+            where: {
+                type: dto.type,
+                blook: { blookId: dto.blookId },
+                item: { itemId: dto.itemId },
+
+                buyerId: { not: null }
+            },
+            include: {
+                bids: true
+            },
+            take: 25,
+            orderBy: { createdAt: "desc" }
+        });
+        if (auctions.length < 1) {
+            await this.redisService.setKey("recentAveragePrice", dto, { averagePrice: null, lowestPrice: null, highestPrice: null, suspicious: false }, 0);
+
+            return { averagePrice: null, lowestPrice: null, highestPrice: null, suspicious: false };
+        };
+
+        let suspicious = false;
+
+        const prices = auctions.map((auction) => auction.buyItNow ? auction.price : auction.bids.sort((a, b) => b.amount - a.amount)[0].amount);
+        prices.sort((a, b) => a - b);
+
+        const medianPrice = prices[Math.floor(prices.length / 2)];
+
+        const minPriceThreshold = medianPrice * 0.1;
+        const maxPriceThreshold = medianPrice * 10;
+
+        const filteredPrices = prices.filter((price) => price > minPriceThreshold && price < maxPriceThreshold);
+        if (filteredPrices.length < prices.length - 3) suspicious = true;
+
+        const averagePrice = Math.round(filteredPrices.reduce((a, b) => a + b) / filteredPrices.length);
+        const lowestPrice = Math.min(...filteredPrices);
+        const highestPrice = Math.max(...filteredPrices);
+
+        await this.redisService.setKey("recentAveragePrice", dto, { averagePrice, lowestPrice, highestPrice, suspicious }, 0);
+
+        return { averagePrice, lowestPrice, highestPrice, suspicious };
     }
 }

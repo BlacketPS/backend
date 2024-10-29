@@ -11,7 +11,7 @@ import * as express from "express";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { logger: new BlacketLoggerService() });
-    
+
     app.use("/api/stripe/webhook", express.raw({ type: "*/*" }));
 
     const configService = app.get(ConfigService);
@@ -21,7 +21,8 @@ async function bootstrap() {
             // to config, put your own domain here include http[s]://
             "https://dev.blacket.org",
             "https://admin-dev.blacket.org",
-            "https://blacket.org"
+            "https://blacket.org",
+            "https://cdn.blacket.org"
         ],
         credentials: true
     });
