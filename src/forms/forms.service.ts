@@ -25,8 +25,8 @@ export class FormsService {
         return count1 + count2 > 0;
     }
 
-    async dropFormById(id: string) {
-        return await this.prismaService.form.delete({ where: { id } });
+    async deleteForm(id: string) {
+        await this.prismaService.form.delete({ where: { id } });
     }
 
     async createForm(dto: FormsCreateDto, ipAddress: string) {

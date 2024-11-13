@@ -21,8 +21,6 @@ export class RedisService extends Redis {
     }
 
     async onModuleInit() {
-        await this.flushall();
-
         // some of these also set the name, this is so we can get all data just from the name without having to fetch every blook, item, etc
         // blacklists table does not exist atm while im converting to prisma - zastix
         // for (const blacklist of await this.prismaService. {

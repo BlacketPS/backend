@@ -4,14 +4,14 @@ import { Injectable } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { SocketGateway } from "src/socket/socket.gateway";
+import { SocketService } from "src/socket/socket.service";
 
 @Injectable()
 export class CronService {
     constructor(
         private loggerService: BlacketLoggerService,
         private prismaService: PrismaService,
-        private socketGateway: SocketGateway
+        private socketService: SocketService
     ) { }
 
     @Cron("0 * * * * *", { name: "checkAuctions", timeZone: "UTC" })
@@ -74,7 +74,7 @@ export class CronService {
 
                 await tx.auction.update({ where: { id: auction.id }, data: { buyerId: auction.bids[0].user.id, delistedAt: new Date() } });
 
-                this.socketGateway.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
+                this.socketService.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
                     id: auction.id,
                     type: auction.type,
                     blookId: auction.blookId,
@@ -92,7 +92,7 @@ export class CronService {
 
     @Cron("*/10 * * * * *", { name: "updateLastSeen", timeZone: "UTC" })
     updateLastSeen() {
-        const users = this.socketGateway.getAllConnectedUsers();
+        const users = this.socketService.getAllConnectedUsers();
         if (users.length < 1) return;
 
         this.prismaService.user.updateMany({ where: { id: { in: users } }, data: { lastSeen: new Date(Date.now()) } });

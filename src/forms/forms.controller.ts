@@ -1,4 +1,4 @@
-import { BadRequestException, Body, ClassSerializerInterceptor, Controller, Get, Param, HttpCode, HttpStatus, Post, UseInterceptors, ConflictException, NotFoundException, Patch } from "@nestjs/common";
+import { BadRequestException, Body, ClassSerializerInterceptor, Controller, Get, Param, HttpCode, HttpStatus, Post, UseInterceptors, ConflictException, NotFoundException, Patch, Delete } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { FormsService } from "./forms.service";
 import { Public, RealIp } from "src/core/decorator";
@@ -59,5 +59,17 @@ export class FormsController {
         if (!form) throw new NotFoundException(NotFound.UNKNOWN_FORM);
 
         return new FormsFormEntity(form);
+    }
+
+    @Public()
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Delete(":id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @ApiResponse({ status: HttpStatus.NO_CONTENT, description: "Form deleted", type: FormsFormEntity })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: BadRequest.FORMS_FORMS_DISABLED })
+    async deleteForm(@Param("id") id: string) {
+        if (this.configService.get<string>("VITE_USER_FORMS_ENABLED") !== "true") throw new BadRequestException(BadRequest.FORMS_FORMS_DISABLED);
+
+        return await this.formsService.deleteForm(id);
     }
 }

@@ -1,19 +1,18 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { SocketGateway } from "src/socket/socket.gateway";
+import { SocketService } from "src/socket/socket.service";
 import { UsersService } from "src/users/users.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 import { AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsSearchAuctionDto, BadRequest, Forbidden, NotFound, PrivateUser, SocketAuctionBidEntity, SocketAuctionExpireEntity } from "@blacket/types";
 import { Auction, AuctionType, PermissionType } from "@blacket/core";
-import { filterOutliers } from "@blacket/common";
 
 @Injectable()
 export class AuctionsService {
     constructor(
         private prismaService: PrismaService,
         private redisService: RedisService,
-        private socketGateway: SocketGateway,
+        private socketService: SocketService,
         private usersService: UsersService,
         private permissionsService: PermissionsService
     ) { }
@@ -213,7 +212,7 @@ export class AuctionsService {
 
             await prisma.auction.update({ where: { id }, data: { buyer: { connect: { id: userId } }, delistedAt: new Date() } });
 
-            this.socketGateway.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
+            this.socketService.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
                 id: auction.id,
                 type: auction.type,
                 blookId: auction?.blook?.blookId,
@@ -281,21 +280,53 @@ export class AuctionsService {
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
-        if (user.tokens < dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
+        await this.prismaService.$transaction(async (tx) => {
+            const auctionsBiddedOn = await tx.auction.findMany({
+                where: {
+                    bids: {
+                        some: {
+                            userId: user.id
+                        }
+                    }
+                },
+                include: {
+                    bids: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true
+                                }
+                            }
+                        },
+                        orderBy: {
+                            amount: "desc"
+                        }
+                    }
+                }
+            });
 
-        const bid = await this.prismaService.auctionBid.create({ data: { auction: { connect: { id } }, user: { connect: { id: userId } }, amount: dto.amount } });
+            let userBidsTotal = 0;
 
-        this.socketGateway.emitAuctionBidEvent(new SocketAuctionBidEntity({
-            id: bid.id,
-            auctionId: auction.id,
-            type: auction.type,
-            amount: bid.amount,
-            blookId: auction?.blook?.blookId,
-            item: auction?.item,
-            bidderId: userId,
-            sellerId: auction.seller.id,
-            bidders: [...new Set(auction.bids.map((bid) => bid.user.id))]
-        }));
+            if (auctionsBiddedOn.length > 0) for (const auction of auctionsBiddedOn) {
+                if (auction.bids[0].user.id === user.id) userBidsTotal += auction.bids[0].amount;
+            }
+
+            if ((user.tokens - userBidsTotal) < dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
+
+            const bid = await tx.auctionBid.create({ data: { auction: { connect: { id } }, user: { connect: { id: userId } }, amount: dto.amount } });
+
+            this.socketService.emitAuctionBidEvent(new SocketAuctionBidEntity({
+                id: bid.id,
+                auctionId: auction.id,
+                type: auction.type,
+                amount: bid.amount,
+                blookId: auction?.blook?.blookId,
+                item: auction?.item,
+                bidderId: userId,
+                sellerId: auction.seller.id,
+                bidders: [...new Set(auction.bids.map((bid) => bid.user.id))]
+            }));
+        });
     }
 
     async removeAuction(userId: string, id: number) {
@@ -329,7 +360,7 @@ export class AuctionsService {
 
         await this.prismaService.auction.update({ where: { id }, data: { delistedAt: new Date() } });
 
-        this.socketGateway.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
+        this.socketService.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
             id: auction.id,
             type: auction.type,
             blookId: auction?.blook?.blookId,

@@ -41,18 +41,22 @@ export class AuthService {
 
             const response = await this.register({ username: form.username, password: dto.password, acceptedTerms: true }, ip);
 
-            await this.formsService.dropFormById(form.id);
+            await this.formsService.deleteForm(form.id);
 
             return response;
         });
     }
 
     async login(dto: LoginDto, ip: string): Promise<AuthAuthEntity> {
-        const user = await this.prismaService.user.findUnique({
-            where: { username: dto.username },
+        const user = await this.prismaService.user.findFirst({
+            where: {
+                username: {
+                    equals: dto.username,
+                    mode: "insensitive"
+                }
+            },
             include: { settings: true, punishments: { where: { type: PunishmentType.BAN, expiresAt: { gt: new Date() } }, orderBy: { createdAt: "desc" } } }
         });
-
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
         if (!await compare(dto.password, user.password)) throw new BadRequestException(BadRequest.AUTH_INCORRECT_PASSWORD);
