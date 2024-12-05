@@ -3,7 +3,7 @@ import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGa
 import { Server, Socket } from "socket.io";
 import { SocketService } from "./socket.service";
 import { WsAuthGuard } from "src/core/guard";
-import { WsExceptionFilter } from "src/core/filters";
+import { WsExceptionFilter } from "src/core/filter";
 import { SocketMessageType, SocketTradingPlazaMoveDto } from "@blacket/types";
 
 @UseGuards(WsAuthGuard)
