@@ -17,12 +17,4 @@ export class MarketController {
 
         return new MarketOpenPackEntity({ id: blookId });
     }
-
-    @Post("gimme-item")
-    gimmeItem(@GetCurrentUser() userId: string) {
-        if (process.env.NODE_ENV === "production") {
-            throw new Error("NO.");
-        }
-        return this.marketService.gimmeItem(userId);
-    }
 }

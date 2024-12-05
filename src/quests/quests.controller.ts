@@ -1,4 +1,4 @@
-import { Controller, Post } from "@nestjs/common";
+import { Controller, Put } from "@nestjs/common";
 import { QuestsService } from "./quests.service";
 import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
@@ -10,7 +10,7 @@ export class QuestsController {
         private readonly questsService: QuestsService
     ) { }
 
-    @Post("claim-daily-tokens")
+    @Put("claim-daily-tokens")
     claimDailyTokens(@GetCurrentUser() userId: string) {
         return this.questsService.claimDailyTokens(userId);
     }

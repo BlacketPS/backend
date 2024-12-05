@@ -19,9 +19,9 @@ async function bootstrap() {
     app.enableCors({
         origin: [
             // to config, put your own domain here include http[s]://
-            "https://dev.blacket.org",
-            "https://admin-dev.blacket.org",
             "https://blacket.org",
+            "https://dev.blacket.org",
+            "https://beta.blacket.org",
             "https://cdn.blacket.org"
         ],
         credentials: true

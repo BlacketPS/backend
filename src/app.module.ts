@@ -32,8 +32,6 @@ import { CronModule } from "./cron/cron.module";
 
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
 
-import { IsAccessCode } from "./core/validate";
-
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true, envFilePath: "../.env" }),
@@ -77,9 +75,7 @@ import { IsAccessCode } from "./core/validate";
     providers: [
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_GUARD, useClass: UserThrottlerGuard },
-        { provide: APP_GUARD, useClass: PermissionGuard },
-
-        IsAccessCode
+        { provide: APP_GUARD, useClass: PermissionGuard }
     ]
 })
 export class AppModule { }

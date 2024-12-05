@@ -1,9 +1,10 @@
-import { ClassSerializerInterceptor, Controller, Get, Param, NotFoundException, UseInterceptors } from "@nestjs/common";
+import { ClassSerializerInterceptor, Controller, Get, Param, NotFoundException, UseInterceptors, Post, UploadedFile, UploadedFiles } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { GetCurrentUser } from "src/core/decorator/getCurrentUser.decorator";
 
 import { ApiTags } from "@nestjs/swagger";
-import { type User, NotFound, PrivateUser, PublicUser } from "@blacket/types";
+import { NotFound, PrivateUser, PublicUser } from "@blacket/types";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @ApiTags("users")
 @Controller("users")
@@ -14,7 +15,7 @@ export class UsersController {
 
     @UseInterceptors(ClassSerializerInterceptor)
     @Get("me")
-    async getMe(@GetCurrentUser() userId: User["id"]) {
+    async getMe(@GetCurrentUser() userId: string) {
         const userData = await this.usersService.getUser(userId, {
             cacheUser: false,
             includeTitles: true,
@@ -45,5 +46,11 @@ export class UsersController {
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
         else return new PublicUser(userData);
+    }
+
+    @UseInterceptors(FileInterceptor("file"))
+    @Post("upload")
+    async uploadFile(@GetCurrentUser() userId: string, @UploadedFile() file: Express.Multer.File) {
+        return await this.usersService.uploadFile(userId, file);
     }
 }

@@ -1,28 +1,15 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, Validate } from "class-validator";
-import { IsAccessCode } from "src/core/validate";
+import { IsNotEmpty, Validate } from "class-validator";
 
 export class RegisterDto {
-    @ApiProperty({ example: "Rin", description: "The username you wish to register with" })
-    @IsNotEmpty()
-    @Validate((value: string) => value.length > 0)
-    readonly username: string;
-
-    @ApiProperty({ example: "Tohsaka", description: "The password you wish to use" })
+    @ApiProperty({ example: "RinToshaka", description: "The password you wish to use" })
     @IsNotEmpty()
     @Validate((value: string) => value.length > 0)
     readonly password: string;
 
-    @ApiProperty({ example: "momfater5", description: "A code that's required to register while the server is in a development mode" })
+    @ApiProperty({ description: "The form ID you wish to register with" })
     @IsNotEmpty()
-    @Validate(IsAccessCode)
-    readonly accessCode?: string;
-
-    @ApiProperty()
-    @IsNotEmpty()
-    @IsBoolean()
-    @Validate((value: boolean) => value === true)
-    readonly acceptedTerms: boolean;
+    readonly formId: string;
 }
 
 export default RegisterDto;

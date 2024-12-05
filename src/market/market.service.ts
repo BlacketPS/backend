@@ -3,7 +3,7 @@ import { MarketOpenPackDto, NotFound, Forbidden, openPack, InternalServerError }
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { DataService } from "src/data/data.service";
-import { BlookObtainMethod, ItemObtainMethod } from "@blacket/core";
+import { BlookObtainMethod } from "@blacket/core";
 
 @Injectable()
 export class MarketService {
@@ -16,8 +16,7 @@ export class MarketService {
     // as opening packs is one of the MOST intensive operations we do
     // i'll be probably optimising this a few times and doing performance measures
     async openPack(userId: string, dto: MarketOpenPackDto) {
-		const pack = await this.redisService.getPack(dto.packId);
-		console.log(pack);
+        const pack = await this.redisService.getPack(dto.packId);
         if (!pack) throw new NotFoundException(NotFound.UNKNOWN_PACK);
 
         if (!pack.enabled) throw new NotFoundException(NotFound.UNKNOWN_PACK);
@@ -30,29 +29,19 @@ export class MarketService {
 
         // TODO: include booster chance
         const blookId = await openPack(pack.id, packBlooks, 1)
-			.catch((err) => {
-				console.log(err);
-				if (err.message === NotFound.UNKNOWN_PACK) throw new NotFoundException(NotFound.UNKNOWN_PACK);
-			});
-		console.log(blookId);
+            .catch((err) => {
+                if (err.message === NotFound.UNKNOWN_PACK) throw new NotFoundException(NotFound.UNKNOWN_PACK);
+            });
         if (!blookId) throw new NotFoundException(NotFound.UNKNOWN_PACK);
         if (typeof blookId === "object") throw new InternalServerErrorException(InternalServerError.DEFAULT);
 
         // increment user's pack opened amount, and experience. insert blook to table. decrement user tokens
-        await this.prismaService.$transaction([
-            this.prismaService.user.update({ select: null, where: { id: userId }, data: { tokens: { decrement: pack.price } } }),
-            this.prismaService.userStatistic.update({ select: null, where: { id: userId }, data: { packsOpened: { increment: 1 } } }),
-            this.prismaService.userBlook.create({ select: null, data: { userId, initalObtainerId: userId, blookId, obtainedBy: BlookObtainMethod.PACK_OPEN } })
-        ]);
-
-        // await this.userRepo.update({ tokens: this.sequelizeService.literal(`tokens - ${pack.price}`) }, { returning: false, where: { id: userId }, transaction },);
-        // await this.userStatisticRepo.update({ packsOpened: this.sequelizeService.literal("\"packsOpened\"+1") }, { returning: false, where: { id: userId }, transaction });
-        // await this.userBlookRepo.create({ userId, initalObtainerId: userId, blookId: blookId, obtainedBy: BlookObtainMethod.PACK_OPEN }, { returning: false, transaction });
+        await this.prismaService.$transaction(async (tx) => {
+            await tx.user.update({ select: null, where: { id: userId }, data: { tokens: { decrement: pack.price } } });
+            await tx.userStatistic.update({ select: null, where: { id: userId }, data: { packsOpened: { increment: 1 } } });
+            await tx.userBlook.create({ select: null, data: { userId, initialObtainerId: userId, blookId, obtainedBy: BlookObtainMethod.PACK_OPEN } });
+        });
 
         return blookId;
-    }
-
-    async gimmeItem(userId: string) {
-        return await this.prismaService.userItem.create({ data: { userId, itemId: 1, usesLeft: 1, initalObtainerId: userId, obtainedBy: ItemObtainMethod.ITEM_SHOP } });
     }
 }

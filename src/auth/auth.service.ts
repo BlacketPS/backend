@@ -7,8 +7,8 @@ import { compare } from "bcrypt";
 import * as speakEasy from "@levminer/speakeasy";
 
 import { AuthAuthEntity, BadRequest, Forbidden, NotFound, Unauthorized } from "@blacket/types";
-import { RegisterDto, LoginDto, RegisterFromFormDto } from "./dto";
-import { Prisma, PrismaClient, PunishmentType, Session, User } from "@blacket/core";
+import { RegisterDto, LoginDto } from "./dto";
+import { Form, Prisma, PrismaClient, PunishmentType, Session, User } from "@blacket/core";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 
 @Injectable()
@@ -20,11 +20,11 @@ export class AuthService {
         private formsService: FormsService
     ) { }
 
-    async register(dto: RegisterDto, ip: string): Promise<AuthAuthEntity> {
-        if (await this.usersService.userExists(dto.username)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
+    async register(form: Form, password: string, ip: string): Promise<AuthAuthEntity> {
+        if (await this.usersService.userExists(form.username)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
 
         return await this.prismaService.$transaction(async (prisma) => {
-            const user = await this.usersService.createUser(dto.username, dto.password, prisma);
+            const user = await this.usersService.createUser(form.username, password, prisma);
 
             await this.usersService.updateUserIp(user, ip, prisma);
 
@@ -34,12 +34,12 @@ export class AuthService {
         });
     }
 
-    async registerFromForm(dto: RegisterFromFormDto, ip: string): Promise<AuthAuthEntity> {
+    async registerFromForm(dto: RegisterDto, ip: string): Promise<AuthAuthEntity> {
         return await this.prismaService.$transaction(async () => {
             const form = await this.formsService.getFormById(dto.formId);
             if (!form) throw new NotFoundException(NotFound.UNKNOWN_FORM);
 
-            const response = await this.register({ username: form.username, password: dto.password, acceptedTerms: true }, ip);
+            const response = await this.register(form, dto.password, ip);
 
             await this.formsService.deleteForm(form.id);
 

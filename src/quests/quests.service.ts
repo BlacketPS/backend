@@ -33,30 +33,34 @@ export class QuestsService {
             if (rand <= cumulativeChance) return distribution.amount;
         }
 
-        // this should never be reached, but just incase..
-        return this.dailyTokensDistribution[0].amount;
+        // this should never be reached, but just incase...
+        return -this.dailyTokensDistribution[0].amount;
     }
 
-    async claimDailyTokens(userId: string): Promise<number> {
+    async claimDailyTokens(userId: string): Promise<{ tokens: number }> {
         const user = await this.usersService.getUser(userId);
 
-        const lastDailyTokenClaim = new Date();
-        lastDailyTokenClaim.setHours(0, 0, 0, 0);
+        return await this.prismaService.$transaction(async (tx) => {
+            const lastClaimed = new Date(user.lastClaimed);
 
-        if (user.lastClaimed && user.lastClaimed >= lastDailyTokenClaim) throw new ForbiddenException(Forbidden.QUESTS_DAILY_ALREADY_CLAIMED);
+            const claimableDate = new Date();
+            claimableDate.setUTCHours(0, 0, 0, 0);
 
-        const tokensToAdd = this.getRandomDailyTokens();
+            if (lastClaimed >= claimableDate) throw new ForbiddenException(Forbidden.QUESTS_DAILY_ALREADY_CLAIMED);
 
-        this.prismaService.user.update({
-            where: { id: userId },
-            data: {
-                tokens: {
-                    increment: tokensToAdd
-                },
-                lastClaimed: lastDailyTokenClaim
-            }
+            const tokensToAdd = this.getRandomDailyTokens();
+
+            await tx.user.update({
+                where: { id: userId },
+                data: {
+                    tokens: {
+                        increment: tokensToAdd
+                    },
+                    lastClaimed: claimableDate
+                }
+            });
+
+            return { tokens: tokensToAdd };
         });
-
-        return tokensToAdd;
     }
 }

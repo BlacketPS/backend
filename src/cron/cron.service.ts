@@ -1,6 +1,7 @@
 import { AuctionType } from "@blacket/core";
 import { SocketAuctionExpireEntity } from "@blacket/types";
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -11,7 +12,8 @@ export class CronService {
     constructor(
         private loggerService: BlacketLoggerService,
         private prismaService: PrismaService,
-        private socketService: SocketService
+        private socketService: SocketService,
+        private configService: ConfigService
     ) { }
 
     @Cron("0 * * * * *", { name: "checkAuctions", timeZone: "UTC" })
@@ -91,11 +93,13 @@ export class CronService {
     }
 
     @Cron("*/10 * * * * *", { name: "updateLastSeen", timeZone: "UTC" })
-    updateLastSeen() {
+    async updateLastSeen() {
         const users = this.socketService.getAllConnectedUsers();
         if (users.length < 1) return;
 
-        this.prismaService.user.updateMany({ where: { id: { in: users } }, data: { lastSeen: new Date(Date.now()) } });
+        const newLastSeen = new Date(Date.now());
+
+        await this.prismaService.user.updateMany({ where: { id: { in: users } }, data: { lastSeen: newLastSeen } });
     }
 
     @Cron("0 0 * * * *", { name: "deleteOldForms", timeZone: "UTC" })

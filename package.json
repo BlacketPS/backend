@@ -31,6 +31,7 @@
     "@stylistic/eslint-plugin": "^1.7.0",
     "@supercharge/request-ip": "^1.2.0",
     "@types/bcrypt": "^5.0.2",
+    "@types/multer": "^1.4.12",
     "@zastix/prisma-generator-typescript-interfaces": "1.4.2",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",

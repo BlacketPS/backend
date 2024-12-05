@@ -42,7 +42,7 @@ export class StripeService {
             data: {
                 userId: user.id,
                 blookId: product.blookId,
-                initalObtainerId: user.id,
+                initialObtainerId: user.id,
                 obtainedBy: BlookObtainMethod.UNKNOWN
             }
         });

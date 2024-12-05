@@ -1,10 +1,13 @@
 import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { DiscordAccessToken, DiscordDiscordUser, User } from "@blacket/types";
-import { Font, PermissionType, Prisma, Resource, Title, OAuthType, PrismaClient } from "@blacket/core";
+import { Font, PermissionType, Prisma, Resource, Title, OAuthType, PrismaClient, UserDiscord } from "@blacket/core";
 import { DefaultArgs } from "@prisma/client/runtime/library";
+import * as path from "path";
+import * as fs from "fs";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -30,6 +33,7 @@ export class UsersService implements OnApplicationBootstrap {
     private defaultFont: Font;
 
     constructor(
+        private configService: ConfigService,
         private prismaService: PrismaService,
         private redisService: RedisService
     ) { }
@@ -122,6 +126,7 @@ export class UsersService implements OnApplicationBootstrap {
         return count > 0;
     }
 
+    // TODO: make this a transaction as well? im not sure
     async createUser(username: string, password: string, transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<User> {
         const prisma = transaction || this.prismaService;
 
@@ -155,8 +160,8 @@ export class UsersService implements OnApplicationBootstrap {
         await prisma.user.update({ where: { id: user.id }, data: { ipAddress: ip } });
     }
 
-    async linkDiscordOAuth(userId: string, accessTokenResponse: DiscordAccessToken, discordUser: DiscordDiscordUser): Promise<void> {
-        await this.prismaService.$transaction(async (prisma) => {
+    async linkDiscordOAuth(userId: string, accessTokenResponse: DiscordAccessToken, discordUser: DiscordDiscordUser): Promise<UserDiscord> {
+        return await this.prismaService.$transaction(async (prisma) => {
             await prisma.userOAuth.create({
                 data: {
                     user: { connect: { id: userId } },
@@ -169,7 +174,7 @@ export class UsersService implements OnApplicationBootstrap {
                 }
             });
 
-            await prisma.userDiscord.create({
+            const userDiscord = await prisma.userDiscord.create({
                 data: {
                     user: { connect: { id: userId } },
                     discordId: discordUser.id,
@@ -177,6 +182,29 @@ export class UsersService implements OnApplicationBootstrap {
                     avatar: discordUser.avatar
                 }
             });
+
+            return userDiscord;
+        });
+    }
+
+    async uploadFile(userId: string, file: Express.Multer.File) {
+        const uploadPath = `/user/${userId}`;
+        const rawUploadPath = `${this.configService.get("SERVER_UPLOAD_PATH")}${uploadPath}`;
+
+        // using basename so no path traversal
+        const fileName = path.basename(file.originalname.slice(0, file.originalname.lastIndexOf(".")));
+        const fileType = path.basename(file.originalname.slice(file.originalname.lastIndexOf(".")));
+
+        const constructedFileName = `${fileName}_${Date.now()}${fileType}`;
+
+        if (!fs.existsSync(rawUploadPath)) fs.mkdirSync(rawUploadPath, { recursive: true });
+        fs.writeFileSync(`${rawUploadPath}/${constructedFileName}`, file.buffer);
+
+        return await this.prismaService.upload.create({
+            data: {
+                userId,
+                path: `${uploadPath}/${constructedFileName}`
+            }
         });
     }
 }
