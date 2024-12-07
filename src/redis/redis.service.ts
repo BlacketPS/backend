@@ -6,6 +6,7 @@ import { ConfigService } from "@nestjs/config";
 import { Session, Resource, Group, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Product, Prisma } from "@blacket/core";
 
 type Room = Prisma.RoomGetPayload<{ include: { users: { select: { userId: true } } } }>;
+type Blacklist = Prisma.BlacklistGetPayload<{ include: { ipAddress: true, punishment: true } }>;
 
 @Injectable()
 export class RedisService extends Redis {
@@ -22,10 +23,14 @@ export class RedisService extends Redis {
 
     async onModuleInit() {
         // some of these also set the name, this is so we can get all data just from the name without having to fetch every blook, item, etc
-        // blacklists table does not exist atm while im converting to prisma - zastix
-        // for (const blacklist of await this.prismaService. {
-        //     this.set(`${this.prefix}:blacklist:${blacklist.ipAddress.ipAddress.replaceAll(":", "|")}`, JSON.stringify(blacklist));
-        // }
+        for (const blacklist of await this.prismaService.blacklist.findMany({
+            include: {
+                ipAddress: true,
+                punishment: true
+            }
+        })) {
+            this.set(`${this.prefix}:blacklist:${blacklist.ipAddress.ipAddress.replaceAll(":", "|")}`, JSON.stringify(blacklist));
+        }
 
         for (const session of await this.prismaService.session.findMany()) this.set(`${this.prefix}:session:${session.userId}`, JSON.stringify(session));
         for (const resource of await this.prismaService.resource.findMany()) this.set(`${this.prefix}:resource:${resource.id}`, JSON.stringify(resource));
@@ -124,10 +129,9 @@ export class RedisService extends Redis {
     // start of "getters", "setters", and "deleters"
     // lambda format for smaller code size
 
-    // see line 24 - zastix
-    // getBlacklist = async (ipAddress: string): Promise<Blacklist> => await this.getKey("blacklist", ipAddress.replaceAll(":", "|"));
-    // setBlacklist = async (ipAddress: string, blacklist: Partial<Blacklist>): Promise<void> => await this.setKey("blacklist", ipAddress.replaceAll(":", "|"), blacklist);
-    // deleteBlacklist = async (ipAddress: string): Promise<void> => await this.deleteKey("blacklist", ipAddress.replaceAll(":", "|"));
+    getBlacklist = async (ipAddress: string): Promise<Blacklist> => await this.getKey("blacklist", ipAddress.replaceAll(":", "|"));
+    setBlacklist = async (ipAddress: string, blacklist: Partial<Blacklist>): Promise<void> => await this.setKey("blacklist", ipAddress.replaceAll(":", "|"), blacklist);
+    deleteBlacklist = async (ipAddress: string): Promise<void> => await this.deleteKey("blacklist", ipAddress.replaceAll(":", "|"));
 
     getSession = async (userId: string): Promise<Session> => await this.getKey("session", userId);
     setSession = async (userId: string, session: Partial<Session>): Promise<void> => await this.setKey("session", userId, session);

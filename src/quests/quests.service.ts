@@ -34,19 +34,23 @@ export class QuestsService {
         }
 
         // this should never be reached, but just incase...
-        return -this.dailyTokensDistribution[0].amount;
+        return this.dailyTokensDistribution[0].amount;
     }
 
     async claimDailyTokens(userId: string): Promise<{ tokens: number }> {
-        const user = await this.usersService.getUser(userId);
-
         return await this.prismaService.$transaction(async (tx) => {
-            const lastClaimed = new Date(user.lastClaimed);
-
             const claimableDate = new Date();
             claimableDate.setUTCHours(0, 0, 0, 0);
 
-            if (lastClaimed >= claimableDate) throw new ForbiddenException(Forbidden.QUESTS_DAILY_ALREADY_CLAIMED);
+            const alreadyClaimed = await tx.user.count({
+                where: {
+                    id: userId,
+                    lastClaimed: {
+                        gte: claimableDate
+                    }
+                }
+            });
+            if (alreadyClaimed) throw new ForbiddenException(Forbidden.QUESTS_DAILY_ALREADY_CLAIMED);
 
             const tokensToAdd = this.getRandomDailyTokens();
 
