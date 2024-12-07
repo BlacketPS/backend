@@ -22,16 +22,15 @@ export class AuthGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext) {
         const request: Request = context.switchToHttp().getRequest();
-        
+
         const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
             context.getHandler(),
             context.getClass()
         ]);
 
         if (isPublic) {
-            // TODO: implement this when blacklists table is done
-            // const blacklist = await this.redisService.getBlacklist(getClientIp(request));
-            // if (blacklist) throw new ForbiddenException(blacklist.punishment.reason);
+            const blacklist = await this.redisService.getBlacklist(getClientIp(request));
+            if (blacklist && new Date(blacklist.punishment.expiresAt) > new Date(Date.now())) throw new ForbiddenException(`${blacklist.punishment.reason}|${blacklist.punishment.expiresAt}`);
 
             return true;
         }

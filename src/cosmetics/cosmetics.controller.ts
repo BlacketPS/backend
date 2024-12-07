@@ -31,14 +31,14 @@ export class CosmeticsController {
         return this.cosmeticsService.changeTitle(userId, dto);
     }
 
-    @Patch("color-tier-1")
+    @Patch("color/1")
     @Permissions({ permissions: [PermissionTypeEnum.CHANGE_NAME_COLOR_TIER_1] })
     @HttpCode(HttpStatus.NO_CONTENT)
     changeColorTier1(@GetCurrentUser() userId: string, @Body() dto: CosmeticsChangeColorTier1Dto) {
         return this.cosmeticsService.changeColorTier1(userId, dto);
     }
 
-    @Patch("color-tier-2")
+    @Patch("color/2")
     @Permissions({ permissions: [PermissionTypeEnum.CHANGE_NAME_COLOR_TIER_2] })
     @HttpCode(HttpStatus.NO_CONTENT)
     changeColorTier2(@GetCurrentUser() userId: string, @Body() dto: CosmeticsChangeColorTier2Dto) {

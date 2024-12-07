@@ -44,7 +44,7 @@ export class ChatService {
 
         if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
         else if (room.public) {
-            const mute = await this.prismaService.userPunishment.findFirst({
+            const mute = await this.prismaService.punishment.findFirst({
                 where: {
                     userId: userId,
                     type: PunishmentType.MUTE,

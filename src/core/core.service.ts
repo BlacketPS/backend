@@ -1,18 +1,25 @@
 import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { ConfigService } from "@nestjs/config";
+import * as path from "path";
+import * as fs from "fs";
 
 @Injectable()
 export class CoreService {
-    constructor() {}
+    constructor(
+        private readonly prismaService: PrismaService,
+        private readonly configService: ConfigService
+    ) { }
 
     safelyParseJSON(json: string): any {
         let parsed: any;
-    
+
         try {
             parsed = JSON.parse(json);
         } catch {
             // womp womp 🤓
         }
-    
+
         return parsed;
     }
 
@@ -20,7 +27,28 @@ export class CoreService {
         if (typeof obj === "bigint") return obj.toString();
         else if (Array.isArray(obj)) return obj.map((item) => this.serializeBigInt(item));
         else if (typeof obj === "object" && obj !== null) return Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, this.serializeBigInt(value)]));
-    
+
         return obj;
+    }
+
+    async userUploadFile(userId: string, file: Express.Multer.File) {
+        const uploadPath = `/user/${userId}`;
+        const rawUploadPath = `${this.configService.get("SERVER_UPLOAD_PATH")}${uploadPath}`;
+
+        // using basename so no path traversal
+        const fileName = path.basename(file.originalname.slice(0, file.originalname.lastIndexOf(".")));
+        const fileType = path.basename(file.originalname.slice(file.originalname.lastIndexOf(".")));
+
+        const constructedFileName = `${fileName}_${Date.now()}${fileType}`;
+
+        if (!fs.existsSync(rawUploadPath)) fs.mkdirSync(rawUploadPath, { recursive: true });
+        fs.writeFileSync(`${rawUploadPath}/${constructedFileName}`, file.buffer);
+
+        return await this.prismaService.upload.create({
+            data: {
+                userId,
+                path: `${uploadPath}/${constructedFileName}`
+            }
+        });
     }
 }

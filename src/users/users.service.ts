@@ -186,25 +186,4 @@ export class UsersService implements OnApplicationBootstrap {
             return userDiscord;
         });
     }
-
-    async uploadFile(userId: string, file: Express.Multer.File) {
-        const uploadPath = `/user/${userId}`;
-        const rawUploadPath = `${this.configService.get("SERVER_UPLOAD_PATH")}${uploadPath}`;
-
-        // using basename so no path traversal
-        const fileName = path.basename(file.originalname.slice(0, file.originalname.lastIndexOf(".")));
-        const fileType = path.basename(file.originalname.slice(file.originalname.lastIndexOf(".")));
-
-        const constructedFileName = `${fileName}_${Date.now()}${fileType}`;
-
-        if (!fs.existsSync(rawUploadPath)) fs.mkdirSync(rawUploadPath, { recursive: true });
-        fs.writeFileSync(`${rawUploadPath}/${constructedFileName}`, file.buffer);
-
-        return await this.prismaService.upload.create({
-            data: {
-                userId,
-                path: `${uploadPath}/${constructedFileName}`
-            }
-        });
-    }
 }
