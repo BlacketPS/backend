@@ -1,13 +1,9 @@
 import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { DiscordAccessToken, DiscordDiscordUser, User } from "@blacket/types";
-import { Font, PermissionType, Prisma, Resource, Title, OAuthType, PrismaClient, UserDiscord } from "@blacket/core";
-import { DefaultArgs } from "@prisma/client/runtime/library";
-import * as path from "path";
-import * as fs from "fs";
+import { Font, PermissionType, Prisma, Resource, Title, OAuthType, UserDiscord } from "@blacket/core";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -33,7 +29,6 @@ export class UsersService implements OnApplicationBootstrap {
     private defaultFont: Font;
 
     constructor(
-        private configService: ConfigService,
         private prismaService: PrismaService,
         private redisService: RedisService
     ) { }
@@ -126,38 +121,46 @@ export class UsersService implements OnApplicationBootstrap {
         return count > 0;
     }
 
-    // TODO: make this a transaction as well? im not sure
-    async createUser(username: string, password: string, transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<User> {
-        const prisma = transaction || this.prismaService;
+    async createUser(username: string, password: string, ip: string): Promise<User> {
+        return await this.prismaService.$transaction(async (tx) => {
+            const ipAddress = await tx.ipAddress.create({
+                data: {
+                    ipAddress: ip
+                }
+            });
 
-        const user = await prisma.user.create({
-            data: {
-                id: (Math.floor(Date.now() / 1000)).toString() + Math.floor(1000000 + Math.random() * 9000000).toString(),
-                username,
-                password: await hash(password, 10),
-                avatarId: this.defaultAvatar.id,
-                bannerId: this.defaultBanner.id,
-                titleId: this.defaultTitle.id,
-                fontId: this.defaultFont.id,
-                permissions: this.defaultPermissions
-            }
+            const user = await tx.user.create({
+                data: {
+                    id: (Math.floor(Date.now() / 1000)).toString() + Math.floor(1000000 + Math.random() * 9000000).toString(),
+                    username,
+                    password: await hash(password, 10),
+                    avatarId: this.defaultAvatar.id,
+                    bannerId: this.defaultBanner.id,
+                    titleId: this.defaultTitle.id,
+                    fontId: this.defaultFont.id,
+                    permissions: this.defaultPermissions,
+
+                    ipAddressId: ipAddress.id
+                }
+            });
+
+            await tx.userStatistic.create({ data: { id: user.id } });
+            await tx.userSetting.create({ data: { id: user.id } });
+
+            return user;
         });
-
-        await prisma.userStatistic.create({ data: { id: user.id } });
-        await prisma.userSetting.create({ data: { id: user.id } });
-
-        return user;
     }
 
-    async updateUserIp(user: User, ip: string, transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<void> {
-        const prisma = transaction || this.prismaService;
+    async updateUserIp(user: User, ip: string): Promise<void> {
+        return await this.prismaService.$transaction(async (tx) => {
+            const ipAddress = await tx.ipAddress.upsert({ where: { ipAddress: ip }, update: {}, create: { ipAddress: ip } });
 
-        const ipAddress = await prisma.ipAddress.upsert({ where: { ipAddress: ip }, update: {}, create: { ipAddress: ip } });
-        const userIpAddress = await prisma.userIpAddress.findFirst({ where: { userId: user.id, ipAddressId: ipAddress.id } })
-            ?? await prisma.userIpAddress.create({ data: { userId: user.id, ipAddressId: ipAddress.id } });
+            const userIpAddress = await tx.userIpAddress.findFirst({ where: { userId: user.id, ipAddressId: ipAddress.id } })
+                ?? await tx.userIpAddress.create({ data: { userId: user.id, ipAddressId: ipAddress.id } });
 
-        await prisma.userIpAddress.update({ data: { uses: { increment: 1 } }, where: { id: userIpAddress.id } });
-        await prisma.user.update({ where: { id: user.id }, data: { ipAddress: ip } });
+            await tx.userIpAddress.update({ data: { uses: { increment: 1 } }, where: { id: userIpAddress.id } });
+            await tx.user.update({ where: { id: user.id }, data: { ipAddress: { connect: { id: ipAddress.id } } } });
+        });
     }
 
     async linkDiscordOAuth(userId: string, accessTokenResponse: DiscordAccessToken, discordUser: DiscordDiscordUser): Promise<UserDiscord> {

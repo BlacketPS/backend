@@ -1,7 +1,6 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TokenDistribution, Forbidden } from "@blacket/types";
-import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class QuestsService {
@@ -18,8 +17,7 @@ export class QuestsService {
     private dailyTokensDistributionTotalChance = this.dailyTokensDistribution.reduce((acc, curr) => acc + curr.chance, 0);
 
     constructor(
-        private prismaService: PrismaService,
-        private usersService: UsersService
+        private prismaService: PrismaService
     ) { }
 
     private getRandomDailyTokens(): number {

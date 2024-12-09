@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { CoreService } from "src/core/core.service";
 import { RedisService } from "src/redis/redis.service";
 import { Server, Socket } from "socket.io";
-import { BrenderEntity, BrenderPlayerEntity, BrenderTradingTableEntity, SocketAuctionBidEntity, SocketAuctionExpireEntity, SocketMessageType, SocketTradingPlazaMoveDto } from "@blacket/types";
+import { BrenderEntity, BrenderPlayerEntity, BrenderTradingTableEntity, PublicUser, SocketAuctionBidEntity, SocketAuctionExpireEntity, SocketMessageType, SocketTradingPlazaMoveDto } from "@blacket/types";
 
 @Injectable()
 export class SocketService {
@@ -84,8 +84,12 @@ export class SocketService {
         this.emitToAll(SocketMessageType.AUCTIONS_BID, data);
     }
 
-    emitLagback(client: Socket, x: number, y: number) {
+    emitLagbackEvent(client: Socket, x: number, y: number) {
         client.emit(SocketMessageType.LAGBACK, { x, y });
+    }
+
+    emitUserUpdatedEvent(data: Partial<PublicUser>) {
+        this.emitToAll(SocketMessageType.USER_UPDATED, data);
     }
 
     async tradingPlazaAddPlayer(client: Socket) {

@@ -29,6 +29,7 @@ import { DiscordModule } from "./discord/discord.module";
 import { AuctionsModule } from "./auctions/auctions.module";
 import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 import { CronModule } from "./cron/cron.module";
+import { NewsModule } from "./news/news.module";
 
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
 
@@ -69,7 +70,8 @@ import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
         LeaderboardModule,
         GuildsModule,
         AuctionsModule,
-        CronModule
+        CronModule,
+        NewsModule
     ],
     controllers: [],
     providers: [

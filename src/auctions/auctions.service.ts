@@ -35,20 +35,12 @@ export class AuctionsService {
                     }
                 },
                 seller: {
-                    include: { customAvatar: true, customBanner: true },
-                    omit: {
-                        password: true,
-                        ipAddress: true
-                    }
+                    include: { customAvatar: true, customBanner: true }
                 },
                 bids: {
                     include: {
                         user: {
-                            include: { customAvatar: true, customBanner: true },
-                            omit: {
-                                password: true,
-                                ipAddress: true
-                            }
+                            include: { customAvatar: true, customBanner: true }
                         }
                     }
                 }
@@ -239,11 +231,7 @@ export class AuctionsService {
                 bids: {
                     include: {
                         user: {
-                            include: { customAvatar: true, customBanner: true },
-                            omit: {
-                                password: true,
-                                ipAddress: true
-                            }
+                            include: { customAvatar: true, customBanner: true }
                         }
                     },
                     omit: {

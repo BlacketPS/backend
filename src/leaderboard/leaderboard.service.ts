@@ -17,20 +17,12 @@ export class LeaderboardService {
             const tokens = (await this.prismaService.user.findMany({
                 orderBy: [{ tokens: "desc" }],
                 include: { customAvatar: true },
-                omit: {
-                    password: true,
-                    ipAddress: true
-                },
                 take: 10
             }));
 
             const experience = (await this.prismaService.user.findMany({
                 orderBy: [{ experience: "desc" }],
                 include: { customAvatar: true },
-                omit: {
-                    password: true,
-                    ipAddress: true
-                },
                 take: 10
             }));
 

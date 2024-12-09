@@ -23,12 +23,12 @@ export class AuthService {
     async register(form: Form, password: string, ip: string): Promise<AuthAuthEntity> {
         if (await this.usersService.userExists(form.username)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
 
-        return await this.prismaService.$transaction(async (prisma) => {
-            const user = await this.usersService.createUser(form.username, password, prisma);
+        return await this.prismaService.$transaction(async (tx) => {
+            const user = await this.usersService.createUser(form.username, password, ip);
 
-            await this.usersService.updateUserIp(user, ip, prisma);
+            await this.usersService.updateUserIp(user, ip);
 
-            const session = await this.findOrCreateSession(user.id, prisma);
+            const session = await this.findOrCreateSession(user.id, tx);
 
             return { token: await this.sessionToToken(session) } as AuthAuthEntity;
         });
