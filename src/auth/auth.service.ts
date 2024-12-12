@@ -79,11 +79,11 @@ export class AuthService {
         return { token: await this.sessionToToken(await this.findOrCreateSession(user.id)) } as AuthAuthEntity;
     }
 
-    async logout(userId: User["id"]): Promise<void> {
+    async logout(userId: string): Promise<void> {
         return await this.destroySession(userId);
     }
 
-    async generateOtpSecret(userId: User["id"]): Promise<string> {
+    async generateOtpSecret(userId: string): Promise<string> {
         if (await this.redisService.getKey("tempOtp", userId)) return (await this.redisService.getKey("tempOtp", userId) as { secret: string }).secret;
 
         const user = await this.usersService.getUser(userId, { includeSettings: true });
@@ -98,7 +98,7 @@ export class AuthService {
         return secret.base32;
     }
 
-    async findOrCreateSession(userId: User["id"], transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<Session> {
+    async findOrCreateSession(userId: string, transaction?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">): Promise<Session> {
         const prisma = transaction || this.prismaService;
 
         const session = await prisma.session.upsert({
@@ -111,7 +111,7 @@ export class AuthService {
         return session;
     }
 
-    async destroySession(userId: User["id"]): Promise<void> {
+    async destroySession(userId: string): Promise<void> {
         const session = await this.prismaService.session.findUnique({ where: { userId } });
 
         if (session) {

@@ -13,7 +13,10 @@ export class BlooksController {
 
     @Put("sell-blooks")
     @HttpCode(HttpStatus.NO_CONTENT)
-    sellBlooks(@GetCurrentUser() userId: string, @Body() dto: BlooksSellBlookDto) {
+    sellBlooks(
+        @GetCurrentUser() userId: string,
+        @Body() dto: BlooksSellBlookDto
+    ) {
         return this.blooksService.sellBlooks(userId, dto);
     }
 }

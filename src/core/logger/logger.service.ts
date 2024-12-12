@@ -11,31 +11,60 @@ enum Color {
     RESET = "\x1b[0m"
 }
 
+enum LogLevel {
+    LOG = "log",
+    INFO = "info",
+    WARN = "warn",
+    ERROR = "error"
+}
+
 const colorize = (color: Color, message: string) => `${color}${message}${Color.RESET}`;
+
+const logWrapper = (color: Color, message: any, trace?: string, context?: string, prefix: string = "Nest", type: LogLevel = LogLevel.LOG) => {
+    const msg = `${colorize(color, `[${prefix}]`)} ${colorize(Color.WHITE, `${new Date().toLocaleString()}`)} ${colorize(color, type.toUpperCase())} ${colorize(Color.YELLOW, `[${context}]`)} ${colorize(color, message)}`;
+
+    switch (type) {
+        case LogLevel.LOG:
+            console.log(msg);
+            break;
+        case LogLevel.INFO:
+            console.info(msg);
+            break;
+        case LogLevel.WARN:
+            console.warn(msg);
+            break;
+        case LogLevel.ERROR:
+            console.error(msg, trace);
+            break;
+        default:
+            console.log(msg);
+            break;
+    }
+};
 
 @Injectable()
 export class BlacketLoggerService implements LoggerService {
     log(message: any, context?: string, prefix: string = "Nest") {
-        console.log(`${colorize(Color.GREEN, `[${prefix}]`)} ${colorize(Color.WHITE, `${new Date().toLocaleString()}`)} ${colorize(Color.GREEN, "LOG")} ${colorize(Color.YELLOW, `[${context}]`)} ${colorize(Color.GREEN, message)}`);
+        logWrapper(Color.GREEN, message, undefined, context, prefix, LogLevel.LOG);
     }
 
     info(message: any, context?: string, prefix: string = "Nest") {
-        console.info(`${colorize(Color.CYAN, `[${prefix}]`)} ${colorize(Color.WHITE, `${new Date().toLocaleString()}`)} ${colorize(Color.CYAN, "INFO")} ${colorize(Color.YELLOW, `[${context}]`)} ${colorize(Color.CYAN, message)}`);
+        logWrapper(Color.CYAN, message, undefined, context, prefix, LogLevel.INFO);
     }
 
     warn(message: any, context?: string, prefix: string = "Nest") {
-        console.warn(`${colorize(Color.YELLOW, `[${prefix}]`)} ${colorize(Color.WHITE, `${new Date().toLocaleString()}`)} ${colorize(Color.YELLOW, "WARN")} ${colorize(Color.YELLOW, `[${context}]`)} ${colorize(Color.YELLOW, message)}`);
+        logWrapper(Color.YELLOW, message, undefined, context, prefix, LogLevel.WARN);
     }
 
     error(message: any, trace?: string, context?: string, prefix: string = "Nest") {
-        console.error(`${colorize(Color.RED, `[${prefix}]`)} ${colorize(Color.WHITE, `${new Date().toLocaleString()}`)} ${colorize(Color.RED, "ERROR")} ${colorize(Color.YELLOW, `[${context}]`)} ${colorize(Color.RED, message)}`, trace);
+        logWrapper(Color.RED, message, trace, context, prefix, LogLevel.ERROR);
     }
 
     debug(message: any, context?: string, prefix: string = "Nest") {
-        console.log(`${colorize(Color.MAGENTA, `[${prefix}]`)} ${colorize(Color.WHITE, `${new Date().toLocaleString()}`)} ${colorize(Color.MAGENTA, "DEBUG")} ${colorize(Color.YELLOW, `[${context}]`)} ${colorize(Color.MAGENTA, message)}`);
+        logWrapper(Color.MAGENTA, message, undefined, context, prefix, LogLevel.LOG);
     }
 
     verbose(message: any, context?: string, prefix: string = "Nest") {
-        console.log(`${colorize(Color.BLUE, `[${prefix}]`)} ${colorize(Color.WHITE, `${new Date().toLocaleString()}`)} ${colorize(Color.BLUE, "VERBOSE")} ${colorize(Color.YELLOW, `[${context}]`)} ${colorize(Color.BLUE, message)}`);
+        logWrapper(Color.BLUE, message, undefined, context, prefix, LogLevel.LOG);
     }
 }

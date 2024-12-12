@@ -24,7 +24,7 @@ export class SettingsService {
         private usersService: UsersService
     ) { }
 
-    async changeSetting(userId: User["id"], dto: SettingsChangeSettingDto): Promise<void> {
+    async changeSetting(userId: string, dto: SettingsChangeSettingDto): Promise<void> {
         if (!Object.keys(this.validSettings).includes(dto.key)) throw new NotFoundException(NotFound.UNKNOWN_SETTING);
 
         switch (typeof this.validSettings[dto.key]) {
@@ -42,7 +42,7 @@ export class SettingsService {
         await this.prismaService.userSetting.update({ where: { id: userId }, data: { [dto.key]: dto.value } });
     }
 
-    async changeUsername(userId: User["id"], dto: SettingsChangeUsernameDto): Promise<void> {
+    async changeUsername(userId: string, dto: SettingsChangeUsernameDto): Promise<void> {
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
@@ -56,7 +56,7 @@ export class SettingsService {
             });
     }
 
-    async changePassword(userId: User["id"], dto: SettingsChangePasswordDto): Promise<AuthAuthEntity> {
+    async changePassword(userId: string, dto: SettingsChangePasswordDto): Promise<AuthAuthEntity> {
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
@@ -69,7 +69,7 @@ export class SettingsService {
         return { token: await this.authService.sessionToToken(await this.authService.findOrCreateSession(userId)) } as AuthAuthEntity;
     }
 
-    async enableOtp(userId: User["id"], dto: SettingsEnableOtpDto): Promise<void> {
+    async enableOtp(userId: string, dto: SettingsEnableOtpDto): Promise<void> {
         const tempOtp = (await this.redisService.getKey("tempOtp", userId) as { secret: string })?.secret;
         if (!tempOtp) throw new NotFoundException(NotFound.UNKNOWN_OTP);
 
@@ -86,7 +86,7 @@ export class SettingsService {
         await this.prismaService.userSetting.update({ data: { otpSecret: tempOtp }, where: { id: userId } });
     }
 
-    async disableOtp(userId: User["id"], dto: SettingsDisableOtpDto): Promise<void> {
+    async disableOtp(userId: string, dto: SettingsDisableOtpDto): Promise<void> {
         const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { settings: true } });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 

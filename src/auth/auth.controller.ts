@@ -1,7 +1,5 @@
 import { Body, Controller, Delete, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { ConfigService } from "@nestjs/config";
-import { FormsService } from "src/forms/forms.service";
 import { GetCurrentUser, Public, RealIp } from "src/core/decorator";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthAuthEntity, AuthOtpEntity, BadRequest, InternalServerError, NotFound } from "@blacket/types";
@@ -11,9 +9,7 @@ import { RegisterDto, LoginDto } from "./dto";
 @ApiTags("auth")
 export class AuthController {
     constructor(
-        private readonly authService: AuthService,
-        private readonly configService: ConfigService,
-        private readonly formsService: FormsService
+        private readonly authService: AuthService
     ) { }
 
     @Public()

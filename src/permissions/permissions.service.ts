@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { PermissionType, User } from "@blacket/core";
+import { PermissionType } from "@blacket/core";
 
 @Injectable()
 export class PermissionsService {
@@ -16,7 +16,7 @@ export class PermissionsService {
         return permissionsToCheck.every((p) => this.hasPermission(permission, p));
     }
 
-    async getUserPermissions(userId: User["id"]): Promise<PermissionType[]> {
+    async getUserPermissions(userId: string): Promise<PermissionType[]> {
         const user = await this.prismaService.user.findUnique({
             where: {
                 id: userId

@@ -12,7 +12,9 @@ export class NewsController {
 
     @Throttle({ default: { limit: 2, ttl: seconds(1) } })
     @Get()
-    async getNews(@GetCurrentUser() userId: string) {
+    async getNews(
+        @GetCurrentUser() userId: string
+    ) {
         return (await this.newsService.getNews(userId)).map((post) => new NewsNewsPostEntity(post));
     }
 

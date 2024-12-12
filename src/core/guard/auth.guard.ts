@@ -36,7 +36,6 @@ export class AuthGuard implements CanActivate {
         }
 
         const token = this.extractTokenFromHeader(request);
-
         if (!token) throw new UnauthorizedException();
 
         const decodedToken = this.coreService.safelyParseJSON(Buffer.from(token, "base64").toString());

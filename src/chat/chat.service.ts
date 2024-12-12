@@ -80,7 +80,7 @@ export class ChatService {
         return message;
     }
 
-    async startTyping(userId: User["id"], roomId: Message["roomId"]): Promise<void> {
+    async startTyping(userId: string, roomId: number): Promise<void> {
         const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
