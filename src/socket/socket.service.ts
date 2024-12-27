@@ -3,6 +3,9 @@ import { CoreService } from "src/core/core.service";
 import { RedisService } from "src/redis/redis.service";
 import { Server, Socket } from "socket.io";
 import { BrenderEntity, BrenderPlayerEntity, BrenderTradingTableEntity, PublicUser, SocketAuctionBidEntity, SocketAuctionExpireEntity, SocketMessageType, SocketTradingPlazaMoveDto } from "@blacket/types";
+import { Room } from "@prisma/client";
+
+type RoomWithUsers = Room & { users: { userId: string }[] };
 
 @Injectable()
 export class SocketService {
@@ -74,6 +77,10 @@ export class SocketService {
 
     emitToRoom(room: string, event: SocketMessageType, data: object) {
         this.server.to(room).emit(event, data);
+    }
+
+    emitToChatRoom(chatRoom: RoomWithUsers, event: SocketMessageType, data: object) {
+        this.emitToUsers(chatRoom.users.map((user) => user.userId), event, data);
     }
 
     emitAuctionExpireEvent(data: SocketAuctionExpireEntity) {

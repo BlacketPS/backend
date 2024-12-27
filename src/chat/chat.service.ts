@@ -2,16 +2,19 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { SocketService } from "src/socket/socket.service";
+import { PermissionsService } from "src/permissions/permissions.service";
 
 import { ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "@blacket/types";
 import { Message, PunishmentType } from "@blacket/core";
+import { PermissionType } from "@prisma/client";
 
 @Injectable()
 export class ChatService {
     constructor(
         private readonly prismaService: PrismaService,
         private readonly redisService: RedisService,
-        private readonly socketService: SocketService
+        private readonly socketService: SocketService,
+        private readonly permissionsService: PermissionsService
     ) { }
 
     async getMessages(room: number = 0, limit: number = 50) {
@@ -33,7 +36,8 @@ export class ChatService {
             },
             take: limit,
             where: {
-                roomId: room
+                roomId: room,
+                deleted: false
             }
         });
     }
@@ -96,5 +100,41 @@ export class ChatService {
         if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
 
         this.socketService.emitToAll(SocketMessageType.CHAT_TYPING_STARTED, { userId, roomId });
+    }
+
+    async deleteMessage(userId: string, roomId: number, messageId: string): Promise<void> {
+        const room = await this.redisService.getRoom(roomId);
+        if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
+
+        if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+
+        const message = await this.prismaService.message.findUnique({
+            where: {
+                id: messageId,
+                roomId
+            },
+            select: {
+                authorId: true
+            }
+        });
+
+        const isStaffMember = this.permissionsService.hasPermissions((await this.permissionsService.getUserPermissions(userId)), [PermissionType.MANAGE_MESSAGES]);
+
+        if (!message) throw new NotFoundException(NotFound.UNKNOWN_MESSAGE);
+
+        if (
+            room.public
+            && message.authorId !== userId
+            && !isStaffMember
+        )
+            throw new ForbiddenException(Forbidden.CHAT_MESSAGE_NO_PERMISSION);
+        else if (
+            message.authorId !== userId
+        )
+            throw new ForbiddenException(Forbidden.CHAT_MESSAGE_NO_PERMISSION);
+
+        await this.prismaService.message.update({ where: { id: messageId }, data: { deleted: true } });
+
+        this.socketService.emitToChatRoom(room, SocketMessageType.CHAT_MESSAGES_DELETE, { messageId });
     }
 }

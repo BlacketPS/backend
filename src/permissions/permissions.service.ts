@@ -8,12 +8,12 @@ export class PermissionsService {
         private readonly prismaService: PrismaService
     ) { }
 
-    hasPermission(permission: PermissionType[], permissionToCheck: PermissionType): boolean {
-        return permission.includes(permissionToCheck);
+    hasPermission(permissions: PermissionType[], permissionToCheck: PermissionType): boolean {
+        return permissions.includes(permissionToCheck);
     }
 
-    hasPermissions(permission: PermissionType[], permissionsToCheck: PermissionType[]): boolean {
-        return permissionsToCheck.every((p) => this.hasPermission(permission, p));
+    hasPermissions(permissions: PermissionType[], permissionsToCheck: PermissionType[]): boolean {
+        return permissionsToCheck.every((p) => this.hasPermission(permissions, p));
     }
 
     async getUserPermissions(userId: string): Promise<PermissionType[]> {

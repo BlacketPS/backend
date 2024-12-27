@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post } from "@nestjs/common";
 import { ChatService } from "./chat.service";
 import { ApiTags } from "@nestjs/swagger";
 import { GetCurrentUser } from "src/core/decorator";
@@ -22,10 +22,10 @@ export class ChatController {
     @Post("messages/:roomId")
     async createMessage(
         @GetCurrentUser() userId: string,
-        @Param("roomId") roomId: string,
+        @Param("roomId", ParseIntPipe) roomId: number,
         @Body() dto: ChatCreateMessageDto
     ) {
-        return await this.chatService.createMessage(userId, parseInt(roomId), dto);
+        return await this.chatService.createMessage(userId, roomId, dto);
     }
 
     @Throttle({ default: { limit: 25, ttl: seconds(5) } })
@@ -33,8 +33,19 @@ export class ChatController {
     @HttpCode(HttpStatus.NO_CONTENT)
     async startTyping(
         @GetCurrentUser() userId: string,
-        @Param("roomId") roomId: number
+        @Param("roomId", ParseIntPipe) roomId: number
     ) {
         return await this.chatService.startTyping(userId, roomId);
+    }
+
+    @Throttle({ default: { limit: 20, ttl: seconds(20) } })
+    @Delete("messages/:roomId/:messageId")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteMessage(
+        @GetCurrentUser() userId: string,
+        @Param("roomId", ParseIntPipe) roomId: number,
+        @Param("messageId") messageId: string
+    ) {
+        return await this.chatService.deleteMessage(userId, roomId, messageId);
     }
 }
