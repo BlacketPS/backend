@@ -8,7 +8,7 @@ import { UsersService } from "src/users/users.service";
 export class DiscordService {
     constructor(
         private readonly configService: ConfigService,
-        private usersService: UsersService,
+        private readonly usersService: UsersService,
         private readonly httpService: HttpService
     ) { }
 

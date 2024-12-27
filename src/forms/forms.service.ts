@@ -6,8 +6,8 @@ import { FormsCreateDto, FormStatusEnum, FormsUpdateDto } from "@blacket/types";
 @Injectable()
 export class FormsService {
     constructor(
-        private prismaService: PrismaService,
-        private usersService: UsersService
+        private readonly prismaService: PrismaService,
+        private readonly usersService: UsersService
     ) { }
 
     async getFormById(id: string) {

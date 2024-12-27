@@ -3,26 +3,39 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
+import { BlacketLoggerService } from "src/core/logger/logger.service";
 import { hash, compare } from "bcrypt";
 import * as speakEasy from "@levminer/speakeasy";
 import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, BadRequest, NotFound, AuthAuthEntity, SettingsEnableOtpDto, SettingsDisableOtpDto } from "@blacket/types";
-import { SettingFriendRequest, User } from "@blacket/core";
 
 @Injectable()
 export class SettingsService {
-    // TODO: get these settings and their types from the database dynamically
-    private validSettings: { [key: string]: any } = {
-        "openPacksInstantly": Boolean,
-        "friendRequests": SettingFriendRequest,
-        "categoriesClosed": Array
-    };
+    private validSettings: { [key: string]: any } = {};
 
     constructor(
-        private prismaService: PrismaService,
-        private redisService: RedisService,
-        private authService: AuthService,
-        private usersService: UsersService
-    ) { }
+        private readonly prismaService: PrismaService,
+        private readonly redisService: RedisService,
+        private readonly authService: AuthService,
+        private readonly usersService: UsersService,
+
+        private readonly logger: BlacketLoggerService
+    ) {
+        this.initializeValidSettings();
+    }
+
+    private async initializeValidSettings() {
+        const settings = await this.prismaService.userSetting.findMany({
+            omit: {
+                otpSecret: true
+            }
+        });
+
+        for (const setting of settings) {
+            this.validSettings = { ...this.validSettings, ...setting };
+        }
+
+        this.logger.log(`Initialized valid settings: ${Object.keys(this.validSettings).join(", ")}`, "SettingsService");
+    }
 
     async changeSetting(userId: string, dto: SettingsChangeSettingDto): Promise<void> {
         if (!Object.keys(this.validSettings).includes(dto.key)) throw new NotFoundException(NotFound.UNKNOWN_SETTING);

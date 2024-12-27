@@ -12,9 +12,9 @@ type Blacklist = Prisma.BlacklistGetPayload<{ include: { ipAddress: true, punish
 export class RedisService extends Redis {
     private prefix: string;
     constructor(
-        private coreService: CoreService,
-        private prismaService: PrismaService,
-        private configService: ConfigService
+        private readonly coreService: CoreService,
+        private readonly prismaService: PrismaService,
+        private readonly configService: ConfigService
     ) {
         super({});
 

@@ -17,7 +17,6 @@ import { AuthModule } from "./auth/auth.module";
 import { PermissionsModule } from "./permissions/permissions.module";
 import { UsersModule } from "./users/users.module";
 import { FormsModule } from "./forms/forms.module";
-import { StaffModule } from "./staff/staff.module";
 import { ChatModule } from "./chat/chat.module";
 import { QuestsModule } from "./quests/quests.module";
 import { BlooksModule } from "./blooks/blooks.module";
@@ -58,7 +57,6 @@ import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
         PermissionsModule,
         UsersModule,
         FormsModule,
-        StaffModule,
         ChatModule,
         QuestsModule,
         BlooksModule,

@@ -1,17 +1,17 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
-import { SocketGateway } from "src/socket/socket.gateway";
+import { SocketService } from "src/socket/socket.service";
 
 import { ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "@blacket/types";
-import { Message, PunishmentType, User } from "@blacket/core";
+import { Message, PunishmentType } from "@blacket/core";
 
 @Injectable()
 export class ChatService {
     constructor(
         private readonly prismaService: PrismaService,
         private readonly redisService: RedisService,
-        private readonly socketGateway: SocketGateway
+        private readonly socketService: SocketService
     ) { }
 
     async getMessages(room: number = 0, limit: number = 50) {
@@ -72,10 +72,19 @@ export class ChatService {
                 content: dto.content,
                 replyingTo: dto.replyingTo ? { connect: { id: dto.replyingTo } } : undefined,
                 mentions
+            },
+            include: {
+                replyingTo: {
+                    select: {
+                        id: true,
+                        content: true,
+                        authorId: true
+                    }
+                }
             }
         });
 
-        this.socketGateway.server.emit(SocketMessageType.CHAT_MESSAGES_CREATE, message);
+        this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_CREATE, message);
 
         return message;
     }
@@ -86,6 +95,6 @@ export class ChatService {
 
         if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
 
-        this.socketGateway.server.emit(SocketMessageType.CHAT_TYPING_STARTED, { userId, roomId });
+        this.socketService.emitToAll(SocketMessageType.CHAT_TYPING_STARTED, { userId, roomId });
     }
 }

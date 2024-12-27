@@ -17,7 +17,7 @@ export class QuestsService {
     private dailyTokensDistributionTotalChance = this.dailyTokensDistribution.reduce((acc, curr) => acc + curr.chance, 0);
 
     constructor(
-        private prismaService: PrismaService
+        private readonly prismaService: PrismaService
     ) { }
 
     private getRandomDailyTokens(): number {
