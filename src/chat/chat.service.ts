@@ -111,7 +111,8 @@ export class ChatService {
         const message = await this.prismaService.message.findUnique({
             where: {
                 id: messageId,
-                roomId
+                roomId,
+                deleted: false
             },
             select: {
                 authorId: true
