@@ -136,6 +136,7 @@ export class ChatService {
 
         await this.prismaService.message.update({ where: { id: messageId }, data: { deleted: true } });
 
-        this.socketService.emitToChatRoom(room, SocketMessageType.CHAT_MESSAGES_DELETE, { messageId });
+        if (room.public) this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_DELETE, { messageId });
+        else this.socketService.emitToChatRoom(room, SocketMessageType.CHAT_MESSAGES_DELETE, { messageId });
     }
 }
