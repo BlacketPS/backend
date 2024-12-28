@@ -4,7 +4,7 @@ import { RedisService } from "src/redis/redis.service";
 import { SocketService } from "src/socket/socket.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 
-import { ChatCreateMessageDto, Forbidden, NotFound, SocketMessageType } from "@blacket/types";
+import { ChatCreateMessageDto, ChatEditMessageDto, Forbidden, NotFound, SocketMessageType } from "@blacket/types";
 import { Message, PunishmentType } from "@blacket/core";
 import { PermissionType } from "@prisma/client";
 
@@ -138,5 +138,35 @@ export class ChatService {
 
         if (room.public) this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_DELETE, { messageId });
         else this.socketService.emitToChatRoom(room, SocketMessageType.CHAT_MESSAGES_DELETE, { messageId });
+    }
+
+    async editMessage(userId: string, roomId: number, messageId: string, dto: ChatEditMessageDto): Promise<void> {
+        const room = await this.redisService.getRoom(roomId);
+        if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
+
+        if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+
+        const message = await this.prismaService.message.findUnique({
+            where: {
+                id: messageId,
+                roomId,
+                deleted: false
+            }
+        });
+
+        if (!message) throw new NotFoundException(NotFound.UNKNOWN_MESSAGE);
+
+        if (message.authorId !== userId) throw new ForbiddenException(Forbidden.CHAT_MESSAGE_NO_PERMISSION);
+
+        await this.prismaService.message.update({
+            where: { id: messageId },
+            data: {
+                content: dto.content,
+                edited: true
+            }
+        });
+
+        if (room.public) this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_UPDATE, { id: message.id, content: dto.content });
+        else this.socketService.emitToChatRoom(room, SocketMessageType.CHAT_MESSAGES_UPDATE, { id: message.id, content: dto.content });
     }
 }

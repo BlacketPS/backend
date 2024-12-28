@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put } from "@nestjs/common";
 import { ChatService } from "./chat.service";
 import { ApiTags } from "@nestjs/swagger";
 import { GetCurrentUser } from "src/core/decorator";
-import { ChatCreateMessageDto } from "@blacket/types";
+import { ChatCreateMessageDto, ChatEditMessageDto } from "@blacket/types";
 import { seconds, Throttle } from "@nestjs/throttler";
 
 @ApiTags("chat")
@@ -47,5 +47,17 @@ export class ChatController {
         @Param("messageId") messageId: string
     ) {
         return await this.chatService.deleteMessage(userId, roomId, messageId);
+    }
+
+    @Throttle({ default: { limit: 5, ttl: seconds(5) } })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Put("messages/:roomId/:messageId")
+    async editMessage(
+        @GetCurrentUser() userId: string,
+        @Param("roomId", ParseIntPipe) roomId: number,
+        @Param("messageId") messageId: string,
+        @Body() dto: ChatEditMessageDto
+    ) {
+        return await this.chatService.editMessage(userId, roomId, messageId, dto);
     }
 }
