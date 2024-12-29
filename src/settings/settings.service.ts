@@ -44,9 +44,6 @@ export class SettingsService {
             case "function":
                 if (typeof dto.value !== typeof this.validSettings[dto.key]()) throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
                 break;
-            case "object":
-                if (!Object.keys(this.validSettings[dto.key]).includes(dto.value)) throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
-                break;
             default:
                 if (typeof dto.value !== typeof this.validSettings[dto.key]) throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
                 break;
