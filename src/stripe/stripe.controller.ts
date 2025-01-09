@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Headers, HttpCode, HttpStatus, Param, Post, Put, Request } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Headers, HttpCode, HttpStatus, Param, Post, Get, Put, Request } from "@nestjs/common";
 import { StripeService } from "./stripe.service";
 import { GetCurrentUser, Public } from "src/core/decorator";
 import { hours, seconds, Throttle } from "@nestjs/throttler";
@@ -25,6 +25,11 @@ export class StripeController {
         if (!event) throw new BadRequestException();
 
         return this.stripeService.handleWebhook(event);
+    }
+
+    @Get("products")
+    async getProducts() {
+        return this.stripeService.getProducts();
     }
 
     @Throttle({ default: { limit: 20, ttl: hours(1) } })

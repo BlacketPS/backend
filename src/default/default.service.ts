@@ -9,7 +9,8 @@ export class DefaultService {
 
     async get() {
         return {
-            version: this.configService.get("VITE_INFORMATION_VERSION")
+            version: this.configService.get("VITE_INFORMATION_VERSION"),
+            type: this.configService.get("SERVER_TYPE")
         };
     }
 }

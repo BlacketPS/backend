@@ -1,10 +1,10 @@
-import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import Stripe from "stripe";
 
-import { Conflict, NotFound, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto } from "@blacket/types";
+import { Conflict, InternalServerError, NotFound, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto } from "@blacket/types";
 import { BlookObtainMethod } from "@blacket/core";
 
 @Injectable()
@@ -31,6 +31,25 @@ export class StripeService {
         }
     }
 
+    async getProducts() {
+        const productCache = await this.redisService.getKey("products", "*");
+        if (productCache) return productCache;
+
+        const products = await this.prismaService.store.findMany({
+            where: {
+                active: true
+            },
+            include: {
+                products: true
+            }
+        });
+        if (!products) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+        // await this.redisService.setKey("products", "*", products, 3600);
+
+        return products;
+    }
+
     async handlePaymentIntent(event: Stripe.PaymentIntent) {
         const user = await this.prismaService.user.findFirst({ where: { stripeCustomerId: event.customer as string } });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
@@ -43,7 +62,7 @@ export class StripeService {
                 userId: user.id,
                 blookId: product.blookId,
                 initialObtainerId: user.id,
-                obtainedBy: BlookObtainMethod.UNKNOWN
+                obtainedBy: BlookObtainMethod.PURCHASE
             }
         });
 
