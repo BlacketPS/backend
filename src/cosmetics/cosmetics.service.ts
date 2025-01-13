@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, NotFound, Forbidden, CosmeticsChangeAvatarDto } from "@blacket/types";
+import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, NotFound, Forbidden, CosmeticsChangeAvatarDto, CosmeticsUploadAvatarDto } from "@blacket/types";
 
 @Injectable()
 export class CosmeticsService {
@@ -18,7 +18,10 @@ export class CosmeticsService {
         if (dto.blookId !== 1 && userBlookCount < 1) throw new ForbiddenException(Forbidden.BLOOKS_NOT_ENOUGH_BLOOKS);
 
         await this.prismaService.user.update({
-            data: { avatar: { connect: { id: blook.imageId } } },
+            data: {
+                avatar: { connect: { id: blook.imageId } },
+                customAvatar: { disconnect: true }
+            },
             where: { id: userId }
         });
     }
@@ -62,5 +65,20 @@ export class CosmeticsService {
         if (!font.default && userFontCount < 1) throw new ForbiddenException(Forbidden.COSMETICS_FONTS_NOT_OWNED);
 
         await this.prismaService.user.update({ data: { font: { connect: { id: font.id } } }, where: { id: userId } });
+    }
+
+    async uploadAvatar(userId: string, dto: CosmeticsUploadAvatarDto) {
+        const upload = await this.prismaService.upload.findUnique({
+            where: {
+                id: dto.uploadId,
+                userId
+            }
+        });
+        if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
+
+        await this.prismaService.user.update({
+            data: { customAvatar: { connect: { id: upload.id } } },
+            where: { id: userId }
+        });
     }
 }

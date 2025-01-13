@@ -31,7 +31,8 @@ export class UsersController {
             includeItemsCurrent: true,
             includeSettings: true,
             includePaymentMethods: true,
-            includeStatistics: true
+            includeStatistics: true,
+            includeRooms: true
         });
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);

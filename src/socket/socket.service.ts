@@ -5,7 +5,7 @@ import { Server, Socket } from "socket.io";
 import { BrenderEntity, BrenderPlayerEntity, BrenderTradingTableEntity, PublicUser, SocketAuctionBidEntity, SocketAuctionExpireEntity, SocketMessageType, SocketTradingPlazaMoveDto } from "@blacket/types";
 import { Room } from "@prisma/client";
 
-type RoomWithUsers = Room & { users: { userId: string }[] };
+type RoomWithUsers = Room & { users: { id: string }[] };
 
 @Injectable()
 export class SocketService {
@@ -68,7 +68,7 @@ export class SocketService {
     }
 
     emitToUser(userId: string, event: SocketMessageType, data: object) {
-        this.server.to(userId).emit(event, data);
+        this.server.to(`user-${userId}`).emit(event, data);
     }
 
     emitToUsers(userIds: string[], event: SocketMessageType, data: object) {
@@ -80,7 +80,7 @@ export class SocketService {
     }
 
     emitToChatRoom(chatRoom: RoomWithUsers, event: SocketMessageType, data: object) {
-        this.emitToUsers(chatRoom.users.map((user) => user.userId), event, data);
+        this.emitToUsers(chatRoom.users.map((user) => user.id), event, data);
     }
 
     emitAuctionExpireEvent(data: SocketAuctionExpireEntity) {

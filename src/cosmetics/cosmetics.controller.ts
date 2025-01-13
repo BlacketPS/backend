@@ -1,9 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Patch } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Patch, Post } from "@nestjs/common";
 import { CosmeticsService } from "./cosmetics.service";
 import { ApiTags } from "@nestjs/swagger";
 import { Throttle, seconds } from "@nestjs/throttler";
 import { GetCurrentUser, Permissions } from "src/core/decorator";
-import { CosmeticsChangeAvatarDto, CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, PermissionTypeEnum } from "@blacket/types";
+import { CosmeticsChangeAvatarDto, CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, CosmeticsUploadAvatarDto, PermissionTypeEnum } from "@blacket/types";
 
 @ApiTags("cosmetics")
 @Controller("cosmetics")
@@ -19,9 +19,22 @@ export class CosmeticsController {
         return this.cosmeticsService.changeAvatar(userId, dto);
     }
 
+    @Throttle({ default: { limit: 3, ttl: seconds(60) } })
+    @Post("avatar/upload")
+    @Permissions({ permissions: [PermissionTypeEnum.CUSTOM_AVATAR] })
+    uploadAvatar(
+        @GetCurrentUser() userId: string,
+        @Body() dto: CosmeticsUploadAvatarDto
+    ) {
+        return this.cosmeticsService.uploadAvatar(userId, dto);
+    }
+
     @Patch("banner")
     @HttpCode(HttpStatus.NO_CONTENT)
-    changeBanner(@GetCurrentUser() userId: string, @Body() dto: CosmeticsChangeBannerDto) {
+    changeBanner(
+        @GetCurrentUser() userId: string,
+        @Body() dto: CosmeticsChangeBannerDto
+    ) {
         return this.cosmeticsService.changeBanner(userId, dto);
     }
 
@@ -46,7 +59,6 @@ export class CosmeticsController {
     }
 
     @Patch("font")
-    @Permissions({ permissions: [PermissionTypeEnum.CHANGE_FONT] })
     @HttpCode(HttpStatus.NO_CONTENT)
     changeFont(@GetCurrentUser() userId: string, @Body() dto: CosmeticsChangeFontDto) {
         return this.cosmeticsService.changeFont(userId, dto);

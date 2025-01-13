@@ -18,6 +18,7 @@ export interface GetUserSettings {
     includeSettings?: boolean;
     includeTitles?: boolean;
     includeFonts?: boolean;
+    includeRooms?: boolean;
 }
 
 @Injectable()
@@ -74,6 +75,7 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeFonts) include.fonts = true;
         if (settings.includeSettings) include.settings = true;
         if (settings.includePaymentMethods) include.paymentMethods = { omit: { paymentMethodId: true } };
+        if (settings.includeRooms) include.rooms = { omit: { public: true } };
 
         const userData = await this.prismaService.user.findFirst({
             where: {
@@ -123,11 +125,7 @@ export class UsersService implements OnApplicationBootstrap {
 
     async createUser(username: string, password: string, ip: string): Promise<User> {
         return await this.prismaService.$transaction(async (tx) => {
-            const ipAddress = await tx.ipAddress.create({
-                data: {
-                    ipAddress: ip
-                }
-            });
+            const ipAddress = await tx.ipAddress.upsert({ where: { ipAddress: ip }, update: {}, create: { ipAddress: ip } });
 
             const user = await tx.user.create({
                 data: {

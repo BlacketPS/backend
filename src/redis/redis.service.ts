@@ -5,7 +5,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
 import { Session, Resource, Group, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Product, Prisma } from "@blacket/core";
 
-type Room = Prisma.RoomGetPayload<{ include: { users: { select: { userId: true } } } }>;
+type Room = Prisma.RoomGetPayload<{ include: { users: { select: { id: true } } } }>;
 type Blacklist = Prisma.BlacklistGetPayload<{ include: { ipAddress: true, punishment: true } }>;
 
 @Injectable()
@@ -37,7 +37,7 @@ export class RedisService extends Redis {
 
         for (const group of await this.prismaService.group.findMany()) this.set(`${this.prefix}:group:${group.id}`, JSON.stringify(group));
 
-        for (const room of await this.prismaService.room.findMany({ include: { users: { select: { userId: true } } } })) {
+        for (const room of await this.prismaService.room.findMany({ include: { users: { select: { id: true } } } })) {
             this.set(`${this.prefix}:room:${room.id}`, JSON.stringify(room));
             this.set(`${this.prefix}:room:${room.name.toLowerCase()}`, JSON.stringify(room));
         }

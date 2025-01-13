@@ -13,9 +13,10 @@ export class ChatController {
     @Throttle({ default: { limit: 15, ttl: seconds(5) } })
     @Get("messages/:roomId")
     async getMessages(
-        roomId: number
+        @GetCurrentUser() userId: string,
+        @Param("roomId", ParseIntPipe) roomId: number
     ) {
-        return await this.chatService.getMessages(roomId);
+        return await this.chatService.getMessages(userId, roomId);
     }
 
     @Throttle({ default: { limit: 100, ttl: seconds(60) } })

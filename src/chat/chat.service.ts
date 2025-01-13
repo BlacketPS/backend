@@ -17,7 +17,12 @@ export class ChatService {
         private readonly permissionsService: PermissionsService
     ) { }
 
-    async getMessages(room: number = 0, limit: number = 50) {
+    async getMessages(userId: string, roomId: number = 0, limit: number = 50) {
+        const room = await this.redisService.getRoom(roomId);
+        if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
+
+        if (!room.public && !room.users.find((user) => user.id === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+
         return await this.prismaService.message.findMany({
             orderBy: {
                 createdAt: "desc"
@@ -36,7 +41,7 @@ export class ChatService {
             },
             take: limit,
             where: {
-                roomId: room,
+                roomId: room.id,
                 deleted: false
             }
         });
@@ -46,7 +51,7 @@ export class ChatService {
         const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
-        if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+        if (!room.public && !room.users.find((user) => user.id === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
         else if (room.public) {
             const mute = await this.prismaService.punishment.findFirst({
                 where: {
@@ -97,7 +102,7 @@ export class ChatService {
         const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
-        if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+        if (!room.public && !room.users.find((user) => user.id === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
 
         this.socketService.emitToAll(SocketMessageType.CHAT_TYPING_STARTED, { userId, roomId });
     }
@@ -106,7 +111,7 @@ export class ChatService {
         const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
-        if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+        if (!room.public && !room.users.find((user) => user.id === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
 
         const message = await this.prismaService.message.findUnique({
             where: {
@@ -144,7 +149,7 @@ export class ChatService {
         const room = await this.redisService.getRoom(roomId);
         if (!room) throw new NotFoundException(NotFound.UNKNOWN_ROOM);
 
-        if (!room.public && !room.users.find((user) => user.userId === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
+        if (!room.public && !room.users.find((user) => user.id === userId)) throw new ForbiddenException(Forbidden.CHAT_ROOM_NO_PERMISSION);
 
         const message = await this.prismaService.message.findUnique({
             where: {
