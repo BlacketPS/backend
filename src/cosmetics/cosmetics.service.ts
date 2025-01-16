@@ -1,15 +1,18 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { CoreService } from "src/core/core.service";
 import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, NotFound, Forbidden, CosmeticsChangeAvatarDto, CosmeticsUploadAvatarDto } from "@blacket/types";
-
-
+import { blookifyImage } from "@blacket/common";
+import * as fs from "fs";
+import { Readable } from "stream";
 
 @Injectable()
 export class CosmeticsService {
     constructor(
         private redisService: RedisService,
-        private prismaService: PrismaService
+        private prismaService: PrismaService,
+        private coreService: CoreService
     ) { }
 
     async changeAvatar(userId: string, dto: CosmeticsChangeAvatarDto) {
@@ -74,13 +77,23 @@ export class CosmeticsService {
             where: {
                 id: dto.uploadId,
                 userId
+            },
+            include: {
+
             }
         });
         if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
 
+        const image = await fs.promises.readFile(await this.coreService.getUploadPath(upload));
+        const blookifiedImage = await blookifyImage(image);
+
+        const newUpload = await this.coreService.userUploadFile(userId, { buffer: blookifiedImage, originalname: "avatar.webp" });
+
         await this.prismaService.user.update({
-            data: { customAvatar: { connect: { id: upload.id } } },
+            data: { customAvatar: { connect: { id: newUpload.id } } },
             where: { id: userId }
         });
+
+        return newUpload;
     }
 }

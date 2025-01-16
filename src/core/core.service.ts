@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
 import * as path from "path";
 import * as fs from "fs";
+import { Upload } from "@blacket/core";
 
 @Injectable()
 export class CoreService {
@@ -31,7 +32,7 @@ export class CoreService {
         return obj;
     }
 
-    async userUploadFile(userId: string, file: Express.Multer.File) {
+    async userUploadFile(userId: string, file: Partial<Express.Multer.File>) {
         const uploadPath = `/user/${userId}`;
         const rawUploadPath = `${this.configService.get("SERVER_UPLOAD_PATH")}${uploadPath}`;
 
@@ -50,5 +51,9 @@ export class CoreService {
                 path: `${uploadPath}/${constructedFileName}`
             }
         });
+    }
+
+    async getUploadPath(upload: Upload): Promise<string> {
+        return `${this.configService.get("SERVER_UPLOAD_PATH")}${upload.path}`;
     }
 }

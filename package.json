@@ -13,6 +13,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "dependencies": {
+    "@blacket/common": "link:@blacket/common",
     "@blacket/core": "link:@blacket/core",
     "@blacket/types": "link:@blacket/types",
     "@levminer/speakeasy": "^1.4.2",
@@ -62,6 +63,8 @@
   },
   "trustedDependencies": [
     "@blacket/core",
+    "@blacket/types",
+    "@blacket/common",
     "@nestjs/core",
     "@prisma/client",
     "@prisma/engines",
