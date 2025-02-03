@@ -22,6 +22,8 @@ export class RedisService extends Redis {
     }
 
     async onModuleInit() {
+        for (const key of await this.keys(`${this.prefix}:*`)) await this.del(key);
+
         // some of these also set the name, this is so we can get all data just from the name without having to fetch every blook, item, etc
         for (const blacklist of await this.prismaService.blacklist.findMany({
             include: {

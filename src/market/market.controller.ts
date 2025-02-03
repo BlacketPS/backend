@@ -2,7 +2,7 @@ import { Body, Controller, Post } from "@nestjs/common";
 import { MarketService } from "./market.service";
 import { GetCurrentUser } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
-import { MarketOpenPackEntity, MarketOpenPackDto } from "@blacket/types";
+import { MarketOpenPackDto } from "@blacket/types";
 import { seconds, Throttle } from "@nestjs/throttler";
 
 @ApiTags("market")
@@ -13,8 +13,6 @@ export class MarketController {
     @Throttle({ default: { limit: 30, ttl: seconds(20) } })
     @Post("open-pack")
     async openPack(@GetCurrentUser() userId: string, @Body() dto: MarketOpenPackDto) {
-        const blookId: number = await this.marketService.openPack(userId, dto);
-
-        return new MarketOpenPackEntity({ id: blookId });
+        return await this.marketService.openPack(userId, dto);
     }
 }

@@ -2,10 +2,9 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CoreService } from "src/core/core.service";
-import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, NotFound, Forbidden, CosmeticsChangeAvatarDto, CosmeticsUploadAvatarDto } from "@blacket/types";
-import { blookifyImage } from "@blacket/common";
+import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, NotFound, Forbidden, CosmeticsChangeAvatarDto, CosmeticsUploadAvatarDto, CosmeticsUploadBannerDto } from "@blacket/types";
+import { bannerifyImage, blookifyImage } from "@blacket/common";
 import * as fs from "fs";
-import { Readable } from "stream";
 
 @Injectable()
 export class CosmeticsService {
@@ -16,19 +15,31 @@ export class CosmeticsService {
     ) { }
 
     async changeAvatar(userId: string, dto: CosmeticsChangeAvatarDto) {
-        const blook = await this.redisService.getBlook(dto.blookId);
-        if (!blook) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
+        if (dto.id === 0) {
+            await this.prismaService.user.update({
+                data: {
+                    avatar: { disconnect: true },
+                    customAvatar: { disconnect: true }
+                },
+                where: { id: userId }
+            });
+        } else {
+            const blook = await this.prismaService.userBlook.findFirst({
+                where: {
+                    id: dto.id,
+                    userId
+                }
+            });
+            if (!blook) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
 
-        const userBlookCount = await this.prismaService.userBlook.count({ where: { userId, blookId: dto.blookId, sold: false } });
-        if (dto.blookId !== 1 && userBlookCount < 1) throw new ForbiddenException(Forbidden.BLOOKS_NOT_ENOUGH_BLOOKS);
-
-        await this.prismaService.user.update({
-            data: {
-                avatar: { connect: { id: blook.imageId } },
-                customAvatar: { disconnect: true }
-            },
-            where: { id: userId }
-        });
+            await this.prismaService.user.update({
+                data: {
+                    avatar: { connect: { id: blook.id } },
+                    customAvatar: { disconnect: true }
+                },
+                where: { id: userId }
+            });
+        }
     }
 
     async changeBanner(userId: string, dto: CosmeticsChangeBannerDto) {
@@ -36,7 +47,10 @@ export class CosmeticsService {
         if (!banner) throw new NotFoundException(NotFound.UNKNOWN_BANNER);
 
         await this.prismaService.user.update({
-            data: { banner: { connect: { id: banner.imageId } } },
+            data: {
+                banner: { connect: { id: banner.imageId } },
+                customBanner: { disconnect: true }
+            },
             where: { id: userId }
         });
     }
@@ -91,6 +105,31 @@ export class CosmeticsService {
 
         await this.prismaService.user.update({
             data: { customAvatar: { connect: { id: newUpload.id } } },
+            where: { id: userId }
+        });
+
+        return newUpload;
+    }
+
+    async uploadBanner(userId: string, dto: CosmeticsUploadBannerDto) {
+        const upload = await this.prismaService.upload.findUnique({
+            where: {
+                id: dto.uploadId,
+                userId
+            },
+            include: {
+
+            }
+        });
+        if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
+
+        const image = await fs.promises.readFile(await this.coreService.getUploadPath(upload));
+        const bannerifiedImage = await bannerifyImage(image);
+
+        const newUpload = await this.coreService.userUploadFile(userId, { buffer: bannerifiedImage, originalname: "banner.webp" });
+
+        await this.prismaService.user.update({
+            data: { customBanner: { connect: { id: newUpload.id } } },
             where: { id: userId }
         });
 

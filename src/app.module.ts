@@ -31,6 +31,7 @@ import { CronModule } from "./cron/cron.module";
 import { NewsModule } from "./news/news.module";
 
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
+import { FriendsModule } from './friends/friends.module';
 
 @Module({
     imports: [
@@ -69,7 +70,8 @@ import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
         GuildsModule,
         AuctionsModule,
         CronModule,
-        NewsModule
+        NewsModule,
+        FriendsModule
     ],
     controllers: [],
     providers: [

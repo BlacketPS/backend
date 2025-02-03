@@ -58,7 +58,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             const defaultFont1 = await prisma.resource.create({ data: { path: "{cdn}/content/fonts/Nunito Bold.ttf", reference: "DEFAULT_FONT_1" } });
             const defaultFont2 = await prisma.resource.create({ data: { path: "{cdn}/content/fonts/Titan One.ttf", reference: "DEFAULT_FONT_2" } });
 
-            // @autoincrement likes to start at 1 for some reason
             await prisma.room.create({ data: { name: "global", public: true, id: 0 } });
 
             await prisma.rarity.create({ data: { name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON } });

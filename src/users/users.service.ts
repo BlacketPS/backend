@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { DiscordAccessToken, DiscordDiscordUser, User } from "@blacket/types";
-import { Font, PermissionType, Prisma, Resource, Title, OAuthType, UserDiscord } from "@blacket/core";
+import { Font, PermissionType, Prisma, Title, OAuthType, UserDiscord } from "@blacket/core";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -24,8 +24,6 @@ export interface GetUserSettings {
 @Injectable()
 export class UsersService implements OnApplicationBootstrap {
     private defaultPermissions: PermissionType[];
-    private defaultAvatar: Resource;
-    private defaultBanner: Resource;
     private defaultTitle: Title;
     private defaultFont: Font;
 
@@ -37,8 +35,6 @@ export class UsersService implements OnApplicationBootstrap {
     async onApplicationBootstrap() {
         this.defaultPermissions = [PermissionType.CREATE_REPORTS, PermissionType.CHANGE_USERNAME];
 
-        this.defaultAvatar = await this.prismaService.resource.findUnique({ where: { reference: "DEFAULT_BLOOK" } });
-        this.defaultBanner = await this.prismaService.resource.findUnique({ where: { reference: "DEFAULT_BANNER" } });
         this.defaultTitle = await this.prismaService.title.findUnique({ where: { id: 1 } });
         this.defaultFont = await this.prismaService.font.findUnique({ where: { id: 1 } });
     }
@@ -56,14 +52,28 @@ export class UsersService implements OnApplicationBootstrap {
 
         if (settings.includeBanners) include.banners = true;
         if (settings.includeBlooksCurrent) include.blooks = {
-            select: { blookId: true }, where: {
+            select: {
+                id: true,
+                blookId: true,
+                shiny: true,
+                createdAt: true,
+                updatedAt: true
+            },
+            where: {
                 sold: false,
                 auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } }
             }
         };
         if (settings.includeBlooksAll) include.blooks = true;
         if (settings.includeItemsCurrent) include.items = {
-            select: { id: true, itemId: true, usesLeft: true }, where: {
+            select: {
+                id: true,
+                itemId: true,
+                usesLeft: true,
+                createdAt: true,
+                updatedAt: true
+            },
+            where: {
                 usesLeft: { gt: 0 },
                 auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } }
             }
@@ -85,6 +95,9 @@ export class UsersService implements OnApplicationBootstrap {
                 ]
             },
             include: {
+                avatar: {
+                    include: { blook: true }
+                },
                 customAvatar: true,
                 customBanner: true,
                 groups: {
@@ -132,8 +145,6 @@ export class UsersService implements OnApplicationBootstrap {
                     id: (Math.floor(Date.now() / 1000)).toString() + Math.floor(1000000 + Math.random() * 9000000).toString(),
                     username,
                     password: await hash(password, 10),
-                    avatarId: this.defaultAvatar.id,
-                    bannerId: this.defaultBanner.id,
                     titleId: this.defaultTitle.id,
                     fontId: this.defaultFont.id,
                     permissions: this.defaultPermissions,

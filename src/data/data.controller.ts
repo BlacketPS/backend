@@ -16,7 +16,7 @@ export class DataController {
     @Public()
     @Get("blooks")
     getBlooks() {
-        return this.redisService.getAllFromKey(DataKey.BLOOK);
+        return this.redisService.getAllFromKey("blook");
     }
 
     @Public()

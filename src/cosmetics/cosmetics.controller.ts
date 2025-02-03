@@ -3,7 +3,7 @@ import { CosmeticsService } from "./cosmetics.service";
 import { ApiTags } from "@nestjs/swagger";
 import { Throttle, seconds } from "@nestjs/throttler";
 import { GetCurrentUser, Permissions } from "src/core/decorator";
-import { CosmeticsChangeAvatarDto, CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, CosmeticsUploadAvatarDto, PermissionTypeEnum } from "@blacket/types";
+import { CosmeticsChangeAvatarDto, CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, CosmeticsUploadAvatarDto, CosmeticsUploadBannerDto, PermissionTypeEnum } from "@blacket/types";
 
 @ApiTags("cosmetics")
 @Controller("cosmetics")
@@ -36,6 +36,16 @@ export class CosmeticsController {
         @Body() dto: CosmeticsChangeBannerDto
     ) {
         return this.cosmeticsService.changeBanner(userId, dto);
+    }
+
+    @Throttle({ default: { limit: 3, ttl: seconds(60) } })
+    @Post("banner/upload")
+    @Permissions({ permissions: [PermissionTypeEnum.CUSTOM_BANNER] })
+    uploadBanner(
+        @GetCurrentUser() userId: string,
+        @Body() dto: CosmeticsUploadBannerDto
+    ) {
+        return this.cosmeticsService.uploadBanner(userId, dto);
     }
 
     @Patch("title")
