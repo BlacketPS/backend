@@ -12,6 +12,7 @@ export class NewsService {
         const rawNews = await this.prismaService.newsPost.findMany({
             orderBy: { createdAt: "desc" },
             include: {
+                image: true,
                 author: true,
                 votes: true
             }
