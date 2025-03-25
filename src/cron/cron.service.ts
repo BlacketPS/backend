@@ -101,18 +101,4 @@ export class CronService {
 
         await this.prismaService.user.updateMany({ where: { id: { in: users } }, data: { lastSeen: newLastSeen } });
     }
-
-    @Cron("0 0 * * * *", { name: "deleteOldForms", timeZone: "UTC" })
-    async deleteOldForms() {
-        const forms = await this.prismaService.form.findMany({ where: { createdAt: { lte: new Date(Date.now() - 604800000) } } });
-        if (forms.length < 1) return;
-
-        const startTime = Date.now();
-
-        this.loggerService.verbose(`Deleting ${forms.length} old forms...`, "CronService");
-
-        await this.prismaService.form.deleteMany({ where: { id: { in: forms.map((form) => form.id) } } });
-
-        this.loggerService.verbose(`Deleted ${forms.length} old forms in ${Date.now() - startTime}ms.`, "CronService");
-    }
 }

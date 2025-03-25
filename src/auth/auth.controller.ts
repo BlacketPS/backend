@@ -23,7 +23,7 @@ export class AuthController {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         description: InternalServerError.DEFAULT
     })
-    async registerFromForm(@Body() dto: RegisterDto, @RealIp() ip: string): Promise<AuthAuthEntity> {
+    async register(@Body() dto: RegisterDto, @RealIp() ip: string): Promise<AuthAuthEntity> {
         return this.authService.register(dto, ip);
     }
 
