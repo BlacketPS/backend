@@ -16,7 +16,6 @@ import { DataModule } from "./data/data.module";
 import { AuthModule } from "./auth/auth.module";
 import { PermissionsModule } from "./permissions/permissions.module";
 import { UsersModule } from "./users/users.module";
-import { FormsModule } from "./forms/forms.module";
 import { ChatModule } from "./chat/chat.module";
 import { QuestsModule } from "./quests/quests.module";
 import { BlooksModule } from "./blooks/blooks.module";
@@ -29,9 +28,9 @@ import { AuctionsModule } from "./auctions/auctions.module";
 import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 import { CronModule } from "./cron/cron.module";
 import { NewsModule } from "./news/news.module";
+import { FriendsModule } from "./friends/friends.module";
 
 import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
-import { FriendsModule } from './friends/friends.module';
 
 @Module({
     imports: [
@@ -57,7 +56,6 @@ import { FriendsModule } from './friends/friends.module';
         AuthModule,
         PermissionsModule,
         UsersModule,
-        FormsModule,
         ChatModule,
         QuestsModule,
         BlooksModule,
