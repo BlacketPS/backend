@@ -21,8 +21,7 @@ async function bootstrap() {
             // to config, put your own domain here include http[s]://
             "https://blacket.org",
             "https://dev.blacket.org",
-            "https://beta.blacket.org",
-            "https://cdn.blacket.org"
+            "https://beta.blacket.org"
         ],
         credentials: true
     });

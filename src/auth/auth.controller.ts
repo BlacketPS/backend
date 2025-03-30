@@ -1,14 +1,16 @@
-import { Body, Controller, Delete, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { AuthService } from "./auth.service";
 import { GetCurrentUser, Public, RealIp } from "src/core/decorator";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import { AuthAuthEntity, AuthOtpEntity, BadRequest, InternalServerError, NotFound } from "@blacket/types";
+import { AuthAuthEntity, AuthOtpEntity, BadRequest, Forbidden, InternalServerError, NotFound } from "@blacket/types";
 import { RegisterDto, LoginDto } from "./dto";
 
 @Controller("auth")
 @ApiTags("auth")
 export class AuthController {
     constructor(
+        private readonly configService: ConfigService,
         private readonly authService: AuthService
     ) { }
 
@@ -24,6 +26,8 @@ export class AuthController {
         description: InternalServerError.DEFAULT
     })
     async register(@Body() dto: RegisterDto, @RealIp() ip: string): Promise<AuthAuthEntity> {
+        if (this.configService.get("SERVER_REGISTRATION_ENABLED") !== "true") throw new ForbiddenException(Forbidden.AUTH_BANNED);
+
         return this.authService.register(dto, ip);
     }
 
