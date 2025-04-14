@@ -22,11 +22,7 @@ export class AuctionsService {
 
         const auctions = await this.prismaService.auction.findMany({
             include: {
-                blook: {
-                    select: {
-                        blookId: true
-                    }
-                },
+                blook: true,
                 item: {
                     select: {
                         id: true,
@@ -55,7 +51,7 @@ export class AuctionsService {
                 : {
 
                     type: dto.type ?? undefined,
-                    blook: { blookId: dto.blookId ?? undefined },
+                    blook: { blookId: dto.blookId ?? undefined, shiny: dto.shiny ?? undefined },
                     item: { itemId: dto.itemId ?? undefined },
 
                     // i don't know why this has to be done but it does
@@ -99,7 +95,6 @@ export class AuctionsService {
         });
 
         for (const auction of auctions) auction.bids = auction.bids
-            .filter((bid) => bid && bid.user && bid.user.tokens >= bid.amount)
             .sort((a, b) => b.amount - a.amount);
 
         return auctions;
@@ -117,9 +112,8 @@ export class AuctionsService {
                 if (!dto.blookId) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
                 if (!this.redisService.getBlook(dto.blookId)) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
 
-                blook = await this.prismaService.userBlook.findFirst({
-                    where: { userId, blookId: dto.blookId, sold: false, auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } } },
-                    orderBy: { createdAt: "asc" }
+                blook = await this.prismaService.userBlook.findUnique({
+                    where: { id: dto.blookId, userId, sold: false, auctions: { none: { AND: [{ buyerId: null }, { delistedAt: null }] } } }
                 });
                 if (!blook) throw new ForbiddenException(Forbidden.BLOOKS_NOT_ENOUGH_BLOOKS);
 
@@ -207,7 +201,7 @@ export class AuctionsService {
             this.socketService.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
                 id: auction.id,
                 type: auction.type,
-                blookId: auction?.blook?.blookId,
+                blook: auction?.blook,
                 item: auction?.item,
                 sellerId: auction.sellerId,
                 buyerId: userId,
@@ -233,9 +227,6 @@ export class AuctionsService {
                         user: {
                             include: { customAvatar: true, customBanner: true }
                         }
-                    },
-                    omit: {
-                        auctionId: true
                     }
                 },
                 blook: {
@@ -256,64 +247,71 @@ export class AuctionsService {
 
         if (auction.seller.id === userId) throw new ForbiddenException(Forbidden.AUCTIONS_BID_OWN_AUCTION);
 
-        auction.bids = auction.bids
-            .filter((bid) => bid && bid.user && bid.user.tokens >= bid.amount)
-            .sort((a, b) => b.amount - a.amount);
+        // Find the user's highest previous bid
+        const userPreviousBids = auction.bids.filter((bid) => bid.user.id === userId);
+        const highestPreviousBidAmount = userPreviousBids.length > 0
+            ? Math.max(...userPreviousBids.map((bid) => bid.amount))
+            : 0;
 
-        if (auction.price >= dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_TOO_LOW.replace("%s", (auction.price + 1).toLocaleString()));
-        if (auction.bids.length > 0 && auction.bids[0].amount >= dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_TOO_LOW.replace("%s", (auction.bids[0].amount + 1).toLocaleString()));
+        if (dto.amount <= highestPreviousBidAmount) {
+            throw new ForbiddenException(
+                Forbidden.AUCTIONS_BID_TOO_LOW.replace("%s", (highestPreviousBidAmount + 1).toLocaleString())
+            );
+        }
 
-        if (auction.bids.length > 0 && auction.bids[0].user.id === userId) throw new ForbiddenException(Forbidden.AUCTIONS_BID_OWN_BID);
+        const additionalAmount = dto.amount - highestPreviousBidAmount;
 
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
+        if (user.tokens < additionalAmount) {
+            throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
+        }
+
+        if (auction.price >= dto.amount) {
+            throw new ForbiddenException(
+                Forbidden.AUCTIONS_BID_TOO_LOW.replace("%s", (auction.price + 1).toLocaleString())
+            );
+        }
+
+        if (auction.bids.length > 0 && auction.bids[0].amount >= dto.amount) {
+            throw new ForbiddenException(
+                Forbidden.AUCTIONS_BID_TOO_LOW.replace("%s", (auction.bids[0].amount + 1).toLocaleString())
+            );
+        }
+
         await this.prismaService.$transaction(async (tx) => {
-            const auctionsBiddedOn = await tx.auction.findMany({
-                where: {
-                    bids: {
-                        some: {
-                            userId: user.id
-                        }
-                    }
-                },
-                include: {
-                    bids: {
-                        include: {
-                            user: {
-                                select: {
-                                    id: true
-                                }
-                            }
-                        },
-                        orderBy: {
-                            amount: "desc"
-                        }
-                    }
+            // Deduct only the additional amount from the user's tokens
+            const updatedUser = await tx.user.update({
+                where: { id: userId },
+                data: { tokens: { decrement: additionalAmount } }
+            });
+            if (updatedUser.tokens < 0) {
+                throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
+            }
+
+            // Create a new bid
+            const bid = await tx.auctionBid.create({
+                data: {
+                    auction: { connect: { id } },
+                    user: { connect: { id: userId } },
+                    amount: dto.amount
                 }
             });
 
-            let userBidsTotal = 0;
-
-            if (auctionsBiddedOn.length > 0) for (const auction of auctionsBiddedOn) {
-                if (auction.bids[0].user.id === user.id) userBidsTotal += auction.bids[0].amount;
-            }
-
-            if ((user.tokens - userBidsTotal) < dto.amount) throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
-
-            const bid = await tx.auctionBid.create({ data: { auction: { connect: { id } }, user: { connect: { id: userId } }, amount: dto.amount } });
-
-            this.socketService.emitAuctionBidEvent(new SocketAuctionBidEntity({
-                id: bid.id,
-                auctionId: auction.id,
-                type: auction.type,
-                amount: bid.amount,
-                blookId: auction?.blook?.blookId,
-                item: auction?.item,
-                bidderId: userId,
-                sellerId: auction.seller.id,
-                bidders: [...new Set(auction.bids.map((bid) => bid.user.id))]
-            }));
+            this.socketService.emitAuctionBidEvent(
+                new SocketAuctionBidEntity({
+                    id: bid.id,
+                    auctionId: auction.id,
+                    type: auction.type,
+                    amount: bid.amount,
+                    blook: auction?.blook,
+                    item: auction?.item,
+                    bidderId: userId,
+                    sellerId: auction.seller.id,
+                    bidders: [...new Set(auction.bids.map((bid) => bid.user.id))]
+                })
+            );
         });
     }
 
@@ -351,7 +349,7 @@ export class AuctionsService {
         this.socketService.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
             id: auction.id,
             type: auction.type,
-            blookId: auction?.blook?.blookId,
+            blook: auction?.blook,
             item: auction?.item,
             sellerId: auction.sellerId,
             buyerId: null,

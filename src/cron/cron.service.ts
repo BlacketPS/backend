@@ -1,5 +1,5 @@
 import { AuctionType } from "@blacket/core";
-import { SocketAuctionExpireEntity } from "@blacket/types";
+import { AuctionsBidEntity, SocketAuctionExpireEntity } from "@blacket/types";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
@@ -41,7 +41,6 @@ export class CronService {
             if (auction.buyItNow) continue;
 
             auction.bids = auction.bids
-                .filter((bid) => bid && bid.user && bid.user.tokens >= bid.amount)
                 .sort((a, b) => b.amount - a.amount);
         }
 
@@ -62,28 +61,46 @@ export class CronService {
                     continue;
                 }
 
-                await tx.user.update({ where: { id: auction.seller.id }, data: { tokens: { increment: auction.bids[0].amount } } });
-                await tx.user.update({ where: { id: auction.bids[0].user.id }, data: { tokens: { decrement: auction.bids[0].amount } } });
+                const winningBid = auction.bids[0];
+
+                await tx.user.update({ where: { id: auction.seller.id }, data: { tokens: { increment: winningBid.amount } } });
 
                 switch (auction.type) {
                     case AuctionType.BLOOK:
-                        await tx.userBlook.update({ where: { id: auction.blook.id }, data: { userId: auction.bids[0].user.id } });
+                        await tx.userBlook.update({ where: { id: auction.blook.id }, data: { userId: winningBid.user.id } });
                         break;
                     case AuctionType.ITEM:
-                        await tx.userItem.update({ where: { id: auction.item.id }, data: { userId: auction.bids[0].user.id } });
+                        await tx.userItem.update({ where: { id: auction.item.id }, data: { userId: winningBid.user.id } });
                         break;
                 }
 
-                await tx.auction.update({ where: { id: auction.id }, data: { buyerId: auction.bids[0].user.id, delistedAt: new Date() } });
+                await tx.auction.update({ where: { id: auction.id }, data: { buyerId: winningBid.user.id, delistedAt: new Date() } });
+
+                const losingBidders = auction.bids.reduce((acc, bid) => {
+                    if (!acc[bid.user.id] || acc[bid.user.id].amount < bid.amount) {
+                        acc[bid.user.id] = bid;
+                    }
+
+                    return acc;
+                }, {}) as Record<string, AuctionsBidEntity>;
+
+                for (const bid of Object.values(losingBidders)) {
+                    if (bid.user.id === winningBid.user.id) continue;
+
+                    await tx.user.update({
+                        where: { id: bid.user.id },
+                        data: { tokens: { increment: bid.amount } }
+                    });
+                }
 
                 this.socketService.emitAuctionExpireEvent(new SocketAuctionExpireEntity({
                     id: auction.id,
                     type: auction.type,
-                    blookId: auction.blookId,
+                    blook: auction.blook,
                     item: auction.item,
                     sellerId: auction.sellerId,
-                    buyerId: auction.bids[0].user.id,
-                    price: auction.bids[0].amount,
+                    buyerId: winningBid.user.id,
+                    price: winningBid.amount,
                     buyItNow: auction.buyItNow
                 }));
             }

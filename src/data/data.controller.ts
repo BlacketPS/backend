@@ -1,16 +1,19 @@
 import { Controller, Get } from "@nestjs/common";
 import { DataKey } from "./data.service";
 import { RedisService } from "src/redis/redis.service";
-import { Public } from "src/core/decorator";
+import { DataService } from "./data.service";
+import { GetCurrentUser, Public } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
 import { Throttle, seconds } from "@nestjs/throttler";
+import { DataBoostersEntity } from "@blacket/types";
 
 @ApiTags("data")
 @Throttle({ default: { limit: 100, ttl: seconds(60) } })
 @Controller("data")
 export class DataController {
     constructor(
-        private redisService: RedisService
+        private redisService: RedisService,
+        private dataService: DataService
     ) { }
 
     @Public()
@@ -89,5 +92,12 @@ export class DataController {
     @Get("credits")
     getCredits() {
         return this.redisService.getAllFromKey(DataKey.CREDIT);
+    }
+
+    @Get("boosters")
+    async getBoosters(@GetCurrentUser() userId: string) {
+        const boosters = await this.dataService.getBoosters(userId);
+
+        return new DataBoostersEntity(boosters);
     }
 }
