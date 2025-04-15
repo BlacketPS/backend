@@ -40,7 +40,13 @@ export class MarketService {
             await tx.user.update({ select: null, where: { id: userId }, data: { tokens: { decrement: pack.price } } });
             await tx.userStatistic.update({ select: null, where: { id: userId }, data: { packsOpened: { increment: 1 } } });
 
-            blook = await tx.userBlook.create({ select: null, data: { userId, initialObtainerId: userId, blookId: blooks[0].blookId, shiny: blooks[0].shiny, obtainedBy: BlookObtainMethod.PACK_OPEN } });
+            const blookId = blooks[0].blookId;
+            const shiny = blooks[0].shiny;
+
+            const currentCount = await tx.userBlook.count({ where: { blookId, shiny } });
+            const nextSerial = currentCount + 1;
+
+            blook = await tx.userBlook.create({ select: null, data: { userId, initialObtainerId: userId, blookId, shiny, obtainedBy: BlookObtainMethod.PACK_OPEN, serial: nextSerial } });
         });
 
         return blook;

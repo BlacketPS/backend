@@ -56,6 +56,7 @@ export class UsersService implements OnApplicationBootstrap {
                 id: true,
                 blookId: true,
                 shiny: true,
+                serial: true,
                 createdAt: true,
                 updatedAt: true
             },
