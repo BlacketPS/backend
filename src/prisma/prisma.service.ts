@@ -24,12 +24,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async onModuleInit() {
+        // await this.seedDatabase();
+
         // development mode setting handler
         if (this.configService.get<string>("NODE_ENV") !== "production") {
             if (this.configService.get<string>("SERVER_DEV_RESEED_DATABASE") === "true") {
                 this.blacketLogger.info("Creating database...", "Database", "Blacket");
 
-                // await this.seedDatabase();
 
                 this.blacketLogger.info("Database has been created! Please set \"SERVER_DEV_RESEED_DATABASE\" to false in your .env to prevent this from happening again.", "Database", "Blacket");
                 process.exit(0);

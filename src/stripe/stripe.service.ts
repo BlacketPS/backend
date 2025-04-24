@@ -4,7 +4,7 @@ import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import Stripe from "stripe";
 
-import { Conflict, InternalServerError, NotFound, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto } from "@blacket/types";
+import { Conflict, InternalServerError, NotFound, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto, StripeProductEntity, StripeStoreEntity } from "@blacket/types";
 import { BlookObtainMethod } from "@blacket/core";
 
 @Injectable()
@@ -31,11 +31,13 @@ export class StripeService {
         }
     }
 
-    async getProducts() {
+    async getStores(): Promise<StripeStoreEntity[]> {
         const productCache = await this.redisService.getKey("products", "*");
-        if (productCache) return productCache;
 
-        const products = await this.prismaService.store.findMany({
+        // for some reason it returns an object instead of an array, so we need to convert it to an array
+        if (productCache) return Object.values(productCache);
+
+        const stores = await this.prismaService.store.findMany({
             where: {
                 active: true
             },
@@ -43,18 +45,55 @@ export class StripeService {
                 products: true
             }
         });
-        if (!products) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+        if (!stores) throw new InternalServerErrorException(InternalServerError.DEFAULT);
 
-        // await this.redisService.setKey("products", "*", products, 3600);
+        const productCount = await this.prismaService.product.count();
 
-        return products;
+        const stripeProducts = await this.stripe.products.list({ limit: productCount });
+        if (!stripeProducts) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+        const stripePrices = await this.stripe.prices.list({ limit: productCount });
+        if (!stripePrices) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+        const response: StripeStoreEntity[] = [];
+
+        for (const store of stores) {
+            response.push({ ...store, products: [] });
+
+            for (const product of store.products) {
+                const stripeProduct = stripeProducts.data.find((p) => p.id === product.stripeProductId);
+                if (!stripeProduct) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+                const stripePrice = stripePrices.data.find((p) => p.id === stripeProduct.default_price);
+                if (!stripePrice) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+                const data = {
+                    ...product,
+
+                    name: stripeProduct.name,
+                    description: stripeProduct.description,
+                    price: stripePrice.unit_amount / 100,
+
+                    stripeProductId: stripeProduct.id,
+                    stripePriceId: stripePrice.id
+                };
+
+                response[response.length - 1].products.push(data);
+
+                await this.redisService.setProduct(product.id, data);
+            }
+        }
+
+        await this.redisService.setKey("products", "*", response, 3600);
+
+        return response;
     }
 
     async handlePaymentIntent(event: Stripe.PaymentIntent) {
         const user = await this.prismaService.user.findFirst({ where: { stripeCustomerId: event.customer as string } });
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
-        const product = await this.redisService.getProduct(parseInt(event.metadata.productId as string));
+        const product = await this.redisService.getProduct(parseInt(event.metadata.blacketProductId as string));
         if (!product) throw new NotFoundException(NotFound.UNKNOWN_PRODUCT);
 
         if (product.blookId) await this.prismaService.userBlook.create({
@@ -230,16 +269,15 @@ export class StripeService {
             customer: user.stripeCustomerId,
             payment_method: paymentMethod.paymentMethodId,
 
-            automatic_payment_methods: {
-                enabled: true,
-                allow_redirects: "never"
-            },
+            confirm: false,
 
             statement_descriptor_suffix: STATEMENT_DESCRIPTOR,
-            description: product.description,
+            description: `${product.name} (${product.stripeProductId})`,
 
             metadata: {
-                productId
+                blacketProductId: productId,
+                stripeProductId: product.stripeProductId,
+                stripePriceId: product.stripePriceId
             }
         });
 

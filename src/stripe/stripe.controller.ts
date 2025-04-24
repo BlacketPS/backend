@@ -2,7 +2,7 @@ import { BadRequestException, Body, Controller, Delete, Headers, HttpCode, HttpS
 import { StripeService } from "./stripe.service";
 import { GetCurrentUser, Public } from "src/core/decorator";
 import { hours, seconds, Throttle } from "@nestjs/throttler";
-import { StripeCreatePaymentMethodDto, StripeCreatePaymentMethodEntity, StripeCreateSetupIntentDto, StripeCreateSetupIntentEntity } from "@blacket/types";
+import { StripeCreatePaymentMethodDto, StripeCreatePaymentMethodEntity, StripeCreateSetupIntentDto, StripeCreateSetupIntentEntity, StripeStoreEntity } from "@blacket/types";
 
 @Controller("stripe")
 export class StripeController {
@@ -27,9 +27,10 @@ export class StripeController {
         return this.stripeService.handleWebhook(event);
     }
 
-    @Get("products")
-    async getProducts() {
-        return this.stripeService.getProducts();
+    @Get("stores")
+    async getStores(): Promise<StripeStoreEntity[]> {
+        return await this.stripeService.getStores()
+            .then((stores) => stores.map((store) => new StripeStoreEntity(store)));
     }
 
     @Throttle({ default: { limit: 20, ttl: hours(1) } })

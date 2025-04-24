@@ -3,7 +3,8 @@ import { Redis } from "ioredis";
 import { CoreService } from "src/core/core.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
-import { Session, Resource, Group, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Product, Prisma } from "@blacket/core";
+import { Session, Resource, Group, Blook, Rarity, Pack, Item, Title, Banner, Font, Emoji, ItemShop, Prisma } from "@blacket/core";
+import { StripeProductEntity } from "@blacket/types";
 
 type Room = Prisma.RoomGetPayload<{ include: { users: { select: { id: true } } } }>;
 type Blacklist = Prisma.BlacklistGetPayload<{ include: { ipAddress: true, punishment: true } }>;
@@ -90,7 +91,6 @@ export class RedisService extends Redis {
 
         for (const product of await this.prismaService.product.findMany()) {
             this.set(`${this.prefix}:product:${product.id}`, JSON.stringify(product));
-            this.set(`${this.prefix}:product:${product.name.toLowerCase()}`, JSON.stringify(product));
         }
     }
 
@@ -187,7 +187,7 @@ export class RedisService extends Redis {
     setEmoji = async (id: number, emoji: Partial<Emoji>): Promise<void> => await this.setKey("emoji", id, emoji);
     deleteEmoji = async (id: number): Promise<void> => await this.deleteKey("emoji", id);
 
-    getProduct = async (id: number): Promise<Product> => await this.getKey("product", id);
-    setProduct = async (id: number, product: Partial<Product>): Promise<void> => await this.setKey("product", id, product);
+    getProduct = async (id: number): Promise<StripeProductEntity> => await this.getKey("product", id);
+    setProduct = async (id: number, product: Partial<StripeProductEntity>): Promise<void> => await this.setKey("product", id, product);
     deleteProduct = async (id: number): Promise<void> => await this.deleteKey("product", id);
 }

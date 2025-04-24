@@ -1,6 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { DefaultService } from "./default.service";
 import { Public } from "src/core/decorator";
+import { Config } from "@blacket/types";
 
 @Controller("")
 export class DefaultController {
@@ -10,7 +11,7 @@ export class DefaultController {
 
     @Public()
     @Get()
-    get() {
+    get(): Config {
         return this.defaultService.get();
     }
 }
