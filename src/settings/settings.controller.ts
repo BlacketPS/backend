@@ -1,4 +1,4 @@
-import { Body, ClassSerializerInterceptor, Controller, HttpCode, HttpStatus, Patch, UseInterceptors } from "@nestjs/common";
+import { Body, ClassSerializerInterceptor, Controller, HttpCode, HttpStatus, Patch, Post, UseInterceptors } from "@nestjs/common";
 import { SettingsService } from "./settings.service";
 import { GetCurrentUser, Permissions } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
@@ -46,4 +46,11 @@ export class SettingsController {
     disableOtp(@GetCurrentUser() userId: string, @Body() dto: SettingsDisableOtpDto) {
         return this.settingsService.disableOtp(userId, dto);
     }
+
+    // @UseInterceptors(ClassSerializerInterceptor)
+    // @Post("resend-verification")
+    // @HttpCode(HttpStatus.NO_CONTENT)
+    // resendVerification(@GetCurrentUser() userId: string) {
+    //     return this.settingsService.sendVerificationEmail(userId);
+    // }
 }

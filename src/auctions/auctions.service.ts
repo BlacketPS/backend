@@ -54,7 +54,6 @@ export class AuctionsService {
                     blook: { blookId: dto.blookId ?? undefined, shiny: dto.shiny ?? undefined },
                     item: { itemId: dto.itemId ?? undefined },
 
-                    // i don't know why this has to be done but it does
                     OR: [
                         {
                             blook: {
@@ -247,7 +246,6 @@ export class AuctionsService {
 
         if (auction.seller.id === userId) throw new ForbiddenException(Forbidden.AUCTIONS_BID_OWN_AUCTION);
 
-        // Find the user's highest previous bid
         const userPreviousBids = auction.bids.filter((bid) => bid.user.id === userId);
         const highestPreviousBidAmount = userPreviousBids.length > 0
             ? Math.max(...userPreviousBids.map((bid) => bid.amount))
@@ -281,7 +279,7 @@ export class AuctionsService {
         }
 
         await this.prismaService.$transaction(async (tx) => {
-            // Deduct only the additional amount from the user's tokens
+            // deduct only the additional amount from the user's tokens
             const updatedUser = await tx.user.update({
                 where: { id: userId },
                 data: { tokens: { decrement: additionalAmount } }
@@ -290,7 +288,7 @@ export class AuctionsService {
                 throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
             }
 
-            // Create a new bid
+            // create a new bid
             const bid = await tx.auctionBid.create({
                 data: {
                     auction: { connect: { id } },

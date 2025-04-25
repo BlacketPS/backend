@@ -3,6 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
+import { MailService } from "src/mail/mail.service";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 import { hash, compare } from "bcrypt";
 import * as speakEasy from "@levminer/speakeasy";
@@ -17,6 +18,7 @@ export class SettingsService {
         private readonly redisService: RedisService,
         private readonly authService: AuthService,
         private readonly usersService: UsersService,
+        private readonly mailService: MailService,
 
         private readonly logger: BlacketLoggerService
     ) {
@@ -107,4 +109,11 @@ export class SettingsService {
 
         await this.prismaService.userSetting.update({ data: { otpSecret: null }, where: { id: userId } });
     }
+
+    // async sendVerificationEmail(userId: string): Promise<void> {
+    //     const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { settings: true } });
+    //     if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+
+    //     await this.mailService.sendVerificationEmail(user.email, userId);
+    // }
 }

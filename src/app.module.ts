@@ -3,6 +3,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule, seconds } from "@nestjs/throttler";
 import { ScheduleModule } from "@nestjs/schedule";
+import { MailerModule } from "@nestjs-modules/mailer";
 
 import { StripeModule } from "./stripe/stripe.module";
 
@@ -43,6 +44,21 @@ import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
             ]
         }),
         ScheduleModule.forRoot(),
+
+        MailerModule.forRoot({
+            transport: {
+                host: process.env.SERVER_MAIL_HOST,
+                port: Number(process.env.SERVER_MAIL_PORT),
+                secure: false,
+                auth: {
+                    user: process.env.SERVER_MAIL_USER,
+                    pass: process.env.SERVER_MAIL_PASSWORD
+                }
+            },
+            defaults: {
+                from: process.env.SERVER_MAIL_FROM
+            }
+        }),
 
         StripeModule.forRoot(),
 
