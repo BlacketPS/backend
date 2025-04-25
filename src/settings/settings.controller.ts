@@ -47,10 +47,10 @@ export class SettingsController {
         return this.settingsService.disableOtp(userId, dto);
     }
 
-    // @UseInterceptors(ClassSerializerInterceptor)
-    // @Post("resend-verification")
-    // @HttpCode(HttpStatus.NO_CONTENT)
-    // resendVerification(@GetCurrentUser() userId: string) {
-    //     return this.settingsService.sendVerificationEmail(userId);
-    // }
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Post("resend-verification")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    resendVerification(@GetCurrentUser() userId: string) {
+        return this.settingsService.sendVerificationEmail(userId);
+    }
 }

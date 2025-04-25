@@ -110,10 +110,10 @@ export class SettingsService {
         await this.prismaService.userSetting.update({ data: { otpSecret: null }, where: { id: userId } });
     }
 
-    // async sendVerificationEmail(userId: string): Promise<void> {
-    //     const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { settings: true } });
-    //     if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+    async sendVerificationEmail(userId: string): Promise<void> {
+        const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { settings: true } });
+        if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
-    //     await this.mailService.sendVerificationEmail(user.email, userId);
-    // }
+        await this.mailService.sendVerificationEmail(user.email, user, "turdle");
+    }
 }
