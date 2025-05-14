@@ -26,7 +26,9 @@ export class AuthController {
         description: InternalServerError.DEFAULT
     })
     async register(@Body() dto: RegisterDto, @RealIp() ip: string): Promise<AuthAuthEntity> {
-        if (this.configService.get("SERVER_REGISTRATION_ENABLED") !== "true") throw new ForbiddenException(Forbidden.AUTH_BANNED);
+        if (this.configService.get("SERVER_REGISTRATION_ENABLED") !== "true") {
+            if (dto.password !== this.configService.get("SERVER_REGISTRATION_BYPASS_PASSWORD")) throw new ForbiddenException(Forbidden.DEFAULT);
+        }
 
         return this.authService.register(dto, ip);
     }

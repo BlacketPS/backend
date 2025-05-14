@@ -104,7 +104,10 @@ export class CosmeticsService {
         const newUpload = await this.coreService.userUploadFile(userId, { buffer: blookifiedImage, originalname: "avatar.webp" });
 
         await this.prismaService.user.update({
-            data: { customAvatar: { connect: { id: newUpload.id } } },
+            data: {
+                avatar: { disconnect: true },
+                customAvatar: { connect: { id: newUpload.id } }
+            },
             where: { id: userId }
         });
 

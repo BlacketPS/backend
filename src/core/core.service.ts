@@ -1,15 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
+import { BlacketLoggerService } from "./logger/logger.service";
 import * as path from "path";
 import * as fs from "fs";
+
 import { Upload } from "@blacket/core";
 
 @Injectable()
 export class CoreService {
     constructor(
         private readonly prismaService: PrismaService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly logger: BlacketLoggerService
     ) { }
 
     safelyParseJSON(json: string): any {
@@ -17,8 +20,8 @@ export class CoreService {
 
         try {
             parsed = JSON.parse(json);
-        } catch {
-            // womp womp 🤓
+        } catch (e) {
+            this.logger.error("Failed to parse JSON", e);
         }
 
         return parsed;

@@ -3,9 +3,11 @@ import { ConfigService } from "@nestjs/config";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import Stripe from "stripe";
+import axios from "axios";
 
 import { Conflict, InternalServerError, NotFound, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto, StripeProductEntity, StripeStoreEntity } from "@blacket/types";
 import { BlookObtainMethod } from "@blacket/core";
+import { constructDiscordWebhookObject } from "./func";
 
 @Injectable()
 export class StripeService {
@@ -96,6 +98,9 @@ export class StripeService {
         const product = await this.redisService.getProduct(parseInt(event.metadata.blacketProductId as string));
         if (!product) throw new NotFoundException(NotFound.UNKNOWN_PRODUCT);
 
+        const customer = await this.stripe.customers.retrieve(event.customer as string);
+        if (!customer) throw new NotFoundException(NotFound.UNKNOWN_CUSTOMER);
+
         if (product.blookId) await this.prismaService.userBlook.create({
             data: {
                 userId: user.id,
@@ -141,7 +146,20 @@ export class StripeService {
             }
         });
 
-        console.log(`User ${user.username} has successfully purchased product ${product.name}.`);
+        // const baseUrl = this.configService.get<string>("SERVER_BASE_URL");
+        // const mediaPath = this.configService.get<string>("VITE_MEDIA_PATH");
+
+        // const webhookData = constructDiscordWebhookObject(user, product, event, customer as Stripe.Customer, `${baseUrl}${mediaPath}`);
+        // console.log(webhookData);
+
+        // await axios.post(this.configService.get<string>("SERVER_DISCORD_PURCHASE_WEBHOOK_URL"), webhookData, {
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     }
+        // }).catch((err) => {
+        //     // console.error("Error sending webhook:", err);
+        // });
+        // // console.log(`User ${user.username} has successfully purchased product ${product.name}.`);
     }
 
     async createSetupIntent(userId: string, dto: StripeCreateSetupIntentDto) {
