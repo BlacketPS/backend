@@ -19,15 +19,15 @@ export class CosmeticsController {
         return this.cosmeticsService.changeAvatar(userId, dto);
     }
 
-    @Throttle({ default: { limit: 3, ttl: seconds(60) } })
-    @Post("avatar/upload")
-    @Permissions({ permissions: [PermissionTypeEnum.CUSTOM_AVATAR] })
-    uploadAvatar(
-        @GetCurrentUser() userId: string,
-        @Body() dto: CosmeticsUploadAvatarDto
-    ) {
-        return this.cosmeticsService.uploadAvatar(userId, dto);
-    }
+    // @Throttle({ default: { limit: 3, ttl: seconds(60) } })
+    // @Post("avatar/upload")
+    // @Permissions({ permissions: [PermissionTypeEnum.CUSTOM_AVATAR] })
+    // uploadAvatar(
+    //     @GetCurrentUser() userId: string,
+    //     @Body() dto: CosmeticsUploadAvatarDto
+    // ) {
+    //     return this.cosmeticsService.uploadAvatar(userId, dto);
+    // }
 
     @Patch("banner")
     @HttpCode(HttpStatus.NO_CONTENT)
@@ -38,15 +38,15 @@ export class CosmeticsController {
         return this.cosmeticsService.changeBanner(userId, dto);
     }
 
-    @Throttle({ default: { limit: 3, ttl: seconds(60) } })
-    @Post("banner/upload")
-    @Permissions({ permissions: [PermissionTypeEnum.CUSTOM_BANNER] })
-    uploadBanner(
-        @GetCurrentUser() userId: string,
-        @Body() dto: CosmeticsUploadBannerDto
-    ) {
-        return this.cosmeticsService.uploadBanner(userId, dto);
-    }
+    // @Throttle({ default: { limit: 3, ttl: seconds(60) } })
+    // @Post("banner/upload")
+    // @Permissions({ permissions: [PermissionTypeEnum.CUSTOM_BANNER] })
+    // uploadBanner(
+    //     @GetCurrentUser() userId: string,
+    //     @Body() dto: CosmeticsUploadBannerDto
+    // ) {
+    //     return this.cosmeticsService.uploadBanner(userId, dto);
+    // }
 
     @Patch("title")
     @HttpCode(HttpStatus.NO_CONTENT)

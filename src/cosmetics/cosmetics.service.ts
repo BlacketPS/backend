@@ -86,56 +86,56 @@ export class CosmeticsService {
         await this.prismaService.user.update({ data: { font: { connect: { id: font.id } } }, where: { id: userId } });
     }
 
-    async uploadAvatar(userId: string, dto: CosmeticsUploadAvatarDto) {
-        const upload = await this.prismaService.upload.findUnique({
-            where: {
-                id: dto.uploadId,
-                userId
-            },
-            include: {
+    // async uploadAvatar(userId: string, dto: CosmeticsUploadAvatarDto) {
+    //     const upload = await this.prismaService.upload.findUnique({
+    //         where: {
+    //             id: dto.uploadId,
+    //             userId
+    //         },
+    //         include: {
 
-            }
-        });
-        if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
+    //         }
+    //     });
+    //     if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
 
-        const image = await fs.promises.readFile(await this.coreService.getUploadPath(upload));
-        const blookifiedImage = await blookifyImage(image);
+    //     const image = await fs.promises.readFile(await this.coreService.getUploadPath(upload));
+    //     const blookifiedImage = await blookifyImage(image);
 
-        const newUpload = await this.coreService.userUploadFile(userId, { buffer: blookifiedImage, originalname: "avatar.webp" });
+    //     const newUpload = await this.coreService.userUploadFile(userId, { buffer: blookifiedImage, originalname: "avatar.webp" });
 
-        await this.prismaService.user.update({
-            data: {
-                avatar: { disconnect: true },
-                customAvatar: { connect: { id: newUpload.id } }
-            },
-            where: { id: userId }
-        });
+    //     await this.prismaService.user.update({
+    //         data: {
+    //             avatar: { disconnect: true },
+    //             customAvatar: { connect: { id: newUpload.id } }
+    //         },
+    //         where: { id: userId }
+    //     });
 
-        return newUpload;
-    }
+    //     return newUpload;
+    // }
 
-    async uploadBanner(userId: string, dto: CosmeticsUploadBannerDto) {
-        const upload = await this.prismaService.upload.findUnique({
-            where: {
-                id: dto.uploadId,
-                userId
-            },
-            include: {
+    // async uploadBanner(userId: string, dto: CosmeticsUploadBannerDto) {
+    //     const upload = await this.prismaService.upload.findUnique({
+    //         where: {
+    //             id: dto.uploadId,
+    //             userId
+    //         },
+    //         include: {
 
-            }
-        });
-        if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
+    //         }
+    //     });
+    //     if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
 
-        const image = await fs.promises.readFile(await this.coreService.getUploadPath(upload));
-        const bannerifiedImage = await bannerifyImage(image);
+    //     const image = await fs.promises.readFile(await this.coreService.getUploadPath(upload));
+    //     const bannerifiedImage = await bannerifyImage(image);
 
-        const newUpload = await this.coreService.userUploadFile(userId, { buffer: bannerifiedImage, originalname: "banner.webp" });
+    //     const newUpload = await this.coreService.userUploadFile(userId, { buffer: bannerifiedImage, originalname: "banner.webp" });
 
-        await this.prismaService.user.update({
-            data: { customBanner: { connect: { id: newUpload.id } } },
-            where: { id: userId }
-        });
+    //     await this.prismaService.user.update({
+    //         data: { customBanner: { connect: { id: newUpload.id } } },
+    //         where: { id: userId }
+    //     });
 
-        return newUpload;
-    }
+    //     return newUpload;
+    // }
 }

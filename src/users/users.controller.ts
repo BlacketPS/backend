@@ -53,28 +53,4 @@ export class UsersController {
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
         else return new PublicUser(userData);
     }
-
-    @UseInterceptors(FileInterceptor("file"))
-    @UsePipes(new FileSizeValidationPipe(1024 * 1024 * 2))
-    @Permissions({ permissions: [PermissionType.UPLOAD_FILES_SMALL] })
-    @Post("upload/small")
-    async uploadFileSmall(@GetCurrentUser() userId: string, @UploadedFile() file: Express.Multer.File) {
-        return await this.coreService.userUploadFile(userId, file);
-    }
-
-    @UseInterceptors(FileInterceptor("file"))
-    @UsePipes(new FileSizeValidationPipe(1024 * 1024 * 4))
-    @Permissions({ permissions: [PermissionType.UPLOAD_FILES_MEDIUM] })
-    @Post("upload/medium")
-    async uploadFileMedium(@GetCurrentUser() userId: string, @UploadedFile() file: Express.Multer.File) {
-        return await this.coreService.userUploadFile(userId, file);
-    }
-
-    @UseInterceptors(FileInterceptor("file"))
-    @UsePipes(new FileSizeValidationPipe(1024 * 1024 * 8))
-    @Permissions({ permissions: [PermissionType.UPLOAD_FILES_LARGE] })
-    @Post("upload/large")
-    async uploadFileLarge(@GetCurrentUser() userId: string, @UploadedFile() file: Express.Multer.File) {
-        return await this.coreService.userUploadFile(userId, file);
-    }
 }

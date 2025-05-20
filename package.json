@@ -13,10 +13,12 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.812.0",
+    "@aws-sdk/s3-presigned-post": "^3.812.0",
     "@blacket/common": "link:@blacket/common",
     "@blacket/core": "link:@blacket/core",
-    "@blacket/types": "link:@blacket/types",
     "@blacket/mail-templates": "link:@blacket/mail-templates",
+    "@blacket/types": "link:@blacket/types",
     "@levminer/speakeasy": "^1.4.2",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/axios": "^3.1.3",

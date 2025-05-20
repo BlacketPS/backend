@@ -12,6 +12,7 @@ import { LoggerModule } from "./core/logger/logger.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RedisModule } from "./redis/redis.module";
 import { SocketModule } from "./socket/socket.module";
+import { S3Module } from "./s3/s3.module";
 import { DefaultModule } from "./default/default.module";
 import { DataModule } from "./data/data.module";
 import { AuthModule } from "./auth/auth.module";
@@ -67,6 +68,7 @@ import { AuthGuard, UserThrottlerGuard, PermissionGuard } from "./core/guard";
         PrismaModule,
         RedisModule,
         SocketModule,
+        S3Module,
         DefaultModule,
         DataModule,
         AuthModule,
