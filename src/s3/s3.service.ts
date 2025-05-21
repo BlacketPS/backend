@@ -43,7 +43,7 @@ export class S3Service {
                 key,
                 "Content-Type": contentType
             },
-            Expires: 60
+            Expires: 300
         });
     }
 
