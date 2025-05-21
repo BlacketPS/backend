@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { MailerService } from "@nestjs-modules/mailer";
 import { PrismaService } from "src/prisma/prisma.service";
 import { render } from "@react-email/render";
-import { WelcomeEmail} from "@blacket/mail-templates";
+import { WelcomeEmail } from "@blacket/mail-templates";
 import { User } from "@blacket/core";
 
 @Injectable()

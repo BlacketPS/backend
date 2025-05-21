@@ -1,17 +1,20 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CoreService } from "src/core/core.service";
-import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, NotFound, Forbidden, CosmeticsChangeAvatarDto, CosmeticsUploadAvatarDto, CosmeticsUploadBannerDto } from "@blacket/types";
+import { S3Service } from "src/s3/s3.service";
+import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, NotFound, Forbidden, CosmeticsChangeAvatarDto, CosmeticsUploadAvatarDto, CosmeticsUploadBannerDto, InternalServerError } from "@blacket/types";
 import { bannerifyImage, blookifyImage } from "@blacket/common";
 import * as fs from "fs";
+import axios from "axios";
 
 @Injectable()
 export class CosmeticsService {
     constructor(
         private redisService: RedisService,
         private prismaService: PrismaService,
-        private coreService: CoreService
+        private coreService: CoreService,
+        private s3Service: S3Service
     ) { }
 
     async changeAvatar(userId: string, dto: CosmeticsChangeAvatarDto) {
@@ -86,56 +89,93 @@ export class CosmeticsService {
         await this.prismaService.user.update({ data: { font: { connect: { id: font.id } } }, where: { id: userId } });
     }
 
-    // async uploadAvatar(userId: string, dto: CosmeticsUploadAvatarDto) {
-    //     const upload = await this.prismaService.upload.findUnique({
-    //         where: {
-    //             id: dto.uploadId,
-    //             userId
-    //         },
-    //         include: {
+    async uploadAvatar(userId: string, dto: CosmeticsUploadAvatarDto) {
+        const upload = await this.prismaService.upload.findUnique({
+            where: {
+                id: dto.uploadId,
+                userId
+            }
+        });
+        if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
 
-    //         }
-    //     });
-    //     if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
+        const image = await axios.get(await this.coreService.getUserUploadPath(upload), { responseType: "arraybuffer" })
+            .then((res) => res.data)
+            .catch(() => {
+                throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
+            });
+        const blookifiedImage = await blookifyImage(image);
 
-    //     const image = await fs.promises.readFile(await this.coreService.getUploadPath(upload));
-    //     const blookifiedImage = await blookifyImage(image);
+        const presignedUrl = await this.s3Service.createPresignedPost(userId, "avatar.webp", "image/webp", 1024 * 1024 * 2);
 
-    //     const newUpload = await this.coreService.userUploadFile(userId, { buffer: blookifiedImage, originalname: "avatar.webp" });
+        const formData = new FormData();
+        Object.entries(presignedUrl.fields).forEach(([k, v]) => formData.append(k, v as string));
 
-    //     await this.prismaService.user.update({
-    //         data: {
-    //             avatar: { disconnect: true },
-    //             customAvatar: { connect: { id: newUpload.id } }
-    //         },
-    //         where: { id: userId }
-    //     });
+        formData.append(
+            "file",
+            new Blob([Buffer.from(blookifiedImage)], { type: "image/webp" }),
+            "avatar.webp"
+        );
 
-    //     return newUpload;
-    // }
+        const s3Upload = await fetch(presignedUrl.url, {
+            method: "POST",
+            body: formData
+        });
+        if (!s3Upload.ok) throw new InternalServerErrorException(InternalServerError.DEFAULT);
 
-    // async uploadBanner(userId: string, dto: CosmeticsUploadBannerDto) {
-    //     const upload = await this.prismaService.upload.findUnique({
-    //         where: {
-    //             id: dto.uploadId,
-    //             userId
-    //         },
-    //         include: {
+        const newUpload = await this.s3Service.verifyUpload(userId, { uploadId: presignedUrl.fields.key.split("/")[2] });
+        if (!newUpload) throw new InternalServerErrorException(InternalServerError.DEFAULT);
 
-    //         }
-    //     });
-    //     if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
+        await this.prismaService.user.update({
+            data: {
+                avatar: { disconnect: true },
+                customAvatar: { connect: { id: newUpload.id } }
+            },
+            where: { id: userId }
+        });
 
-    //     const image = await fs.promises.readFile(await this.coreService.getUploadPath(upload));
-    //     const bannerifiedImage = await bannerifyImage(image);
+        return newUpload;
+    }
 
-    //     const newUpload = await this.coreService.userUploadFile(userId, { buffer: bannerifiedImage, originalname: "banner.webp" });
+    async uploadBanner(userId: string, dto: CosmeticsUploadBannerDto) {
+        const upload = await this.prismaService.upload.findUnique({
+            where: {
+                id: dto.uploadId,
+                userId
+            }
+        });
+        if (!upload) throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
 
-    //     await this.prismaService.user.update({
-    //         data: { customBanner: { connect: { id: newUpload.id } } },
-    //         where: { id: userId }
-    //     });
+        const image = await axios.get(await this.coreService.getUserUploadPath(upload), { responseType: "arraybuffer" })
+            .then((res) => res.data)
+            .catch(() => {
+                throw new NotFoundException(NotFound.UNKNOWN_UPLOAD);
+            });
+        const bannerifiedImage = await bannerifyImage(image);
 
-    //     return newUpload;
-    // }
+        const presignedUrl = await this.s3Service.createPresignedPost(userId, "banner.webp", "image/webp", 1024 * 1024 * 2);
+
+        const formData = new FormData();
+        Object.entries(presignedUrl.fields).forEach(([k, v]) => formData.append(k, v as string));
+        formData.append(
+            "file",
+            new Blob([Buffer.from(bannerifiedImage)], { type: "image/webp" }),
+            "banner.webp"
+        );
+
+        const s3Upload = await fetch(presignedUrl.url, {
+            method: "POST",
+            body: formData
+        });
+        if (!s3Upload.ok) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+        const newUpload = await this.s3Service.verifyUpload(userId, { uploadId: presignedUrl.fields.key.split("/")[2] });
+        if (!newUpload) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+        await this.prismaService.user.update({
+            data: { customBanner: { connect: { id: newUpload.id } } },
+            where: { id: userId }
+        });
+
+        return newUpload;
+    }
 }
