@@ -1,18 +1,16 @@
-import { Controller, Get, UseInterceptors, UsePipes, Query, Post, Body } from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
+import { Controller, Get, Query, Post, Body } from "@nestjs/common";
 import { S3Service } from "./s3.service";
 import { GetCurrentUser, Permissions } from "src/core/decorator";
-import { FileSizeValidationPipe } from "src/core/pipe";
 
 import { PermissionType, Upload } from "@blacket/core";
 import { S3UploadDto, S3UploadEntity, S3VerifyDto } from "@blacket/types";
+import { seconds, Throttle } from "@nestjs/throttler";
 
 @Controller("s3")
 export class S3Controller {
     constructor(private readonly s3Service: S3Service) { }
 
-    @UseInterceptors(FileInterceptor("file"))
-    @UsePipes(new FileSizeValidationPipe(1024 * 1024 * 10))
+    @Throttle({ default: { limit: 5, ttl: seconds(10) } })
     @Permissions({ permissions: [PermissionType.UPLOAD_FILES_SMALL] })
     @Get("upload/small")
     async uploadFileSmall(
@@ -27,8 +25,7 @@ export class S3Controller {
         );
     }
 
-    @UseInterceptors(FileInterceptor("file"))
-    @UsePipes(new FileSizeValidationPipe(1024 * 1024 * 50))
+    @Throttle({ default: { limit: 5, ttl: seconds(10) } })
     @Permissions({ permissions: [PermissionType.UPLOAD_FILES_MEDIUM] })
     @Get("upload/medium")
     async uploadFileMedium(
@@ -43,8 +40,7 @@ export class S3Controller {
         );
     }
 
-    @UseInterceptors(FileInterceptor("file"))
-    @UsePipes(new FileSizeValidationPipe(1024 * 1024 * 100))
+    @Throttle({ default: { limit: 5, ttl: seconds(10) } })
     @Permissions({ permissions: [PermissionType.UPLOAD_FILES_LARGE] })
     @Get("upload/large")
     async uploadFileLarge(
@@ -59,6 +55,7 @@ export class S3Controller {
         );
     }
 
+    @Throttle({ default: { limit: 5, ttl: seconds(10) } })
     @Post("verify")
     async verifyFile(
         @GetCurrentUser() userId: string,
