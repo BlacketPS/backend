@@ -5,7 +5,7 @@ import { DataService } from "./data.service";
 import { GetCurrentUser, Public } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
 import { Throttle, seconds } from "@nestjs/throttler";
-import { DataBoostersEntity } from "@blacket/types";
+import { DataBoostersEntity, StripeProductEntity } from "@blacket/types";
 
 @ApiTags("data")
 @Throttle({ default: { limit: 100, ttl: seconds(60) } })
@@ -84,8 +84,10 @@ export class DataController {
 
     @Public()
     @Get("products")
-    getProducts() {
-        return this.redisService.getAllFromKey(DataKey.PRODUCT);
+    async getProducts() {
+        const products = await this.redisService.getAllFromKey(DataKey.PRODUCT);
+
+        return products.map((product) => new StripeProductEntity(product));
     }
 
     @Public()

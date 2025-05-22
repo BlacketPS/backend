@@ -68,4 +68,10 @@ export class StripeController {
     async createPaymentIntent(@GetCurrentUser() userId: string, @Param("productId") id: string) {
         return this.stripeService.createPaymentIntent(userId, parseInt(id));
     }
+
+    @Throttle({ default: { limit: 5, ttl: hours(1) } })
+    @Post("invoice/:productId")
+    async createInvoice(@GetCurrentUser() userId: string, @Param("productId") id: string) {
+        return this.stripeService.createSubscription(userId, parseInt(id));
+    }
 }

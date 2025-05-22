@@ -6,7 +6,7 @@ import Stripe from "stripe";
 import axios from "axios";
 
 import { Conflict, InternalServerError, NotFound, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto, StripeProductEntity, StripeStoreEntity } from "@blacket/types";
-import { BlookObtainMethod } from "@blacket/core";
+import { BlookObtainMethod, UserSubscription } from "@blacket/core";
 import { constructDiscordWebhookObject } from "./func";
 
 @Injectable()
@@ -30,6 +30,14 @@ export class StripeService {
         switch (event.type) {
             case "payment_intent.succeeded":
                 return await this.handlePaymentIntent(event.data.object as Stripe.PaymentIntent);
+            case "invoice.payment_succeeded":
+                return await this.handleInvoiceSuccess(event.data.object as Stripe.Invoice);
+            case "invoice.payment_failed":
+                return await this.handleInvoiceFailed(event.data.object as Stripe.Invoice);
+            case "customer.subscription.created":
+                return await this.handleSubscriptionCreate(event.data.object as Stripe.Subscription);
+            case "customer.subscription.deleted":
+                return await this.handleSubscriptionEnd(event.data.object as Stripe.Subscription);
         }
     }
 
@@ -160,6 +168,93 @@ export class StripeService {
         //     // console.error("Error sending webhook:", err);
         // });
         // // console.log(`User ${user.username} has successfully purchased product ${product.name}.`);
+    }
+
+    async handleSubscriptionCreate(event: Stripe.Subscription) {
+        const user = await this.prismaService.user.findFirst({ where: { stripeCustomerId: event.customer as string } });
+        if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+
+        const product = await this.redisService.getProduct(parseInt(event.metadata.blacketProductId as string));
+        if (!product) throw new NotFoundException(NotFound.UNKNOWN_PRODUCT);
+
+        const subscription = await this.prismaService.userSubscription.create({
+            data: {
+                userId: user.id,
+                productId: product.id,
+                stripeSubscriptionId: event.id,
+                expiresAt: new Date(event.current_period_end * 1000)
+            }
+        });
+
+        console.log(subscription);
+
+        console.log(`User ${user.username} has successfully purchased subscription ${product.name}.`);
+    };
+
+    async handleInvoiceSuccess(event: Stripe.Invoice) {
+        const user = await this.prismaService.user.findFirst({ where: { stripeCustomerId: event.customer as string } });
+        if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+
+        const product = await this.redisService.getProduct(parseInt(event.metadata.blacketProductId as string));
+        if (!product) throw new NotFoundException(NotFound.UNKNOWN_PRODUCT);
+
+        const subscription = await this.prismaService.userSubscription.findFirst({
+            where: {
+                userId: user.id,
+                productId: product.id
+            }
+        });
+        if (!subscription) throw new NotFoundException(NotFound.UNKNOWN_SUBSCRIPTION);
+
+        await this.prismaService.userSubscription.update({
+            where: { id: subscription.id },
+            data: {
+                stripeSubscriptionId: event.subscription as string,
+                expiresAt: new Date(event.lines.data[0].period.end * 1000)
+            }
+        });
+
+        console.log(`User ${user.username} has successfully purchased subscription ${product.name}.`);
+    }
+
+    async handleInvoiceFailed(event: Stripe.Invoice) {
+        const user = await this.prismaService.user.findFirst({ where: { stripeCustomerId: event.customer as string } });
+        if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+
+        const product = await this.redisService.getProduct(parseInt(event.metadata.blacketProductId as string));
+        if (!product) throw new NotFoundException(NotFound.UNKNOWN_PRODUCT);
+
+        const subscription = await this.prismaService.userSubscription.findFirst({
+            where: {
+                userId: user.id,
+                stripeSubscriptionId: event.subscription as string
+            }
+        });
+        if (!subscription) throw new NotFoundException(NotFound.UNKNOWN_SUBSCRIPTION);
+
+        console.log(`User ${user.username} has failed to pay for subscription ${product.name}.`);
+    }
+
+    async handleSubscriptionEnd(event: Stripe.Subscription) {
+        const user = await this.prismaService.user.findFirst({ where: { stripeCustomerId: event.customer as string } });
+        if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+
+        const product = await this.redisService.getProduct(parseInt(event.metadata.blacketProductId as string));
+        if (!product) throw new NotFoundException(NotFound.UNKNOWN_PRODUCT);
+
+        const subscription = await this.prismaService.userSubscription.findFirst({
+            where: {
+                userId: user.id,
+                stripeSubscriptionId: event.id
+            }
+        });
+        if (!subscription) throw new NotFoundException(NotFound.UNKNOWN_SUBSCRIPTION);
+
+        await this.prismaService.userSubscription.delete({ where: { id: subscription.id } });
+
+        await this.prismaService.userGroup.deleteMany({ where: { userId: user.id, groupId: product.groupId } });
+
+        console.log(`User ${user.username} has successfully ended subscription ${product.name}.`);
     }
 
     async createSetupIntent(userId: string, dto: StripeCreateSetupIntentDto) {
@@ -300,5 +395,35 @@ export class StripeService {
         });
 
         return paymentIntent;
+    }
+
+    async createSubscription(userId: string, productId: number) {
+        const hasSubscription = await this.prismaService.userSubscription.count({ where: { userId, productId } });
+        if (hasSubscription > 0) throw new ConflictException(Conflict.SUBSCRIPTION_ALREADY_EXISTS);
+
+        const product = await this.redisService.getProduct(productId);
+        if (!product || !product.isSubscription) throw new NotFoundException(NotFound.UNKNOWN_PRODUCT);
+
+        const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { paymentMethods: { where: { primary: true } } } });
+        if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
+
+        const paymentMethod = user.paymentMethods[0];
+        if (!paymentMethod) throw new NotFoundException(NotFound.UNKNOWN_PAYMENT_METHOD);
+
+        if (!user.stripeCustomerId) throw new NotFoundException(NotFound.UNKNOWN_CUSTOMER);
+
+        return await this.stripe.subscriptions.create({
+            customer: user.stripeCustomerId,
+            items: [{ price: product.stripePriceId }],
+            default_payment_method: paymentMethod.paymentMethodId,
+
+            metadata: {
+                blacketProductId: productId,
+                stripeProductId: product.stripeProductId,
+                stripePriceId: product.stripePriceId
+            },
+
+            cancel_at_period_end: false
+        });
     }
 }

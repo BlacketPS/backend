@@ -31,6 +31,7 @@ export class UsersController {
             includeItemsCurrent: true,
             includeSettings: true,
             includePaymentMethods: true,
+            includeSubscription: true,
             includeStatistics: true,
             includeRooms: true
         });

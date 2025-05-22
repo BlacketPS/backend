@@ -14,6 +14,7 @@ export interface GetUserSettings {
     includeItemsCurrent?: boolean;
     includeItemsAll?: boolean;
     includePaymentMethods?: boolean;
+    includeSubscription?: boolean;
     includeStatistics?: boolean;
     includeSettings?: boolean;
     includeTitles?: boolean;
@@ -86,6 +87,12 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeFonts) include.fonts = true;
         if (settings.includeSettings) include.settings = true;
         if (settings.includePaymentMethods) include.paymentMethods = { omit: { paymentMethodId: true } };
+        if (settings.includeSubscription) include.subscription = {
+            omit: {
+                stripeSubscriptionId: true,
+                userId: true
+            }
+        };
         if (settings.includeRooms) include.rooms = { omit: { public: true } };
 
         const userData = await this.prismaService.user.findFirst({
