@@ -167,7 +167,7 @@ export class StripeService {
         // }).catch((err) => {
         //     // console.error("Error sending webhook:", err);
         // });
-        // // console.log(`User ${user.username} has successfully purchased product ${product.name}.`);
+        console.log(`User ${user.username} has successfully purchased product ${product.name}.`);
     }
 
     async handleSubscriptionCreate(event: Stripe.Subscription) {
