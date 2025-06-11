@@ -62,12 +62,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     //         await prisma.room.create({ data: { name: "global", public: true, id: 0 } });
 
     //         await prisma.rarity.create({ data: { name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON } });
-    //         await prisma.rarity.create({ data: { name: "Uncommon", color: "#4bc22e", experience: 1, animationType: RarityAnimationType.UNCOMMON } });
-    //         await prisma.rarity.create({ data: { name: "Rare", color: "#0a14fa", experience: 5, animationType: RarityAnimationType.RARE } });
-    //         await prisma.rarity.create({ data: { name: "Epic", color: "#be0000", experience: 25, animationType: RarityAnimationType.EPIC } });
-    //         await prisma.rarity.create({ data: { name: "Legendary", color: "#ff910f", experience: 100, animationType: RarityAnimationType.LEGENDARY } });
+    //         await prisma.rarity.create({ data: { name: "Uncommon", color: "#29e629", experience: 1, animationType: RarityAnimationType.UNCOMMON } });
+    //         await prisma.rarity.create({ data: { name: "Rare", color: "#0000ff", experience: 5, animationType: RarityAnimationType.RARE } });
+    //         await prisma.rarity.create({ data: { name: "Epic", color: "#8000ff", experience: 25, animationType: RarityAnimationType.EPIC } });
+    //         await prisma.rarity.create({ data: { name: "Legendary", color: "#ffaf0f", experience: 100, animationType: RarityAnimationType.LEGENDARY } });
     //         await prisma.rarity.create({ data: { name: "Chroma", color: "#00ccff", experience: 250, animationType: RarityAnimationType.CHROMA } });
-    //         await prisma.rarity.create({ data: { name: "Mystical", color: "#a335ee", experience: 1000, animationType: RarityAnimationType.CHROMA } });
+    //         await prisma.rarity.create({ data: { name: "Supreme", color: "#be0000", experience: 250, animationType: RarityAnimationType.CHROMA } });
+    //         await prisma.rarity.create({ data: { name: "Mythical", color: "#ff75ff", experience: 1000, animationType: RarityAnimationType.CHROMA } });
     //         await prisma.rarity.create({ data: { name: "Unique", color: "#008080", experience: 1000, animationType: RarityAnimationType.CHROMA } });
     //         await prisma.rarity.create({ data: { name: "Iridescent", color: "rainbow", experience: 1000, animationType: RarityAnimationType.IRIDESCENT } });
 

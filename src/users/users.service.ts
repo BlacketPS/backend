@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { DiscordAccessToken, DiscordDiscordUser, User } from "@blacket/types";
-import { Font, PermissionType, Prisma, Title, OAuthType, UserDiscord } from "@blacket/core";
+import { Font, PermissionType, Prisma, Title, OAuthType, UserDiscord, Transaction } from "@blacket/core";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -204,6 +204,13 @@ export class UsersService implements OnApplicationBootstrap {
             });
 
             return userDiscord;
+        });
+    }
+
+    async getTransactions(userId: string): Promise<Transaction[]> {
+        return await this.prismaService.transaction.findMany({
+            where: { userId },
+            orderBy: { createdAt: "desc" }
         });
     }
 }

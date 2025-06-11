@@ -54,4 +54,9 @@ export class UsersController {
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
         else return new PublicUser(userData);
     }
+
+    @Get("transactions")
+    async getTransactions(@GetCurrentUser() userId: string) {
+        return this.usersService.getTransactions(userId);
+    }
 }
