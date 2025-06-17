@@ -41,6 +41,12 @@ export class UsersController {
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
+    @Get("transactions")
+    async getTransactions(@GetCurrentUser() userId: string) {
+        return this.usersService.getTransactions(userId);
+    }
+
+    @UseInterceptors(ClassSerializerInterceptor)
     @Get(":user")
     async getUser(@Param("user") user: string) {
         const userData = await this.usersService.getUser(user, {
@@ -53,10 +59,5 @@ export class UsersController {
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
         else return new PublicUser(userData);
-    }
-
-    @Get("transactions")
-    async getTransactions(@GetCurrentUser() userId: string) {
-        return this.usersService.getTransactions(userId);
     }
 }

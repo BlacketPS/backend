@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
 import { hash } from "bcrypt";
 import { DiscordAccessToken, DiscordDiscordUser, User } from "@blacket/types";
-import { Font, PermissionType, Prisma, Title, OAuthType, UserDiscord, Transaction } from "@blacket/core";
+import { Font, PermissionType, Prisma, Title, OAuthType, UserDiscord, Transaction, UserSubscriptionStatus } from "@blacket/core";
 
 export interface GetUserSettings {
     cacheUser?: boolean;
@@ -87,11 +87,19 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeFonts) include.fonts = true;
         if (settings.includeSettings) include.settings = true;
         if (settings.includePaymentMethods) include.paymentMethods = { omit: { paymentMethodId: true } };
-        if (settings.includeSubscription) include.subscription = {
-            omit: {
-                stripeSubscriptionId: true,
-                userId: true
-            }
+        if (settings.includeSubscription) include.subscriptions = {
+            where: {
+                status: UserSubscriptionStatus.ACTIVE
+            },
+            include: {
+                product: {
+                    include: {
+                        group: true
+                    }
+                }
+            },
+            orderBy: { expiresAt: "desc" },
+            take: 1
         };
         if (settings.includeRooms) include.rooms = { omit: { public: true } };
 

@@ -1,8 +1,8 @@
 import { BadRequestException, Body, Controller, Delete, Headers, HttpCode, HttpStatus, Param, Post, Get, Put, Request } from "@nestjs/common";
 import { StripeService } from "./stripe.service";
-import { GetCurrentUser, Public } from "src/core/decorator";
+import { GetCurrentUser, Public, RealIp } from "src/core/decorator";
 import { hours, seconds, Throttle } from "@nestjs/throttler";
-import { StripeCreatePaymentMethodDto, StripeCreatePaymentMethodEntity, StripeCreateSetupIntentDto, StripeCreateSetupIntentEntity, StripeStoreEntity } from "@blacket/types";
+import { StripeCreatePaymentIntentDto, StripeCreatePaymentMethodDto, StripeCreatePaymentMethodEntity, StripeCreateSetupIntentDto, StripeCreateSetupIntentEntity, StripeStoreEntity } from "@blacket/types";
 
 @Controller("stripe")
 export class StripeController {
@@ -65,13 +65,22 @@ export class StripeController {
 
     @Throttle({ default: { limit: 60, ttl: hours(1) } })
     @Post("payment-intent/:productId")
-    async createPaymentIntent(@GetCurrentUser() userId: string, @Param("productId") id: string) {
-        return this.stripeService.createPaymentIntent(userId, parseInt(id));
+    async createPaymentIntent(
+        @GetCurrentUser() userId: string,
+        @Param("productId") id: string,
+        @Body() dto: StripeCreatePaymentIntentDto,
+        @RealIp() ip: string
+    ) {
+        return this.stripeService.createPaymentIntent(userId, parseInt(id), dto, ip);
     }
 
     @Throttle({ default: { limit: 5, ttl: hours(1) } })
     @Post("invoice/:productId")
-    async createInvoice(@GetCurrentUser() userId: string, @Param("productId") id: string) {
-        return this.stripeService.createSubscription(userId, parseInt(id));
+    async createInvoice(
+        @GetCurrentUser() userId: string,
+        @Param("productId") id: string,
+        @RealIp() ip: string
+    ) {
+        return this.stripeService.createSubscription(userId, parseInt(id), ip);
     }
 }

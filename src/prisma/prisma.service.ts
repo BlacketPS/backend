@@ -44,15 +44,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
     //     // truncate entire database
     //     await this.$transaction(async (prisma) => {
-    //         await prisma.resource.deleteMany({});
-    //         await prisma.room.deleteMany({});
-    //         await prisma.rarity.deleteMany({});
-    //         await prisma.banner.deleteMany({});
-    //         await prisma.title.deleteMany({});
-    //         await prisma.blook.deleteMany({});
-    //         await prisma.font.deleteMany({});
-    //         await prisma.user.deleteMany({});
-
     //         const defaultBlook = await prisma.resource.create({ data: { path: "{cdn}/content/blooks/Default.png", reference: "DEFAULT_BLOOK" } });
     //         const defaultBlookBackground = await prisma.resource.create({ data: { path: "{cdn}/content/blooks/backgrounds/Default.png", reference: "DEFAULT_BLOOK_BACKGROUND" } });
     //         const defaultBanner = await prisma.resource.create({ data: { path: "{cdn}/content/banners/Default.png", reference: "DEFAULT_BANNER" } });

@@ -1,12 +1,14 @@
-import { ConflictException, ForbiddenException, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "src/redis/redis.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { SocketService } from "src/socket/socket.service";
+import { PermissionsService } from "src/permissions/permissions.service";
 import Stripe from "stripe";
 import axios from "axios";
 
-import { Conflict, InternalServerError, NotFound, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto, StripeProductEntity, StripeStoreEntity } from "@blacket/types";
-import { BlookObtainMethod, UserSubscription } from "@blacket/core";
+import { BadRequest, Conflict, InternalServerError, NotFound, SocketMessageType, StripeCreatePaymentIntentDto, StripeCreatePaymentMethodDto, StripeCreateSetupIntentDto, StripeProductEntity, StripeStoreEntity } from "@blacket/types";
+import { BlookObtainMethod, CurrencyType, TransactionStatus, UserSubscription, UserSubscriptionStatus } from "@blacket/core";
 import { constructDiscordWebhookObject } from "./func";
 
 @Injectable()
@@ -17,6 +19,8 @@ export class StripeService {
         private readonly configService: ConfigService,
         private readonly redisService: RedisService,
         private readonly prismaService: PrismaService,
+        private readonly socketService: SocketService,
+        private readonly permissionsService: PermissionsService,
         @Inject("STRIPE_OPTIONS") private readonly options: { apiKey: string, options: Stripe.StripeConfig }
     ) {
         this.stripe = new Stripe(this.options.apiKey, this.options.options);
@@ -52,49 +56,27 @@ export class StripeService {
                 active: true
             },
             include: {
-                products: true
+                products: {
+                    select: {
+                        id: true
+                    }
+                }
             }
         });
         if (!stores) throw new InternalServerErrorException(InternalServerError.DEFAULT);
 
-        const productCount = await this.prismaService.product.count();
+        const response = stores.map((store) => new StripeStoreEntity({
+            id: store.id,
+            name: store.name,
+            description: store.description,
+            priority: store.priority,
+            products: store.products.map((product) => product.id),
+            createdAt: store.createdAt,
+            updatedAt: store.updatedAt,
+            active: store.active
+        }));
 
-        const stripeProducts = await this.stripe.products.list({ limit: productCount });
-        if (!stripeProducts) throw new InternalServerErrorException(InternalServerError.DEFAULT);
-
-        const stripePrices = await this.stripe.prices.list({ limit: productCount });
-        if (!stripePrices) throw new InternalServerErrorException(InternalServerError.DEFAULT);
-
-        const response: StripeStoreEntity[] = [];
-
-        for (const store of stores) {
-            response.push({ ...store, products: [] });
-
-            for (const product of store.products) {
-                const stripeProduct = stripeProducts.data.find((p) => p.id === product.stripeProductId);
-                if (!stripeProduct) throw new InternalServerErrorException(InternalServerError.DEFAULT);
-
-                const stripePrice = stripePrices.data.find((p) => p.id === stripeProduct.default_price);
-                if (!stripePrice) throw new InternalServerErrorException(InternalServerError.DEFAULT);
-
-                const data = {
-                    ...product,
-
-                    name: stripeProduct.name,
-                    description: stripeProduct.description,
-                    price: stripePrice.unit_amount / 100,
-
-                    stripeProductId: stripeProduct.id,
-                    stripePriceId: stripePrice.id
-                };
-
-                response[response.length - 1].products.push(data);
-
-                await this.redisService.setProduct(product.id, data);
-            }
-        }
-
-        await this.redisService.setKey("products", "*", response, 3600);
+        await this.redisService.setKey("products", "*", response);
 
         return response;
     }
@@ -109,50 +91,222 @@ export class StripeService {
         const customer = await this.stripe.customers.retrieve(event.customer as string);
         if (!customer) throw new NotFoundException(NotFound.UNKNOWN_CUSTOMER);
 
-        if (product.blookId) await this.prismaService.userBlook.create({
-            data: {
-                userId: user.id,
-                blookId: product.blookId,
-                initialObtainerId: user.id,
-                obtainedBy: BlookObtainMethod.PURCHASE
+        const blooks = [];
+        const items = [];
+        const fonts = [];
+        const titles = [];
+        const banners = [];
+        const permissions = [];
+
+        let tokens = 0;
+        let gems = 0;
+
+        for (let i = 0; i < (parseInt(event.metadata.quantity as string) || 1); i++) {
+            if (product.blookId) {
+                const shiny = (Math.random() < 0.1) ? true : false;
+
+                const currentCount = await this.prismaService.userBlook.count({ where: { blookId: product.blookId, shiny } });
+                const nextSerial = currentCount + 1;
+
+                const blook = await this.prismaService.userBlook.create({
+                    data: {
+                        userId: user.id,
+                        blookId: product.blookId,
+                        initialObtainerId: user.id,
+                        shiny,
+                        serial: nextSerial,
+                        obtainedBy: BlookObtainMethod.PURCHASE
+                    }
+                });
+
+                blooks.push(blook);
             }
+
+            if (product.itemId) {
+                const item = await this.prismaService.userItem.create({
+                    data: {
+                        userId: user.id,
+                        itemId: product.itemId,
+                        initalObtainerId: user.id
+                    }
+                });
+                items.push(item);
+            }
+
+            if (product.fontId) {
+                const font = await this.prismaService.userFont.create({
+                    data: {
+                        userId: user.id,
+                        fontId: product.fontId
+                    }
+                });
+                fonts.push(font.id);
+            }
+
+            if (product.titleId) {
+                const title = await this.prismaService.userTitle.create({
+                    data: {
+                        userId: user.id,
+                        titleId: product.titleId
+                    }
+                });
+
+                titles.push(title.id);
+            }
+
+            if (product.bannerId) {
+                const banner = await this.prismaService.userBanner.create({
+                    data: {
+                        userId: user.id,
+                        bannerId: product.bannerId
+                    }
+                });
+
+                banners.push(banner.id);
+            }
+
+            if (product.groupId && !product.isSubscription) {
+                const group = await this.prismaService.group.findFirst({ where: { id: product.groupId } });
+                if (!group) throw new NotFoundException(NotFound.DEFAULT);
+
+                const existingGroup = await this.prismaService.userGroup.count({
+                    where: {
+                        userId: user.id,
+                        groupId: product.groupId
+                    }
+                });
+                if (existingGroup === 0) await this.prismaService.userGroup.create({
+                    data: {
+                        userId: user.id,
+                        groupId: product.groupId
+                    }
+                });
+
+                this.permissionsService.clearCache(user.id);
+
+                permissions.push(...group.permissions);
+            }
+
+            if (product.isSubscription) await this.prismaService.$transaction(async (tx) => {
+                await tx.userSubscription.updateMany({
+                    where: {
+                        userId: user.id,
+                        status: UserSubscriptionStatus.ACTIVE,
+                        expiresAt: { equals: null }
+                    },
+                    data: { status: UserSubscriptionStatus.CANCELED }
+                });
+
+                const existingSubscription = await tx.userSubscription.findFirst({
+                    where: {
+                        userId: user.id,
+                        productId: product.id,
+                        status: UserSubscriptionStatus.ACTIVE,
+                        expiresAt: { gte: new Date() }
+                    },
+                    orderBy: { expiresAt: "desc" },
+                    take: 1
+                });
+                if (existingSubscription) {
+                    const subscription = await this.stripe.subscriptions.retrieve(existingSubscription.stripeSubscriptionId);
+                    if (!subscription) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+                    await this.stripe.subscriptions.cancel(existingSubscription.stripeSubscriptionId);
+
+                    const invoice = await this.stripe.invoices.retrieve(subscription.latest_invoice as string);
+                    if (!invoice) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+                    const chargeId = invoice.payment_intent as string;
+                    if (!chargeId) throw new InternalServerErrorException(InternalServerError.DEFAULT);
+
+                    const currentPeriodEnd = subscription.current_period_end;
+                    const currentPeriodStart = subscription.current_period_start;
+                    const now = Math.floor(Date.now() / 1000);
+
+                    const timeUsed = now - currentPeriodStart;
+                    const periodLength = currentPeriodEnd - currentPeriodStart;
+                    const unusedRatio = (periodLength - timeUsed) / periodLength;
+
+                    const amountToRefund = Math.round(invoice.amount_paid * unusedRatio);
+
+                    console.log(`Refunding ${amountToRefund} cents for subscription ${existingSubscription.stripeSubscriptionId} for user ${user.username}.`);
+
+                    const refund = await this.stripe.refunds.create({
+                        payment_intent: chargeId,
+                        amount: amountToRefund
+                    });
+
+                    console.log(refund);
+
+                    const sub = await tx.userSubscription.create({
+                        data: {
+                            userId: user.id,
+                            productId: product.id,
+                            stripeSubscriptionId: event.id,
+                            expiresAt: null
+                        }
+                    });
+
+                    console.log(sub);
+                } else {
+                    const sub = await tx.userSubscription.create({
+                        data: {
+                            userId: user.id,
+                            productId: product.id,
+                            stripeSubscriptionId: event.id,
+                            expiresAt: null
+                        }
+                    });
+
+                    console.log(sub);
+                }
+
+                this.permissionsService.clearCache(user.id);
+            });
+
+            if (product.tokens !== 0 || product.gems !== 0) {
+                await this.prismaService.user.update({
+                    where: { id: user.id },
+                    data: {
+                        tokens: { increment: product.tokens || 0 },
+                        gems: { increment: product.gems || 0 }
+                    }
+                });
+
+                tokens += product.tokens || 0;
+                gems += product.gems || 0;
+            }
+        }
+
+        await this.prismaService.transaction.update({
+            where: { id: event.metadata.blacketTransactionId as string },
+            data: { status: TransactionStatus.COMPLETED }
         });
 
-        if (product.itemId) await this.prismaService.userItem.create({
-            data: {
-                userId: user.id,
-                itemId: product.itemId,
-                initalObtainerId: user.id
-            }
+        this.socketService.emitToUser(user.id, SocketMessageType.PURCHASE_SUCCEEDED, {
+            blooks,
+            items,
+            fonts,
+            titles,
+            banners,
+            permissions,
+            tokens,
+            gems
         });
 
-        if (product.fontId) await this.prismaService.userFont.create({
-            data: {
-                userId: user.id,
-                fontId: product.fontId
-            }
-        });
-
-        if (product.titleId) await this.prismaService.userTitle.create({
-            data: {
-                userId: user.id,
-                titleId: product.titleId
-            }
-        });
-
-        if (product.bannerId) await this.prismaService.userBanner.create({
-            data: {
-                userId: user.id,
-                bannerId: product.bannerId
-            }
-        });
-
-        if (product.groupId) await this.prismaService.userGroup.create({
-            data: {
-                userId: user.id,
-                groupId: product.groupId
-            }
-        });
+        // await this.prismaService.transaction.create({
+        //     data: {
+        //         user: { connect: { id: user.id } },
+        //         product: { connect: { id: product.id } },
+        //         stripePaymentId: event.id,
+        //         paymentMethod: { connect: { id: parseInt(event.metadata.blacketPaymentMethodId as string) } },
+        //         amount: parseInt(event.amount_received as unknown as string) / 100,
+        //         quantity: parseInt(event.metadata.quantity as string) || 1,
+        //         currency: CurrencyType.USD,
+        //         ipAddress: { connect: { ipAddress: event.metadata.ipAddress } },
+        //         status: TransactionStatus.COMPLETED
+        //     }
+        // });
 
         // const baseUrl = this.configService.get<string>("SERVER_BASE_URL");
         // const mediaPath = this.configService.get<string>("VITE_MEDIA_PATH");
@@ -185,6 +339,8 @@ export class StripeService {
                 expiresAt: new Date(event.current_period_end * 1000)
             }
         });
+
+        this.permissionsService.clearCache(user.id);
 
         console.log(subscription);
 
@@ -250,9 +406,15 @@ export class StripeService {
         });
         if (!subscription) throw new NotFoundException(NotFound.UNKNOWN_SUBSCRIPTION);
 
-        await this.prismaService.userSubscription.delete({ where: { id: subscription.id } });
+        await this.prismaService.userSubscription.update({
+            where: { id: subscription.id },
+            data: {
+                status: UserSubscriptionStatus.CANCELED,
+                expiresAt: new Date(event.current_period_end * 1000)
+            }
+        });
 
-        await this.prismaService.userGroup.deleteMany({ where: { userId: user.id, groupId: product.groupId } });
+        this.permissionsService.clearCache(user.id);
 
         console.log(`User ${user.username} has successfully ended subscription ${product.name}.`);
     }
@@ -360,11 +522,17 @@ export class StripeService {
         });
     }
 
-    async createPaymentIntent(userId: string, productId: number) {
+    async createPaymentIntent(userId: string, productId: number, dto: StripeCreatePaymentIntentDto, ipAddress: string) {
         const product = await this.redisService.getProduct(productId);
         if (!product) throw new NotFoundException(NotFound.UNKNOWN_PRODUCT);
+        if (product.isSubscription && product.price === 0) throw new BadRequestException(NotFound.UNKNOWN_PRODUCT);
 
-        const FINAL_PRICE = Math.round(product.price * 100);
+        let quantity = dto.quantity;
+        if (!quantity || quantity <= 0) quantity = 1;
+
+        if (product.isQuantityCapped && quantity > 1) throw new BadRequestException(BadRequest.PRODUCT_QUANTITY_CAPPED);
+
+        const FINAL_PRICE = Math.round((product.price * quantity) * 100);
         const STATEMENT_DESCRIPTOR = product.name.toUpperCase().replaceAll(" ", "").substring(0, 22);
 
         const user = await this.prismaService.user.findUnique({ where: { id: userId }, include: { paymentMethods: { where: { primary: true } } } });
@@ -374,6 +542,19 @@ export class StripeService {
         if (!paymentMethod) throw new NotFoundException(NotFound.UNKNOWN_PAYMENT_METHOD);
 
         if (!user.stripeCustomerId) throw new NotFoundException(NotFound.UNKNOWN_CUSTOMER);
+
+        const transaction = await this.prismaService.transaction.create({
+            data: {
+                user: { connect: { id: user.id } },
+                product: { connect: { id: product.id } },
+                paymentMethod: { connect: { id: paymentMethod.id } },
+                amount: FINAL_PRICE / 100,
+                quantity,
+                currency: CurrencyType.USD,
+                ipAddress: { connect: { ipAddress } },
+                status: TransactionStatus.PENDING
+            }
+        });
 
         const paymentIntent = await this.stripe.paymentIntents.create({
             amount: FINAL_PRICE,
@@ -385,20 +566,25 @@ export class StripeService {
             confirm: false,
 
             statement_descriptor_suffix: STATEMENT_DESCRIPTOR,
-            description: `${product.name} (${product.stripeProductId})`,
+            description: `x${quantity} ${product.name}${product.stripeProductId ? ` (${product.stripeProductId})` : ""}`,
 
             metadata: {
+                quantity: quantity.toString(),
                 blacketProductId: productId,
+                blacketUserId: user.id,
+                blacketPaymentMethodId: paymentMethod.id,
+                blacketTransactionId: transaction.id,
                 stripeProductId: product.stripeProductId,
-                stripePriceId: product.stripePriceId
+                stripePriceId: product.stripePriceId,
+                ipAddress
             }
         });
 
         return paymentIntent;
     }
 
-    async createSubscription(userId: string, productId: number) {
-        const hasSubscription = await this.prismaService.userSubscription.count({ where: { userId, productId } });
+    async createSubscription(userId: string, productId: number, ipAddress: string) {
+        const hasSubscription = await this.prismaService.userSubscription.count({ where: { userId, productId, status: UserSubscriptionStatus.ACTIVE } });
         if (hasSubscription > 0) throw new ConflictException(Conflict.SUBSCRIPTION_ALREADY_EXISTS);
 
         const product = await this.redisService.getProduct(productId);
@@ -412,15 +598,33 @@ export class StripeService {
 
         if (!user.stripeCustomerId) throw new NotFoundException(NotFound.UNKNOWN_CUSTOMER);
 
+        const transaction = await this.prismaService.transaction.create({
+            data: {
+                user: { connect: { id: user.id } },
+                product: { connect: { id: product.id } },
+                paymentMethod: { connect: { id: paymentMethod.id } },
+                amount: product.subscriptionPrice,
+                quantity: 1,
+                currency: CurrencyType.USD,
+                ipAddress: { connect: { ipAddress } },
+                status: TransactionStatus.PENDING
+            }
+        });
+
         return await this.stripe.subscriptions.create({
             customer: user.stripeCustomerId,
             items: [{ price: product.stripePriceId }],
             default_payment_method: paymentMethod.paymentMethodId,
 
             metadata: {
+                quantity: "1",
                 blacketProductId: productId,
+                blacketUserId: user.id,
+                blacketPaymentMethodId: paymentMethod.id,
+                blacketTransactionId: transaction.id,
                 stripeProductId: product.stripeProductId,
-                stripePriceId: product.stripePriceId
+                stripePriceId: product.stripePriceId,
+                ipAddress
             },
 
             cancel_at_period_end: false
