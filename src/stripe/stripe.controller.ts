@@ -35,7 +35,10 @@ export class StripeController {
 
     @Throttle({ default: { limit: 20, ttl: hours(1) } })
     @Post("setup-intent")
-    async createSetupIntent(@GetCurrentUser() userId: string, @Body() dto: StripeCreateSetupIntentDto) {
+    async createSetupIntent(
+        @GetCurrentUser() userId: string,
+        @Body() dto: StripeCreateSetupIntentDto
+    ) {
         const setupIntent = await this.stripeService.createSetupIntent(userId, dto);
 
         return new StripeCreateSetupIntentEntity(setupIntent);
@@ -43,7 +46,10 @@ export class StripeController {
 
     @Throttle({ default: { limit: 5, ttl: hours(1) } })
     @Post("payment-methods")
-    async createPaymentMethod(@GetCurrentUser() userId: string, @Body() dto: StripeCreatePaymentMethodDto) {
+    async createPaymentMethod(
+        @GetCurrentUser() userId: string,
+        @Body() dto: StripeCreatePaymentMethodDto
+    ) {
         const paymentMethod = (await this.stripeService.createPaymentMethod(userId, dto));
 
         return new StripeCreatePaymentMethodEntity(paymentMethod);
@@ -52,14 +58,20 @@ export class StripeController {
     @Throttle({ default: { limit: 10, ttl: seconds(60) } })
     @Put("payment-methods/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    selectPaymentMethod(@GetCurrentUser() userId: string, @Param("id") id: string) {
+    selectPaymentMethod(
+        @GetCurrentUser() userId: string,
+        @Param("id") id: string
+    ) {
         return this.stripeService.selectPaymentMethod(userId, parseInt(id));
     }
 
     @Throttle({ default: { limit: 10, ttl: seconds(60) } })
     @Delete("payment-methods/:id")
     @HttpCode(HttpStatus.NO_CONTENT)
-    removePaymentMethod(@GetCurrentUser() userId: string, @Param("id") id: string) {
+    removePaymentMethod(
+        @GetCurrentUser() userId: string,
+        @Param("id") id: string
+    ) {
         return this.stripeService.removePaymentMethod(userId, parseInt(id));
     }
 

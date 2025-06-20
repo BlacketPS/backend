@@ -3,7 +3,7 @@ import { CoreService } from "src/core/core.service";
 import { RedisService } from "src/redis/redis.service";
 import { Server, Socket } from "socket.io";
 import { BrenderEntity, BrenderPlayerEntity, BrenderTradingTableEntity, PublicUser, SocketAuctionBidEntity, SocketAuctionExpireEntity, SocketMessageType, SocketTradingPlazaMoveDto } from "@blacket/types";
-import { Room } from "@prisma/client";
+import { Room } from "@blacket/core";
 
 type RoomWithUsers = Room & { users: { id: string }[] };
 

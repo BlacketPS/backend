@@ -1,21 +1,16 @@
-import { ClassSerializerInterceptor, Controller, Get, Param, NotFoundException, UseInterceptors, Post, UploadedFile, UsePipes } from "@nestjs/common";
+import { ClassSerializerInterceptor, Controller, Get, Param, NotFoundException, UseInterceptors, Patch, HttpStatus, HttpCode } from "@nestjs/common";
 import { UsersService } from "./users.service";
-import { CoreService } from "src/core/core.service";
 import { GetCurrentUser } from "src/core/decorator/getCurrentUser.decorator";
 
 import { ApiTags } from "@nestjs/swagger";
 import { NotFound, PrivateUser, PublicUser } from "@blacket/types";
-import { FileInterceptor } from "@nestjs/platform-express";
-import { FileSizeValidationPipe } from "src/core/pipe";
-import { Permissions } from "src/core/decorator";
-import { PermissionType } from "@prisma/client";
+import { hours, seconds, Throttle } from "@nestjs/throttler";
 
 @ApiTags("users")
 @Controller("users")
 export class UsersController {
     constructor(
-        private usersService: UsersService,
-        private coreService: CoreService
+        private usersService: UsersService
     ) { }
 
     @UseInterceptors(ClassSerializerInterceptor)
@@ -40,6 +35,7 @@ export class UsersController {
         else return new PrivateUser(userData);
     }
 
+    @Throttle({ default: { limit: 10, ttl: seconds(60) } })
     @UseInterceptors(ClassSerializerInterceptor)
     @Get("transactions")
     async getTransactions(@GetCurrentUser() userId: string) {
@@ -59,5 +55,13 @@ export class UsersController {
 
         if (!userData) throw new NotFoundException(NotFound.UNKNOWN_USER);
         else return new PublicUser(userData);
+    }
+
+    @Throttle({ default: { limit: 3, ttl: hours(24) } })
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Patch("read-rules")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async readRules(@GetCurrentUser() userId: string) {
+        return await this.usersService.readRules(userId);
     }
 }

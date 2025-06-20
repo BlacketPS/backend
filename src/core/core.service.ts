@@ -2,8 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
 import { BlacketLoggerService } from "./logger/logger.service";
-import * as path from "path";
-import * as fs from "fs";
 
 import { Upload } from "@blacket/core";
 
@@ -21,6 +19,7 @@ export class CoreService {
         try {
             parsed = JSON.parse(json);
         } catch (e) {
+            // this should really only be in dev
             this.logger.error("Failed to parse JSON", e);
         }
 

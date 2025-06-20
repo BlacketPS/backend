@@ -5,8 +5,7 @@ import { SocketService } from "src/socket/socket.service";
 import { PermissionsService } from "src/permissions/permissions.service";
 
 import { ChatCreateMessageDto, ChatEditMessageDto, Forbidden, NotFound, SocketMessageType } from "@blacket/types";
-import { Message, PunishmentType } from "@blacket/core";
-import { PermissionType } from "@prisma/client";
+import { Message, PunishmentType, PermissionType } from "@blacket/core";
 
 @Injectable()
 export class ChatService {

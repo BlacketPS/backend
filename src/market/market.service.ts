@@ -34,21 +34,17 @@ export class MarketService {
         if (!blooks) throw new NotFoundException(NotFound.UNKNOWN_PACK);
 
         // increment user's pack opened amount, and experience. insert blook to table. decrement user tokens
-        let blook;
-
-        await this.prismaService.$transaction(async (tx) => {
+        return await this.prismaService.$transaction(async (tx) => {
             await tx.user.update({ select: null, where: { id: userId }, data: { tokens: { decrement: pack.price } } });
             await tx.userStatistic.update({ select: null, where: { id: userId }, data: { packsOpened: { increment: 1 } } });
 
             const blookId = blooks[0].blookId;
-            const shiny = blooks[0].shiny;
+            const shiny = blooks[0].shiny > 0;
 
             const currentCount = await tx.userBlook.count({ where: { blookId, shiny } });
             const nextSerial = currentCount + 1;
 
-            blook = await tx.userBlook.create({ select: null, data: { userId, initialObtainerId: userId, blookId, shiny, obtainedBy: BlookObtainMethod.PACK_OPEN, serial: nextSerial } });
+            return await tx.userBlook.create({ select: null, data: { userId, initialObtainerId: userId, blookId, shiny, obtainedBy: BlookObtainMethod.PACK_OPEN, serial: nextSerial } });
         });
-
-        return blook;
     }
 }

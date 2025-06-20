@@ -1,32 +1,37 @@
-import { User } from "@blacket/core";
 import { StripeProductEntity } from "@blacket/types";
+import { Prisma, Transaction } from "@blacket/core";
 import Stripe from "stripe";
 
 export const constructDiscordWebhookObject = (
-    user: User,
+    user: Prisma.UserGetPayload<{
+        include: {
+            ipAddress: true;
+        };
+    }>,
     product: StripeProductEntity,
     intent: Stripe.PaymentIntent,
     customer: Stripe.Customer,
+    transaction: Transaction,
     mediaPath: string
 ) => {
     return {
-        content: "@everyone",
+        content: "<@260453209892454404>",
         embeds: [
             {
                 title: "✅ Purchase Successful",
                 fields: [
                     {
                         name: "__``User Information``__",
-                        value: "**Username:** " + user.username + "\n" +
-                            "**ID:** " + user.id + "\n" +
-                            "**IP:** " + user.ipAddressId + "\n" +
-                            "**Email:** " + user.email + "\n",
+                        value: "**ID:** " + user.id + "\n" +
+                            "**Username:** " + user.username + "\n" +
+                            "**IP:** " + user.ipAddress.ipAddress + "\n" +
+                            "**Email:** " + (user.email || "None") + "\n",
                         inline: true
                     },
                     {
                         name: "__``Product Information``__",
-                        value: "**Name:** " + product.name + "\n" +
-                            "**ID:** " + product.id + "\n",
+                        value: "**ID:** " + product.id + "\n" +
+                            "**Name:** " + product.name + "\n",
                         inline: true
                     }
                 ],
@@ -35,27 +40,29 @@ export const constructDiscordWebhookObject = (
                     url: `${mediaPath}/content/icons/success.png`
                 },
                 image: {
-                    url: "https://i.imgur.com/8NdaHgw.png"
+                    url: `${mediaPath}/content/test.png`
                 }
             },
             {
                 fields: [
                     {
                         name: "__``Payment Information``__",
-                        value: "**ID:** " + intent.id + "\n" +
-                            "**Amount:** $" + (intent.amount / 100).toFixed(2) + "\n",
+                        value: "**Stripe ID:** " + intent.id + "\n" +
+                            "**Transaction ID:** " + transaction.id + "\n" +
+                            "**Amount:** $" + (intent.amount / 100).toFixed(2) + "\n" +
+                            "**Quantity:** " + intent.metadata.quantity + "\n",
                         inline: true
                     },
                     {
                         name: "__``Customer Information``__",
-                        value: "**Name:** " + (customer as Stripe.Customer).name + "\n" +
-                            "**ID:** " + customer.id + "\n" +
+                        value: "**Stripe ID:** " + customer.id + "\n" +
+                            "**Name:** " + (customer as Stripe.Customer).name + "\n" +
                             "**Email:** " + (customer as Stripe.Customer).email + "\n",
                         inline: true
                     }
                 ],
                 image: {
-                    url: "https://i.imgur.com/8NdaHgw.png"
+                   url: `${mediaPath}/content/test.png`
                 },
                 color: 0x00ff00,
                 footer: {

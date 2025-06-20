@@ -40,6 +40,13 @@ export class UsersService implements OnApplicationBootstrap {
         this.defaultFont = await this.prismaService.font.findUnique({ where: { id: 1 } });
     }
 
+    async readRules(userId: string): Promise<void> {
+        await this.prismaService.user.update({
+            where: { id: userId },
+            data: { readRulesAt: new Date() }
+        });
+    }
+
     async getUser(user: string, settings: GetUserSettings = {
         cacheUser: true
     }): Promise<User | null> {
@@ -86,7 +93,10 @@ export class UsersService implements OnApplicationBootstrap {
         if (settings.includeTitles) include.titles = true;
         if (settings.includeFonts) include.fonts = true;
         if (settings.includeSettings) include.settings = true;
-        if (settings.includePaymentMethods) include.paymentMethods = { omit: { paymentMethodId: true } };
+        if (settings.includePaymentMethods) include.paymentMethods = {
+            where: { deletedAt: null },
+            omit: { paymentMethodId: true }
+        };
         if (settings.includeSubscription) include.subscriptions = {
             where: {
                 status: UserSubscriptionStatus.ACTIVE
