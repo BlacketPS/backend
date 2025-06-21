@@ -4,7 +4,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SocketService } from "src/socket/socket.service";
 import { UsersService } from "src/users/users.service";
 import { PermissionsService } from "src/permissions/permissions.service";
-import { AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsSearchAuctionDto, BadRequest, Forbidden, NotFound, PrivateUser, SocketAuctionBidEntity, SocketAuctionExpireEntity } from "@blacket/types";
+import { CoreService } from "src/core/core.service";
+import { AuctionsBidAuctionDto, AuctionsBuyAuctionDto, AuctionsCreateAuctionDto, AuctionsSearchAuctionDto, BadRequest, Forbidden, NotFound, PrivateUser, SocketAuctionBidEntity, SocketAuctionExpireEntity } from "@blacket/types";
 import { Auction, AuctionType, PermissionType } from "@blacket/core";
 
 @Injectable()
@@ -14,7 +15,8 @@ export class AuctionsService {
         private redisService: RedisService,
         private socketService: SocketService,
         private usersService: UsersService,
-        private permissionsService: PermissionsService
+        private permissionsService: PermissionsService,
+        private coreService: CoreService
     ) { }
 
     async getAuctions(dto: AuctionsSearchAuctionDto = {}): Promise<Auction[]> {
@@ -154,7 +156,10 @@ export class AuctionsService {
         });
     }
 
-    async buyItNow(userId: string, id: number) {
+    async buyItNow(userId: string, id: number, dto: AuctionsBuyAuctionDto, ip: string) {
+        const captcha = await this.coreService.verifyTurnstile(dto.captchaToken, ip);
+        if (!captcha) throw new ForbiddenException(Forbidden.DEFAULT);
+
         const auction = await this.prismaService.auction.findUnique({
             where: {
                 id,
@@ -210,7 +215,10 @@ export class AuctionsService {
         });
     }
 
-    async bid(userId: string, id: number, dto: AuctionsBidAuctionDto) {
+    async bid(userId: string, id: number, dto: AuctionsBidAuctionDto, ip: string) {
+        const captcha = await this.coreService.verifyTurnstile(dto.captchaToken, ip);
+        if (!captcha) throw new ForbiddenException(Forbidden.DEFAULT);
+
         const auction = await this.prismaService.auction.findUnique({
             where: {
                 id,

@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RedisService } from "src/redis/redis.service";
+import { CoreService } from "src/core/core.service";
 import { UsersService } from "src/users/users.service";
 import { compare } from "bcrypt";
 import * as speakEasy from "@levminer/speakeasy";
@@ -15,10 +16,14 @@ export class AuthService {
     constructor(
         private prismaService: PrismaService,
         private redisService: RedisService,
+        private coreService: CoreService,
         private usersService: UsersService
     ) { }
 
     async register(dto: RegisterDto, ip: string): Promise<AuthAuthEntity> {
+        const captcha = await this.coreService.verifyTurnstile(dto.captchaToken, ip);
+        if (!captcha) throw new ForbiddenException(Forbidden.DEFAULT);
+
         if (await this.usersService.userExists(dto.username)) throw new BadRequestException(BadRequest.AUTH_USERNAME_TAKEN);
 
         return await this.prismaService.$transaction(async (tx) => {
@@ -33,6 +38,9 @@ export class AuthService {
     }
 
     async login(dto: LoginDto, ip: string): Promise<AuthAuthEntity> {
+        const captcha = await this.coreService.verifyTurnstile(dto.captchaToken, ip);
+        if (!captcha) throw new ForbiddenException(Forbidden.DEFAULT);
+
         const user = await this.prismaService.user.findFirst({
             where: {
                 username: {

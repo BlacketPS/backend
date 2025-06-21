@@ -1,14 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
 import { ConfigService } from "@nestjs/config";
 import { BlacketLoggerService } from "./logger/logger.service";
+import axios from "axios";
 
 import { Upload } from "@blacket/core";
 
 @Injectable()
 export class CoreService {
     constructor(
-        private readonly prismaService: PrismaService,
         private readonly configService: ConfigService,
         private readonly logger: BlacketLoggerService
     ) { }
@@ -36,5 +35,23 @@ export class CoreService {
 
     async getUserUploadPath(upload: Upload): Promise<string> {
         return `${this.configService.get("VITE_CDN_URL")}/users/${upload.userId}/${upload.uploadId}/${upload.filename}`;
+    }
+
+    async verifyTurnstile(token: string, ip?: string): Promise<boolean> {
+        const secret = this.configService.get("SERVER_TURNSTILE_SECRET_KEY");
+
+        const body = new URLSearchParams();
+
+        body.append("secret", secret);
+        body.append("response", token);
+        if (ip) body.append("remoteip", ip);
+
+        const res = await axios.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            body.toString(),
+            { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+        );
+
+        return res.data.success === true;
     }
 }

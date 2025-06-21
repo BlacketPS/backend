@@ -2,8 +2,8 @@ import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPip
 import { ApiTags } from "@nestjs/swagger";
 import { CoreService } from "src/core/core.service";
 import { AuctionsService } from "./auctions.service";
-import { GetCurrentUser } from "src/core/decorator";
-import { AuctionsAuctionEntity, AuctionsBidAuctionDto, AuctionsCreateAuctionDto, AuctionsRecentAveragePriceDto, AuctionsRecentAveragePriceEntity, AuctionsSearchAuctionDto } from "@blacket/types";
+import { GetCurrentUser, RealIp } from "src/core/decorator";
+import { AuctionsAuctionEntity, AuctionsBidAuctionDto, AuctionsBuyAuctionDto, AuctionsCreateAuctionDto, AuctionsRecentAveragePriceDto, AuctionsRecentAveragePriceEntity, AuctionsSearchAuctionDto } from "@blacket/types";
 
 @ApiTags("auctions")
 @Controller("auctions")
@@ -34,18 +34,21 @@ export class AuctionsController {
     @HttpCode(HttpStatus.NO_CONTENT)
     buyItNow(
         @GetCurrentUser() userId: string,
-        @Param("id", ParseIntPipe) id: number
+        @Param("id", ParseIntPipe) id: number,
+        @Body() dto: AuctionsBuyAuctionDto,
+        @RealIp() ip: string
     ) {
-        return this.auctionsService.buyItNow(userId, id);
+        return this.auctionsService.buyItNow(userId, id, dto, ip);
     }
 
     @Post(":id/bid")
     bid(
         @GetCurrentUser() userId: string,
         @Param("id", ParseIntPipe) id: number,
-        @Body() dto: AuctionsBidAuctionDto
+        @Body() dto: AuctionsBidAuctionDto,
+        @RealIp() ip: string
     ) {
-        return this.auctionsService.bid(userId, id, dto);
+        return this.auctionsService.bid(userId, id, dto, ip);
     }
 
     @Delete(":id")

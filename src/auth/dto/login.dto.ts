@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumberString, Length, Matches, IsOptional, Validate } from "class-validator";
+import { IsNotEmpty, IsNumberString, Length, Matches, IsOptional, Validate, IsString } from "class-validator";
 
 export class LoginDto {
     @ApiProperty({ example: "BenStewart", description: "The username you wish to login with" })
@@ -19,6 +19,10 @@ export class LoginDto {
     @Matches(/^\d{6}$/, { message: "otpCode must be a 6-digit number with no spaces" })
     @IsOptional()
     readonly otpCode?: string;
+
+    @IsNotEmpty()
+    @IsString()
+    readonly captchaToken: string;
 
     constructor(partial: Partial<LoginDto>) {
         Object.assign(this, partial);

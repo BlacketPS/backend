@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, Validate } from "class-validator";
+import { IsNotEmpty, IsString, Validate } from "class-validator";
 
 export class RegisterDto {
     @ApiProperty({ example: "BenStewart", description: "The username you wish to register with" })
@@ -11,6 +11,10 @@ export class RegisterDto {
     @IsNotEmpty()
     @Validate((value: string) => value.length > 0)
     readonly password: string;
+
+    @IsNotEmpty()
+    @IsString()
+    readonly captchaToken: string;
 }
 
 export default RegisterDto;
