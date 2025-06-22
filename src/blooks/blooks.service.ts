@@ -25,7 +25,7 @@ export class BlooksService {
             if (userBlooks.length !== dto.blooks.length) throw new NotFoundException(NotFound.UNKNOWN_BLOOK);
 
             await tx.userBlook.updateMany({ where: { id: { in: userBlooks.map((blook) => blook.id) } }, data: { sold: true } });
-            await tx.user.update({ where: { id: userId }, data: { tokens: { increment: userBlooks.reduce((acc, blook) => acc + blook.blook.price, 0) } } });
+            await tx.user.update({ where: { id: userId }, data: { tokens: { increment: userBlooks.reduce((acc, blook) => acc + (blook.shiny ? (blook.blook.price * 10) : blook.blook.price), 0) } } });
         });
     }
 }
