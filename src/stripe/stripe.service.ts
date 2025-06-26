@@ -34,6 +34,10 @@ export class StripeService {
         switch (event.type) {
             case "payment_intent.succeeded":
                 return await this.handlePaymentIntent(event.data.object as Stripe.PaymentIntent);
+            case "payment_intent.payment_failed":
+                // return await this.handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
+                // TODO: handle payment intent failure
+                return console.log("Payment failed");
             case "invoice.payment_succeeded":
                 return await this.handleInvoiceSuccess(event.data.object as Stripe.Invoice);
             case "invoice.payment_failed":

@@ -73,28 +73,35 @@ export class ChatService {
 
         const mentions = Array.from(new Set(dto.content.match(/<@(\d+)>/g))).map((mention) => mention.replace(/<|@|>/g, ""));
 
-        const message = await this.prismaService.message.create({
-            data: {
-                author: { connect: { id: userId } },
-                room: { connect: { id: roomId } },
-                content: dto.content,
-                replyingTo: dto.replyingTo ? { connect: { id: dto.replyingTo } } : undefined,
-                mentions
-            },
-            include: {
-                replyingTo: {
-                    select: {
-                        id: true,
-                        content: true,
-                        authorId: true
+        return await this.prismaService.$transaction(async (tx) => {
+            const message = await tx.message.create({
+                data: {
+                    author: { connect: { id: userId } },
+                    room: { connect: { id: roomId } },
+                    content: dto.content,
+                    replyingTo: dto.replyingTo ? { connect: { id: dto.replyingTo } } : undefined,
+                    mentions
+                },
+                include: {
+                    replyingTo: {
+                        select: {
+                            id: true,
+                            content: true,
+                            authorId: true
+                        }
                     }
                 }
-            }
+            });
+
+            await tx.userStatistic.update({
+                where: { id: userId },
+                data: { messagesSent: { increment: 1 } }
+            });
+
+            this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_CREATE, message);
+
+            return message;
         });
-
-        this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_CREATE, message);
-
-        return message;
     }
 
     async startTyping(userId: string, roomId: number): Promise<void> {

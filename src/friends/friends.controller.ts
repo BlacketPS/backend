@@ -8,9 +8,13 @@ import { GetCurrentUser } from "src/core/decorator";
 export class FriendsController {
   constructor(private readonly friendsService: FriendsService) {}
 
-	@Get()
-	getFriends() {
-		return this.friendsService.getFriends();
+	@Get("/")
+    getFriends(@GetCurrentUser() userId: string) {
+        try {
+            return this.friendsService.getFriends(userId);
+        } catch (error) {
+            throw new Error(error.message);
+        }
 	}
 
 	@Post(":id/add")
@@ -23,12 +27,29 @@ export class FriendsController {
 	}
 
 	@Post(":id/remove")
-	removeFriend(@GetCurrentUser() userId: string, @Param("id") id: string) {
-		return this.friendsService.removeFriend(userId, id);
+    removeFriend(@GetCurrentUser() userId: string, @Param("id") id: string) {
+        try {
+            return this.friendsService.removeFriend(userId, id);
+        } catch (error) {
+            throw new Error(error.message);
+        }
 	}
 
 	@Post(":id/block")
-	blockFriend(@Param("id") id: string) {
-		return this.friendsService.blockFriend(id);
-	}
+    blockUser(@GetCurrentUser() userId: string, @Param("id") id: string) {
+        try {
+            return this.friendsService.blockUser(userId, id);
+        } catch(error) {
+            throw new Error(error.message);
+        }
+    }
+
+    @Post(":id/unblock")
+    unblockUser(@GetCurrentUser() userId: string, @Param("id") id: string) {
+        try {
+            return this.friendsService.unblockUser(userId, id);
+        } catch(error) {
+            throw new Error(error.message);
+        }
+    }
 }
