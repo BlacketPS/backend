@@ -140,7 +140,7 @@ export class StripeService {
                     data: {
                         userId: user.id,
                         itemId: product.itemId,
-                        initalObtainerId: user.id
+                        initialObtainerId: user.id
                     }
                 });
                 items.push(item);

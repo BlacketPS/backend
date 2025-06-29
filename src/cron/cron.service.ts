@@ -1,4 +1,4 @@
-import { AuctionType } from "@blacket/core";
+import { AuctionType, ItemObtainMethod } from "@blacket/core";
 import { AuctionsBidEntity, SocketAuctionExpireEntity } from "@blacket/types";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -117,5 +117,44 @@ export class CronService {
         const newLastSeen = new Date(Date.now());
 
         await this.prismaService.user.updateMany({ where: { id: { in: users } }, data: { lastSeen: newLastSeen } });
+    }
+
+
+    @Cron("0 0 */12 * * *", { name: "dailySpinnyWheelTicket", timeZone: "UTC" })
+    async dailySpinnyWheelTicket() {
+        const item = await this.prismaService.item.findFirst({ where: { name: "Spinny Wheel Ticket" } });
+        if (!item) return;
+
+        const users = await this.prismaService.user.findMany({
+            where: {
+                lastClaimed: {
+                    lt: new Date(Date.now() - 12 * 60 * 60 * 1000)
+                },
+                AND: {
+                    lastSeen: {
+                        gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+                    }
+                }
+            },
+            select: { id: true }
+        });
+        if (users.length < 1) return;
+
+        await this.prismaService.$transaction(async (tx) => {
+            await tx.userItem.createMany({
+                data: users.map((user) => ({
+                    userId: user.id,
+                    itemId: item.id,
+                    obtainedBy: ItemObtainMethod.DAILY,
+                    initialObtainerId: user.id
+                }))
+            });
+            await tx.user.updateMany({
+                where: { id: { in: users.map((user) => user.id) } },
+                data: { lastClaimed: new Date() }
+            });
+
+            this.loggerService.verbose(`Created ${users.length} Spinny Wheel tickets for ${users.length} users.`, "CronService");
+        });
     }
 }

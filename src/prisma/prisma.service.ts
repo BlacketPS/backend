@@ -43,34 +43,59 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         this.blacketLogger.info("Seeding database with initial data...", "Database", "Blacket");
 
         // truncate entire database
-        await this.$transaction(async (prisma) => {
-            const defaultBlook = await prisma.resource.create({ data: { path: "{cdn}/content/blooks/Default.png", reference: "DEFAULT_BLOOK" } });
-            const defaultBlookBackground = await prisma.resource.create({ data: { path: "{cdn}/content/blooks/backgrounds/Default.png", reference: "DEFAULT_BLOOK_BACKGROUND" } });
-            const defaultBanner = await prisma.resource.create({ data: { path: "{cdn}/content/banners/Default.png", reference: "DEFAULT_BANNER" } });
-            const defaultFont1 = await prisma.resource.create({ data: { path: "{cdn}/content/fonts/Nunito Bold.ttf", reference: "DEFAULT_FONT_1" } });
-            const defaultFont2 = await prisma.resource.create({ data: { path: "{cdn}/content/fonts/Titan One.ttf", reference: "DEFAULT_FONT_2" } });
+        await this.$transaction(async (tx) => {
+            const defaultBlook = await tx.resource.create({ data: { path: "{cdn}/content/blooks/Default.png", reference: "DEFAULT_BLOOK" } });
+            const defaultBlookBackground = await tx.resource.create({ data: { path: "{cdn}/content/blooks/backgrounds/Default.png", reference: "DEFAULT_BLOOK_BACKGROUND" } });
+            const defaultBanner = await tx.resource.create({ data: { path: "{cdn}/content/banners/Default.png", reference: "DEFAULT_BANNER" } });
+            const defaultFont1 = await tx.resource.create({ data: { path: "{cdn}/content/fonts/Nunito Bold.ttf", reference: "DEFAULT_FONT_1" } });
+            const defaultFont2 = await tx.resource.create({ data: { path: "{cdn}/content/fonts/Titan One.ttf", reference: "DEFAULT_FONT_2" } });
+            const spinnyWheelTicket = await tx.resource.create({ data: { path: "{cdn}/content/items/Daily Spinny Wheel Ticket.png", reference: "DAILY_SPINNY_WHEEL_TICKET" } });
 
-            await prisma.room.create({ data: { name: "global", public: true, id: 0 } });
+            await tx.room.createMany({
+                data: [
+                    { name: "global", public: true, id: 0 },
+                    { name: "trading-plaza", public: true, id: 1 }
+                ]
+            });
 
-            await prisma.rarity.create({ data: { name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON } });
-            await prisma.rarity.create({ data: { name: "Uncommon", color: "#29e629", experience: 1, animationType: RarityAnimationType.UNCOMMON } });
-            await prisma.rarity.create({ data: { name: "Rare", color: "#0000ff", experience: 5, animationType: RarityAnimationType.RARE } });
-            await prisma.rarity.create({ data: { name: "Epic", color: "#8000ff", experience: 25, animationType: RarityAnimationType.EPIC } });
-            await prisma.rarity.create({ data: { name: "Legendary", color: "#ffaf0f", experience: 100, animationType: RarityAnimationType.LEGENDARY } });
-            await prisma.rarity.create({ data: { name: "Chroma", color: "#00ccff", experience: 250, animationType: RarityAnimationType.CHROMA } });
-            await prisma.rarity.create({ data: { name: "Supreme", color: "#be0000", experience: 250, animationType: RarityAnimationType.CHROMA } });
-            await prisma.rarity.create({ data: { name: "Mythical", color: "#ff75ff", experience: 1000, animationType: RarityAnimationType.CHROMA } });
-            await prisma.rarity.create({ data: { name: "Unique", color: "#008080", experience: 1000, animationType: RarityAnimationType.CHROMA } });
-            await prisma.rarity.create({ data: { name: "Iridescent", color: "rainbow", experience: 1000, animationType: RarityAnimationType.IRIDESCENT } });
+            await tx.rarity.createMany({
+                data: [
+                    { name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON },
+                    { name: "Uncommon", color: "#29e629", experience: 1, animationType: RarityAnimationType.UNCOMMON },
+                    { name: "Rare", color: "#0000ff", experience: 5, animationType: RarityAnimationType.RARE },
+                    { name: "Epic", color: "#8000ff", experience: 25, animationType: RarityAnimationType.EPIC },
+                    { name: "Legendary", color: "#ffaf0f", experience: 100, animationType: RarityAnimationType.LEGENDARY },
+                    { name: "Chroma", color: "#00ccff", experience: 250, animationType: RarityAnimationType.CHROMA },
+                    { name: "Supreme", color: "#be0000", experience: 250, animationType: RarityAnimationType.CHROMA },
+                    { name: "Mythical", color: "#ff75ff", experience: 1000, animationType: RarityAnimationType.CHROMA },
+                    { name: "Unique", color: "#008080", experience: 1000, animationType: RarityAnimationType.CHROMA },
+                    { name: "Iridescent", color: "rainbow", experience: 1000, animationType: RarityAnimationType.IRIDESCENT }
+                ]
+            });
 
-            await prisma.banner.create({ data: { name: "Default", resource: { connect: { id: defaultBanner.id } } } });
+            await tx.banner.create({ data: { name: "Default", resource: { connect: { id: defaultBanner.id } } } });
 
-            await prisma.title.create({ data: { name: "Common" } });
+            await tx.title.create({ data: { name: "Common" } });
 
-            await prisma.blook.create({ data: { name: "Default", chance: 0, price: 0, rarity: { connect: { id: 1 } }, priority: 0, background: { connect: { id: defaultBlookBackground.id } }, image: { connect: { id: defaultBlook.id } } } });
+            await tx.blook.create({ data: { name: "Default", chance: 0, price: 0, rarity: { connect: { id: 1 } }, priority: 0, background: { connect: { id: defaultBlookBackground.id } }, image: { connect: { id: defaultBlook.id } } } });
+            await tx.font.createMany({
+                data: [
+                    { name: "Nunito Bold", resourceId: defaultFont1.id, default: true, priority: 1 },
+                    { name: "Titan One", resourceId: defaultFont2.id, default: true, priority: 2 }
+                ]
+            });
 
-            await prisma.font.create({ data: { name: "Nunito Bold", resource: { connect: { id: defaultFont1.id } }, default: true, priority: 1 } });
-            await prisma.font.create({ data: { name: "Titan One", resource: { connect: { id: defaultFont2.id } }, default: true, priority: 2 } });
+            await tx.item.createMany({
+                data: [
+                    {
+                        name: "Spinny Wheel Ticket",
+                        description: "Spin the daily wheel for a chance to win great prizes!",
+                        rarityId: 1,
+                        imageId: spinnyWheelTicket.id,
+                        priority: 0
+                    }
+                ]
+            });
         });
 
         this.blacketLogger.info("Database has been seeded with initial data!", "Database", "Blacket");
