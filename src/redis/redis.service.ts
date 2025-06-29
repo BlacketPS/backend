@@ -92,6 +92,16 @@ export class RedisService extends Redis {
         for (const product of await this.prismaService.product.findMany()) {
             this.set(`${this.prefix}:product:${product.id}`, JSON.stringify(product));
         }
+
+        for (const spinnyWheel of await this.prismaService.spinnyWheel.findMany(
+            {
+                include: {
+                    rewards: true
+                }
+            }
+        )) {
+            this.set(`${this.prefix}:spinnyWheel:${spinnyWheel.id}`, JSON.stringify(spinnyWheel));
+        }
     }
 
     // these are CRUCIAL for the redis service to work, all "getters", "setters", and "deleters" will use this

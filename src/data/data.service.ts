@@ -17,7 +17,8 @@ export enum DataKey {
     EMOJI = "emoji",
     RESOURCE = "resource",
     PRODUCT = "product",
-    CREDIT = "credit"
+    CREDIT = "credit",
+    SPINNY_WHEEL = "spinnyWheel"
 }
 
 @Injectable()

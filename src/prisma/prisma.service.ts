@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 
-import { PrismaClient, RarityAnimationType } from "@blacket/core";
+import { PrismaClient, RarityAnimationType, SpinnyWheelRewardType } from "@blacket/core";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -49,7 +49,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             const defaultBanner = await tx.resource.create({ data: { path: "{cdn}/content/banners/Default.png", reference: "DEFAULT_BANNER" } });
             const defaultFont1 = await tx.resource.create({ data: { path: "{cdn}/content/fonts/Nunito Bold.ttf", reference: "DEFAULT_FONT_1" } });
             const defaultFont2 = await tx.resource.create({ data: { path: "{cdn}/content/fonts/Titan One.ttf", reference: "DEFAULT_FONT_2" } });
-            const spinnyWheelTicket = await tx.resource.create({ data: { path: "{cdn}/content/items/Daily Spinny Wheel Ticket.png", reference: "DAILY_SPINNY_WHEEL_TICKET" } });
+            const swtResource = await tx.resource.create({ data: { path: "{cdn}/content/items/Daily Spinny Wheel Ticket.png", reference: "DAILY_SPINNY_WHEEL_TICKET" } });
 
             await tx.room.createMany({
                 data: [
@@ -85,19 +85,37 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 ]
             });
 
-            await tx.item.createMany({
+            const swtItem = await tx.item.create({
+                data: {
+                    name: "Spinny Wheel Ticket",
+                    description: "Spin the daily wheel for a chance to win great prizes!",
+                    rarityId: 1,
+                    imageId: swtResource.id,
+                    priority: 0
+                }
+            });
+
+            const sw = await tx.spinnyWheel.create({
+                data: {
+                    name: "Daily Spinny Wheel",
+                    itemId: swtItem.id
+                }
+            });
+
+            await tx.spinnyWheelReward.createMany({
                 data: [
-                    {
-                        name: "Spinny Wheel Ticket",
-                        description: "Spin the daily wheel for a chance to win great prizes!",
-                        rarityId: 1,
-                        imageId: spinnyWheelTicket.id,
-                        priority: 0
-                    }
+                    { type: SpinnyWheelRewardType.TOKENS, tokens: 500, spinnyWheelId: sw.id, chance: 20 },
+                    { type: SpinnyWheelRewardType.TOKENS, tokens: 600, spinnyWheelId: sw.id, chance: 20 },
+                    { type: SpinnyWheelRewardType.TOKENS, tokens: 700, spinnyWheelId: sw.id, chance: 20 },
+                    { type: SpinnyWheelRewardType.TOKENS, tokens: 800, spinnyWheelId: sw.id, chance: 20 },
+                    { type: SpinnyWheelRewardType.TOKENS, tokens: 900, spinnyWheelId: sw.id, chance: 20 },
+                    { type: SpinnyWheelRewardType.TOKENS, tokens: 1000, spinnyWheelId: sw.id, chance: 20 },
+                    { type: SpinnyWheelRewardType.ITEM, itemId: swtItem.id, spinnyWheelId: sw.id, chance: 20 },
+                    { type: SpinnyWheelRewardType.GEMS, gems: 5, spinnyWheelId: sw.id, chance: 5 },
                 ]
             });
-        });
 
-        this.blacketLogger.info("Database has been seeded with initial data!", "Database", "Blacket");
+            this.blacketLogger.info("Database has been seeded with initial data!", "Database", "Blacket");
+        });
     }
 }

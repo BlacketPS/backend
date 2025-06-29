@@ -96,6 +96,12 @@ export class DataController {
         return this.redisService.getAllFromKey(DataKey.CREDIT);
     }
 
+    @Public()
+    @Get("spinny-wheels")
+    getSpinnyWheel() {
+        return this.redisService.getAllFromKey(DataKey.SPINNY_WHEEL);
+    }
+
     @Get("boosters")
     async getBoosters(@GetCurrentUser() userId: string) {
         const boosters = await this.dataService.getBoosters(userId);
