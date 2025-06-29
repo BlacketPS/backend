@@ -65,6 +65,9 @@ export class UsersService implements OnApplicationBootstrap {
                 blookId: true,
                 shiny: true,
                 serial: true,
+                canSell: true,
+                canTrade: true,
+                canAuction: true,
                 createdAt: true,
                 updatedAt: true
             },

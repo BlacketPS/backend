@@ -41,7 +41,7 @@ export class ChatService {
             take: limit,
             where: {
                 roomId: room.id,
-                deleted: false
+                deletedAt: null
             }
         });
     }
@@ -123,7 +123,7 @@ export class ChatService {
             where: {
                 id: messageId,
                 roomId,
-                deleted: false
+                deletedAt: null
             },
             select: {
                 authorId: true
@@ -145,7 +145,7 @@ export class ChatService {
         )
             throw new ForbiddenException(Forbidden.CHAT_MESSAGE_NO_PERMISSION);
 
-        await this.prismaService.message.update({ where: { id: messageId }, data: { deleted: true } });
+        await this.prismaService.message.update({ where: { id: messageId }, data: { deletedAt: new Date() } });
 
         if (room.public) this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_DELETE, { messageId });
         else this.socketService.emitToChatRoom(room, SocketMessageType.CHAT_MESSAGES_DELETE, { messageId });
@@ -161,7 +161,7 @@ export class ChatService {
             where: {
                 id: messageId,
                 roomId,
-                deleted: false
+                deletedAt: null
             }
         });
 
@@ -173,7 +173,7 @@ export class ChatService {
             where: { id: messageId },
             data: {
                 content: dto.content,
-                edited: true
+                editedAt: new Date()
             }
         });
 
