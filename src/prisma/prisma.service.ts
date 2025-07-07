@@ -60,16 +60,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
             await tx.rarity.createMany({
                 data: [
-                    { name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.UNCOMMON },
-                    { name: "Uncommon", color: "#29e629", experience: 1, animationType: RarityAnimationType.UNCOMMON },
+                    { name: "Common", color: "#ffffff", experience: 0, animationType: RarityAnimationType.COMMON },
+                    { name: "Uncommon", color: "#29e629", experience: 1, animationType: RarityAnimationType.COMMON },
                     { name: "Rare", color: "#0000ff", experience: 5, animationType: RarityAnimationType.RARE },
                     { name: "Epic", color: "#8000ff", experience: 25, animationType: RarityAnimationType.EPIC },
                     { name: "Legendary", color: "#ffaf0f", experience: 100, animationType: RarityAnimationType.LEGENDARY },
                     { name: "Chroma", color: "#00ccff", experience: 250, animationType: RarityAnimationType.CHROMA },
                     { name: "Supreme", color: "#be0000", experience: 250, animationType: RarityAnimationType.CHROMA },
-                    { name: "Mythical", color: "#ff75ff", experience: 1000, animationType: RarityAnimationType.CHROMA },
-                    { name: "Unique", color: "#008080", experience: 1000, animationType: RarityAnimationType.CHROMA },
-                    { name: "Iridescent", color: "rainbow", experience: 1000, animationType: RarityAnimationType.IRIDESCENT }
+                    { name: "Mythical", color: "#ff75ff", experience: 1000, animationType: RarityAnimationType.MYTHICAL },
+                    { name: "Unique", color: "#008080", experience: 1000, animationType: RarityAnimationType.MYTHICAL },
+                    { name: "Iridescent", color: "rainbow", experience: 1000, animationType: RarityAnimationType.COMMON }
                 ]
             });
 
