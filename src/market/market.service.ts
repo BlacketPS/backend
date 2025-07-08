@@ -27,7 +27,7 @@ export class MarketService {
         const rarities = await this.redisService.getAllFromKey(DataKey.RARITY);
 
         // TODO: include booster chance
-        const blooks = await openPack(packBlooks, rarities, 1, 1000, 10)
+        const blooks = await openPack(packBlooks, rarities, 1, 1, 1)
             .catch((err) => {
                 if (err.message === NotFound.UNKNOWN_PACK) throw new NotFoundException(NotFound.UNKNOWN_PACK);
             });
