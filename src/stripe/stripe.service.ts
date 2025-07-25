@@ -368,7 +368,7 @@ export class StripeService {
         if (!invoice) throw new NotFoundException(NotFound.UNKNOWN_INVOICE);
 
         const chargeId = invoice.payment_intent as string;
-        if (!chargeId) throw new  NotFoundException(NotFound.UNKNOWN_TRANSACTION);
+        if (!chargeId) throw new NotFoundException(NotFound.UNKNOWN_TRANSACTION);
 
         return await this.prismaService.$transaction(async (tx) => {
             const ip = await this.prismaService.ipAddress.upsert({
@@ -703,6 +703,12 @@ export class StripeService {
 
         if (!user.stripeCustomerId) throw new NotFoundException(NotFound.UNKNOWN_CUSTOMER);
 
+        const ip = await this.prismaService.ipAddress.upsert({
+            where: { ipAddress },
+            create: { ipAddress },
+            update: {}
+        });
+
         const transaction = await this.prismaService.transaction.create({
             data: {
                 user: { connect: { id: user.id } },
@@ -711,7 +717,7 @@ export class StripeService {
                 amount: FINAL_PRICE / 100,
                 quantity,
                 currency: CurrencyType.USD,
-                ipAddress: { connect: { ipAddress } },
+                ipAddress: { connect: { id: ip.id } },
                 status: TransactionStatus.PENDING
             }
         });

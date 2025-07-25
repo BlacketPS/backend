@@ -124,9 +124,7 @@ export class UsersService implements OnApplicationBootstrap {
                 ]
             },
             include: {
-                avatar: {
-                    include: { blook: true }
-                },
+                avatar: true,
                 customAvatar: true,
                 customBanner: true,
                 groups: {
