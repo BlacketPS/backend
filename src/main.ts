@@ -8,11 +8,19 @@ import { useContainer } from "class-validator";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import * as express from "express";
+import * as compression from "compression";
+
+const COMPRESS_PATHS = ["/api/users", "/api/data"];
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { logger: new BlacketLoggerService() });
 
     app.use("/api/stripe/webhook", express.raw({ type: "*/*" }));
+
+    app.use(compression({
+        threshold: 100 * 1024,
+        filter: (req: any) => COMPRESS_PATHS.some((path) => req.url.startsWith(path))
+    }));
 
     const configService = app.get(ConfigService);
 
