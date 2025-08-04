@@ -26,21 +26,6 @@ export class S3Controller {
     }
 
     @Throttle({ default: { limit: 5, ttl: seconds(10) } })
-    @Permissions({ permissions: [PermissionType.UPLOAD_FILES_MEDIUM] })
-    @Get("upload/medium")
-    async uploadFileMedium(
-        @GetCurrentUser() userId: string,
-        @Query() dto: S3UploadDto
-    ): Promise<S3UploadEntity> {
-        return await this.s3Service.createPresignedPost(
-            userId,
-            dto.filename,
-            dto.mimetype,
-            1024 * 1024 * 50
-        );
-    }
-
-    @Throttle({ default: { limit: 5, ttl: seconds(10) } })
     @Permissions({ permissions: [PermissionType.UPLOAD_FILES_LARGE] })
     @Get("upload/large")
     async uploadFileLarge(
