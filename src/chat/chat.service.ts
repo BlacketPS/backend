@@ -98,7 +98,7 @@ export class ChatService {
                 data: { messagesSent: { increment: 1 } }
             });
 
-            this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_CREATE, message);
+            this.socketService.emitToAll(SocketMessageType.CHAT_MESSAGES_CREATE, { ...message, nonce: dto.nonce });
 
             return message;
         });
