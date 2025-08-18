@@ -73,12 +73,18 @@ export class ChatService {
 
         const mentions = Array.from(new Set(dto.content.match(/<@(\d+)>/g))).map((mention) => mention.replace(/<|@|>/g, ""));
 
+        const { chatColor } = await this.prismaService.userSetting.findUnique({
+            where: { id: userId },
+            select: { chatColor: true }
+        });
+
         return await this.prismaService.$transaction(async (tx) => {
             const message = await tx.message.create({
                 data: {
                     author: { connect: { id: userId } },
                     room: { connect: { id: roomId } },
                     content: dto.content,
+                    color: chatColor,
                     replyingTo: dto.replyingTo ? { connect: { id: dto.replyingTo } } : undefined,
                     mentions
                 },

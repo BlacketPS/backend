@@ -7,7 +7,7 @@ import { MailService } from "src/mail/mail.service";
 import { BlacketLoggerService } from "src/core/logger/logger.service";
 import { hash, compare } from "bcrypt";
 import * as speakEasy from "@levminer/speakeasy";
-import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, BadRequest, NotFound, AuthAuthEntity, SettingsEnableOtpDto, SettingsDisableOtpDto } from "@blacket/types";
+import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, SettingsChangeChatColorDto, BadRequest, NotFound, AuthAuthEntity, SettingsEnableOtpDto, SettingsDisableOtpDto } from "@blacket/types";
 
 @Injectable()
 export class SettingsService {
@@ -28,7 +28,8 @@ export class SettingsService {
     private async initializeValidSettings() {
         const settings = await this.prismaService.userSetting.findMany({
             omit: {
-                otpSecret: true
+                otpSecret: true,
+                chatColor: true
             }
         });
 
@@ -41,6 +42,15 @@ export class SettingsService {
 
     async changeSetting(userId: string, dto: SettingsChangeSettingDto): Promise<void> {
         if (!Object.keys(this.validSettings).includes(dto.key)) throw new NotFoundException(NotFound.UNKNOWN_SETTING);
+
+        if (dto.value === null) {
+            await this.prismaService.userSetting.update({ where: { id: userId }, data: { [dto.key]: null } })
+                .catch(() => {
+                    throw new BadRequestException(BadRequest.SETTINGS_INVALID_SETTING_VALUE);
+                });
+
+            return;
+        }
 
         switch (typeof this.validSettings[dto.key]) {
             case "function":
@@ -79,6 +89,10 @@ export class SettingsService {
         await this.prismaService.user.update({ data: { password: await hash(dto.newPassword, 10) }, where: { id: userId } });
 
         return { token: await this.authService.sessionToToken(await this.authService.findOrCreateSession(userId)) } as AuthAuthEntity;
+    }
+
+    async changeChatColor(userId: string, dto: SettingsChangeChatColorDto): Promise<void> {
+        await this.prismaService.userSetting.update({ where: { id: userId }, data: { chatColor: dto.color } });
     }
 
     async enableOtp(userId: string, dto: SettingsEnableOtpDto): Promise<void> {

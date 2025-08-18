@@ -3,7 +3,7 @@ import { SettingsService } from "./settings.service";
 import { GetCurrentUser, Permissions } from "src/core/decorator";
 import { ApiTags } from "@nestjs/swagger";
 
-import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, SettingsEnableOtpDto, SettingsDisableOtpDto, Forbidden, PermissionTypeEnum } from "@blacket/types";
+import { SettingsChangeSettingDto, SettingsChangeUsernameDto, SettingsChangePasswordDto, SettingsEnableOtpDto, SettingsDisableOtpDto, Forbidden, PermissionTypeEnum, SettingsChangeChatColorDto } from "@blacket/types";
 
 @ApiTags("settings")
 @Controller("settings")
@@ -31,6 +31,14 @@ export class SettingsController {
     @Patch("password")
     changePassword(@GetCurrentUser() userId: string, @Body() dto: SettingsChangePasswordDto) {
         return this.settingsService.changePassword(userId, dto);
+    }
+
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Patch("chat-color")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Permissions({ permissions: [PermissionTypeEnum.USE_CHAT_COLORS] })
+    changeChatColor(@GetCurrentUser() userId: string, @Body() dto: SettingsChangeChatColorDto) {
+        return this.settingsService.changeChatColor(userId, dto);
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
