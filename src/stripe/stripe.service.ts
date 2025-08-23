@@ -110,7 +110,8 @@ export class StripeService {
         const permissions = [];
 
         let tokens = 0;
-        let gems = 0;
+        let diamonds = 0;
+        let crystals = 0;
 
         let subscription;
 
@@ -305,17 +306,19 @@ export class StripeService {
                 }
             });
 
-            if (product.tokens !== 0 || product.gems !== 0) {
+            if (product.tokens !== 0 || product.diamonds !== 0 || product.crystals !== 0) {
                 await this.prismaService.user.update({
                     where: { id: user.id },
                     data: {
                         tokens: { increment: product.tokens || 0 },
-                        gems: { increment: product.gems || 0 }
+                        diamonds: { increment: product.diamonds || 0 },
+                        crystals: { increment: product.crystals || 0 }
                     }
                 });
 
                 tokens += product.tokens || 0;
-                gems += product.gems || 0;
+                diamonds += product.diamonds || 0;
+                crystals += product.crystals || 0;
             }
         }
 
@@ -335,7 +338,8 @@ export class StripeService {
             banners,
             permissions,
             tokens,
-            gems,
+            diamonds,
+            crystals,
             subscription
         });
 

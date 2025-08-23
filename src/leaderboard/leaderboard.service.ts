@@ -14,21 +14,21 @@ export class LeaderboardService {
 
         if (leaderboard) return leaderboard;
         else {
-            const tokens = (await this.prismaService.user.findMany({
-                orderBy: [{ tokens: "desc" }],
-                include: { customAvatar: true },
+            const diamonds = (await this.prismaService.user.findMany({
+                orderBy: [{ diamonds: "desc" }],
+                select: { id: true },
                 take: 10
-            }));
+            })).map((u) => u.id);
 
             const experience = (await this.prismaService.user.findMany({
                 orderBy: [{ experience: "desc" }],
-                include: { customAvatar: true },
+                select: { id: true },
                 take: 10
-            }));
+            })).map((u) => u.id);
 
-            await this.redisService.setKey("leaderboard", "*", { tokens, experience }, 300);
+            await this.redisService.setKey("leaderboard", "*", { diamonds, experience }, 60);
 
-            return { tokens, experience };
+            return { diamonds, experience };
         }
     }
 }

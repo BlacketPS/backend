@@ -62,7 +62,7 @@ export const constructDiscordWebhookObject = (
                     }
                 ],
                 image: {
-                   url: `${mediaPath}/content/test.png`
+                    url: `${mediaPath}/content/test.png`
                 },
                 color: 0x00ff00,
                 footer: {

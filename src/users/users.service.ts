@@ -138,8 +138,8 @@ export class UsersService implements OnApplicationBootstrap {
         if (!userData) return null;
 
         if (settings.cacheUser) {
-            await this.redisService.setKey("cachedUser", userData.id, userData, 10);
-            await this.redisService.setKey("cachedUser", userData.username.toLowerCase(), userData, 10);
+            await this.redisService.setKey("cachedUser", userData.id, userData, 600);
+            await this.redisService.setKey("cachedUser", userData.username.toLowerCase(), userData, 600);
         }
 
         return userData;
