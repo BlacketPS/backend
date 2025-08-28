@@ -139,8 +139,8 @@ export class AuctionsService {
         const durationTax = Math.floor(dto.duration / 60 * 10);
 
         return await this.prismaService.$transaction(async (prisma) => {
-            const user = await prisma.user.update({ where: { id: userId }, data: { tokens: { decrement: (Math.floor(auctionTax) + durationTax) } } });
-            if (user.tokens < 0) throw new ForbiddenException(Forbidden.AUCTIONS_TAX_NOT_ENOUGH_TOKENS);
+            const user = await prisma.user.update({ where: { id: userId }, data: { diamonds: { decrement: (Math.floor(auctionTax) + durationTax) } } });
+            if (user.diamonds < 0) throw new ForbiddenException(Forbidden.AUCTIONS_TAX_NOT_ENOUGH_DIAMONDS);
 
             return await prisma.auction.create({
                 data: {
@@ -189,13 +189,13 @@ export class AuctionsService {
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
-        if (user.tokens < auction.price) throw new ForbiddenException(Forbidden.AUCTIONS_BUY_IT_NOW_NOT_ENOUGH_TOKENS);
+        if (user.diamonds < auction.price) throw new ForbiddenException(Forbidden.AUCTIONS_BUY_IT_NOW_NOT_ENOUGH_DIAMONDS);
 
         return await this.prismaService.$transaction(async (prisma) => {
-            const user = await prisma.user.update({ where: { id: userId }, data: { tokens: { decrement: auction.price } } });
-            if (user.tokens < 0) throw new ForbiddenException(Forbidden.AUCTIONS_BUY_IT_NOW_NOT_ENOUGH_TOKENS);
+            const user = await prisma.user.update({ where: { id: userId }, data: { diamonds: { decrement: auction.price } } });
+            if (user.diamonds < 0) throw new ForbiddenException(Forbidden.AUCTIONS_BUY_IT_NOW_NOT_ENOUGH_DIAMONDS);
 
-            await prisma.user.update({ where: { id: auction.sellerId }, data: { tokens: { increment: auction.price } } });
+            await prisma.user.update({ where: { id: auction.sellerId }, data: { diamonds: { increment: auction.price } } });
 
             if (auction.type === AuctionType.BLOOK) await prisma.userBlook.update({ where: { id: auction.blookId }, data: { user: { connect: { id: userId } } } });
             else await prisma.userItem.update({ where: { id: auction.itemId }, data: { user: { connect: { id: userId } } } });
@@ -270,8 +270,8 @@ export class AuctionsService {
         const user = await this.usersService.getUser(userId);
         if (!user) throw new NotFoundException(NotFound.UNKNOWN_USER);
 
-        if (user.tokens < additionalAmount) {
-            throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
+        if (user.diamonds < additionalAmount) {
+            throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_DIAMONDS);
         }
 
         if (auction.price >= dto.amount) {
@@ -287,13 +287,13 @@ export class AuctionsService {
         }
 
         await this.prismaService.$transaction(async (tx) => {
-            // deduct only the additional amount from the user's tokens
+            // deduct only the additional amount from the user's diamonds
             const updatedUser = await tx.user.update({
                 where: { id: userId },
-                data: { tokens: { decrement: additionalAmount } }
+                data: { diamonds: { decrement: additionalAmount } }
             });
-            if (updatedUser.tokens < 0) {
-                throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_TOKENS);
+            if (updatedUser.diamonds < 0) {
+                throw new ForbiddenException(Forbidden.AUCTIONS_BID_NOT_ENOUGH_DIAMONDS);
             }
 
             // create a new bid

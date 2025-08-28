@@ -5,7 +5,6 @@ import { CoreService } from "src/core/core.service";
 import { S3Service } from "src/s3/s3.service";
 import { CosmeticsChangeBannerDto, CosmeticsChangeColorTier1Dto, CosmeticsChangeColorTier2Dto, CosmeticsChangeFontDto, CosmeticsChangeTitleDto, NotFound, Forbidden, CosmeticsChangeAvatarDto, CosmeticsUploadAvatarDto, CosmeticsUploadBannerDto, InternalServerError } from "@blacket/types";
 import { bannerifyImage, blookifyImage } from "@blacket/common";
-import * as fs from "fs";
 import axios from "axios";
 
 @Injectable()
@@ -112,7 +111,7 @@ export class CosmeticsService {
 
         formData.append(
             "file",
-            new Blob([Buffer.from(blookifiedImage)], { type: "image/webp" }),
+            new Blob([new Uint8Array(blookifiedImage)], { type: "image/webp" }),
             "avatar.webp"
         );
 
@@ -158,7 +157,7 @@ export class CosmeticsService {
         Object.entries(presignedUrl.fields).forEach(([k, v]) => formData.append(k, v as string));
         formData.append(
             "file",
-            new Blob([Buffer.from(bannerifiedImage)], { type: "image/webp" }),
+            new Blob([new Uint8Array(bannerifiedImage)], { type: "image/webp" }),
             "banner.webp"
         );
 

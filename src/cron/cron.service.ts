@@ -63,7 +63,7 @@ export class CronService {
 
                 const winningBid = auction.bids[0];
 
-                await tx.user.update({ where: { id: auction.seller.id }, data: { tokens: { increment: winningBid.amount } } });
+                await tx.user.update({ where: { id: auction.seller.id }, data: { diamonds: { increment: winningBid.amount } } });
 
                 switch (auction.type) {
                     case AuctionType.BLOOK:
@@ -89,7 +89,7 @@ export class CronService {
 
                     await tx.user.update({
                         where: { id: bid.user.id },
-                        data: { tokens: { increment: bid.amount } }
+                        data: { diamonds: { increment: bid.amount } }
                     });
                 }
 
